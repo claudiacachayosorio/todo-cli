@@ -44,12 +44,25 @@ create_todo() {
 #done_to_todo() {}
 
 # main menu for todo list manager
-#main_menu() {
-#}
+main_menu() {
+	echo "todo		create new todo"
+	echo "exit		leave todo-cli"
+	echo ""
+
+	read menu_selection
+	case $menu_selection in
+		todo) create_todo ;;
+		exit) exit ;;
+		*) read menu_selection ;;
+	esac
+}
 
 
 
 # Point of entry
 # ================================================================================================= #
 
-create_todo
+# header
+echo -e "\ntodo task manager\n"
+
+main_menu
