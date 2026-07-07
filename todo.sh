@@ -10,8 +10,8 @@
 # Global variables
 # ================================================================================================= #
 
-todotxt_path="./todo.txt"
-donetxt_path="./done.txt"
+todotxt="./todo.txt"
+donetxt="./done.txt"
 
 
 
@@ -19,32 +19,37 @@ donetxt_path="./done.txt"
 # ================================================================================================= #
 
 # view all todo items
-view_todos() {}
+#view_todos() {}
 
 # view all done items
-view_done() {}
+#view_done() {}
 
 # create a new todo item
-create_todo() {}
+create_todo() {
+	local new_todo
+	read -p "todo: " new_todo
+	echo $new_todo >> $todotxt
+}
 
 # delete a todo item
-delete_todo() {}
+#delete_todo() {}
 
 # reword a todo item
-reword_todo() {}
+#reword_todo() {}
 
 # mark a todo item as done
-todo_to_done() {}
+#todo_to_done() {}
 
 # mark a done item as todo
-done_to_todo() {}
+#done_to_todo() {}
 
 # main menu for todo list manager
-main_menu() {}
+#main_menu() {
+#}
 
 
 
 # Point of entry
 # ================================================================================================= #
 
-main_menu
+create_todo
