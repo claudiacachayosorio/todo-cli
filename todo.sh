@@ -3,16 +3,19 @@
 # ================================================================================================= #
 # todo.sh: A simple command-line todo list manager													#
 # ================================================================================================= #
-# To execute this script, run: ./todo.sh <command>													#
+# To execute this script, run: ./todo.sh <arguments>												#
 
 
 
 # Global variables
 # ================================================================================================= #
 
+# Run command
+RUN=$0
+
 # Paths
-todotxt="./todo.txt"
-donetxt="./done.txt"
+TODOTXT="./todo.txt"
+DONETXT="./done.txt"
 
 
 
@@ -20,21 +23,24 @@ donetxt="./done.txt"
 # ================================================================================================= #
 
 usage() {
-	echo "usage: $0	<command>"
+	echo ""
+	echo "Usage: $RUN <arguments>"
 	echo ""
 	echo "Options:"
 }
+
+usage
 
 
 
 # Parse arguments
 # ================================================================================================= #
 
-while [[ $# -gt 0 ]]
-do
-	case $1 in
-	esac
-done
+#while [[ $# -gt 0 ]]
+#do
+	#case $1 in
+	#esac
+#done
 
 
 
@@ -51,7 +57,7 @@ done
 add_todo() {
 	local new_todo
 	read new_todo
-	echo $new_todo >> $todotxt
+	echo $new_todo >> $TODOTXT
 }
 
 # Delete a todo
