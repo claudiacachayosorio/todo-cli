@@ -3,7 +3,7 @@
 # ================================================================================================= #
 # todo.sh: A simple command-line todo list manager													#
 # ================================================================================================= #
-# To execute this script, run: ./todo.sh															#
+# To execute this script, run: ./todo.sh <command>													#
 
 
 
@@ -25,10 +25,11 @@ donetxt="./done.txt"
 # view all done items
 #view_done() {}
 
-# create a new todo item
-create_todo() {
+# add a new todo item
+add_todo() {
 	local new_todo
-	read -p "todo: " new_todo
+	echo "input: todo" #temp
+	read new_todo
 	echo $new_todo >> $todotxt
 }
 
@@ -44,25 +45,7 @@ create_todo() {
 # mark a done item as todo
 #done_to_todo() {}
 
-# main menu for todo list manager
-main_menu() {
-	echo	"todo	create new todo"
-	echo	"exit	leave todo-cli"
-
-	read menu_selection
-	case $menu_selection in
-		todo) create_todo ;;
-		exit) exit ;;
-		*) read menu_selection ;;
-	esac
-}
-
 
 
 # Point of entry
 # ================================================================================================= #
-
-# header
-echo -e "\ntodo-cli task manager\n"
-
-main_menu
