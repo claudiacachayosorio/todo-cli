@@ -16,7 +16,29 @@ donetxt="./done.txt"
 
 
 
-# Functions
+# Usage
+# ================================================================================================= #
+
+usage() {
+	echo "usage: $0	<command>"
+	echo ""
+	echo "Options:"
+}
+
+
+
+# Parse arguments
+# ================================================================================================= #
+
+while [[ $# -gt 0 ]]
+do
+	case $1 in
+	esac
+done
+
+
+
+# Core functions
 # ================================================================================================= #
 
 # View all todo tasks
@@ -28,7 +50,6 @@ donetxt="./done.txt"
 # Add a new todo
 add_todo() {
 	local new_todo
-	echo "input: todo" #temp
 	read new_todo
 	echo $new_todo >> $todotxt
 }
@@ -44,8 +65,3 @@ add_todo() {
 
 # Move a task from done to todo
 #done_to_todo() {}
-
-
-
-# Point of entry
-# ================================================================================================= #
