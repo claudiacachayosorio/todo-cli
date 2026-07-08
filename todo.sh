@@ -12,13 +12,11 @@
 usage() {
 	cat << EOF
 
-Usage: ./todo.sh <command>
+Usage: bash todo.sh <command> [<args>]
 
-Available commands:
-
-  add     Add task to todo list.
-  list    View all current tasks in todo list.
-  done    View all completed tasks in done list.
+Commands:
+  todo | t <task>
+  view | v [todo|done]
 
 EOF
 	exit 0
@@ -76,8 +74,8 @@ fi
 while [[ $# -gt 0 ]]
 do
 	case $1 in
-		add)
-			add_todo
+		todo|t)
+			add_todo $2
 			shift
 			;;
 		*)
