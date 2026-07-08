@@ -10,6 +10,7 @@
 # Global variables
 # ================================================================================================= #
 
+# Paths
 todotxt="./todo.txt"
 donetxt="./done.txt"
 
@@ -45,9 +46,8 @@ create_todo() {
 
 # main menu for todo list manager
 main_menu() {
-	echo "todo		create new todo"
-	echo "exit		leave todo-cli"
-	echo ""
+	echo	"todo	create new todo"
+	echo	"exit	leave todo-cli"
 
 	read menu_selection
 	case $menu_selection in
@@ -63,6 +63,6 @@ main_menu() {
 # ================================================================================================= #
 
 # header
-echo -e "\ntodo task manager\n"
+echo -e "\ntodo-cli task manager\n"
 
 main_menu
