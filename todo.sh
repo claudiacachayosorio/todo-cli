@@ -15,7 +15,7 @@ usage() {
 Usage: bash todo.sh <command> [<args>]
 
 Commands:
-  todo | t <task>
+  todo | t
   view | v [todo|done]
 
 EOF
@@ -45,7 +45,9 @@ DONETXT="./done.txt"
 # Add a new todo
 add_todo() {
 	local new_todo
-	read -p "TODO: " new_todo
+
+	read new_todo
+
 	echo $new_todo >> $TODOTXT
 }
 
@@ -75,7 +77,7 @@ while [[ $# -gt 0 ]]
 do
 	case $1 in
 		todo|t)
-			add_todo $2
+			add_todo
 			shift
 			;;
 		*)
