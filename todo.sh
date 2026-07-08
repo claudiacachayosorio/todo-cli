@@ -15,8 +15,8 @@ usage() {
 Usage: bash todo.sh <command> [<args>]
 
 Commands:
-  todo | t
-  view | v [todo|done]
+  todo | t <task>
+  view | v [todo | done]
 
 EOF
 	exit 0
@@ -44,9 +44,12 @@ DONETXT="./done.txt"
 
 # Add a new todo
 add_todo() {
-	local new_todo
+	local new_todo=$1
 
-	read new_todo
+	while [[ -z $new_todo ]]
+	do
+		read new_todo
+	done
 
 	echo $new_todo >> $TODOTXT
 }
@@ -68,7 +71,7 @@ add_todo() {
 # Parse arguments
 # ================================================================================================= #
 
-if [[ -z $1 ]]
+if [[ $# -eq 0 ]]
 then
 	usage
 fi
@@ -77,8 +80,9 @@ while [[ $# -gt 0 ]]
 do
 	case $1 in
 		todo|t)
-			add_todo
 			shift
+			add_todo "$*"
+			set --
 			;;
 		*)
 			usage
