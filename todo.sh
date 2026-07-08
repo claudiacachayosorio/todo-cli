@@ -19,13 +19,13 @@ donetxt="./done.txt"
 # Functions
 # ================================================================================================= #
 
-# view all todo items
+# View all todo tasks
 #view_todos() {}
 
-# view all done items
+# View all done tasks
 #view_done() {}
 
-# add a new todo item
+# Add a new todo
 add_todo() {
 	local new_todo
 	echo "input: todo" #temp
@@ -33,16 +33,16 @@ add_todo() {
 	echo $new_todo >> $todotxt
 }
 
-# delete a todo item
+# Delete a todo
 #delete_todo() {}
 
-# reword a todo item
+# Reword a todo
 #reword_todo() {}
 
-# mark a todo item as done
+# Move a task from todo to done
 #todo_to_done() {}
 
-# mark a done item as todo
+# Move a task from done to todo
 #done_to_todo() {}
 
 
