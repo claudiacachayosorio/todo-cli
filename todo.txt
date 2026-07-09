@@ -1,4 +1,0 @@
-make popcorn
-read a programming book
-charge cellphone
-build a bird house
