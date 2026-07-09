@@ -16,6 +16,8 @@ Usage: bash todo.sh <command> [<args>]
 
 Commands:
   t <task>
+    -m <task>
+	   <task>...;
   li [done]
   del [<line-number>]
 
@@ -73,10 +75,8 @@ add_todo() {
 		read t_item
 	done
 
-	new_tasks=+$t_item
-
-	#echo $new_todo >> $TODOTXT
-	echo ${#new_tasks[@]}
+	new_tasks+=$t_item
+	printf "%s\n" "${new_tasks[@]}" >> $TODOTXT
 }
 
 # Delete a todo
