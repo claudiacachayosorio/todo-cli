@@ -65,19 +65,23 @@ view_list() {
 # Add a new todo
 # bash todo.sh t
 add_todo() {
-	local new_todo=$1
+	local t_item=$1
+	local new_tasks=()
 
-	while [[ -z $new_todo ]]
+	while  [[ -z $t_item ]]
 	do
-		read new_todo
+		read t_item
 	done
 
-	echo $new_todo >> $TODOTXT
+	new_tasks=+$t_item
+
+	#echo $new_todo >> $TODOTXT
+	echo ${#new_tasks[@]}
 }
 
 # Delete a todo
 # bash todo.sh del
-delete_todo() {}
+#delete_todo() {}
 
 # Reword a todo
 #reword_todo() {}
