@@ -16,7 +16,7 @@ Usage: bash todo.sh <command> [<args>]
 
 Commands:
   todo | t <task>
-  list | l [done]
+  list | li [done]
 
 EOF
 	exit 0
@@ -73,7 +73,7 @@ add_todo() {
 }
 
 # Delete a todo
-#delete_todo() {}
+delete_todo() {}
 
 # Reword a todo
 #reword_todo() {}
@@ -102,7 +102,7 @@ do
 			add_todo "$*"
 			set --
 			;;
-		list|l)
+		list|li)
 			view_list $2
 			set --
 			;;
