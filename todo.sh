@@ -15,8 +15,9 @@ usage() {
 Usage: bash todo.sh <command> [<args>]
 
 Commands:
-  todo | t <task>
-  list | li [done]
+  t <task>
+  li [done]
+  del [<line-number>]
 
 EOF
 	exit 0
@@ -37,6 +38,7 @@ DONETXT="./done.txt"
 # ===================================================================================== #
 
 # View list of tasks
+# bash todo.sh li
 view_list() {
 	local list_file=$TODOTXT
 
@@ -61,6 +63,7 @@ view_list() {
 }
 
 # Add a new todo
+# bash todo.sh t
 add_todo() {
 	local new_todo=$1
 
@@ -73,6 +76,7 @@ add_todo() {
 }
 
 # Delete a todo
+# bash todo.sh del
 delete_todo() {}
 
 # Reword a todo
@@ -97,13 +101,18 @@ fi
 while [[ $# -gt 0 ]]
 do
 	case $1 in
-		todo|t)
+		t)
 			shift
 			add_todo "$*"
 			set --
 			;;
-		list|li)
+		li)
 			view_list $2
+			set --
+			;;
+		del)
+			shift
+			delete_todo "$@"
 			set --
 			;;
 		*)
