@@ -16,7 +16,7 @@ Usage: bash todo.sh <command> [<args>]
 
 Commands:
   todo | t <task>
-  list | l [todo | done]
+  list | l [done]
 
 EOF
 	exit 0
@@ -38,13 +38,25 @@ DONETXT="./done.txt"
 
 # View list of tasks
 view_list() {
-	# TODO: should change list to donetxt if $1=done (if/else? case?)
-	# TODO: should end script if invalid input
+	local list_file=$TODOTXT
 
-	local list=$TODOTXT
+	if [[ -n $1 ]]
+	then
+		if [[ $1 == "todo" ]]
+		then :
+
+		elif [[ $1 == "done" ]]
+		then
+			list_file=$DONETXT
+
+		else
+			echo "error: '$1' is not a list option"
+			return 1
+		fi
+	fi
 
 	echo ""
-	sed 's/^/- /' $list
+	sed 's/^/- /' $list_file
 	echo ""
 }
 
@@ -91,8 +103,8 @@ do
 			set --
 			;;
 		list|l)
-			list_todo $2
-			shift
+			view_list $2
+			set --
 			;;
 		*)
 			usage
