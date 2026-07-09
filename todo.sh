@@ -16,7 +16,7 @@ Usage: bash todo.sh <command> [<args>]
 
 Commands:
   todo | t <task>
-  view | v [todo | done]
+  list | l [todo | done]
 
 EOF
 	exit 0
@@ -36,11 +36,17 @@ DONETXT="./done.txt"
 # Core functions
 # ================================================================================================= #
 
-# View all todo tasks
-#view_todos() {}
+# View list of tasks
+view_list() {
+	# TODO: should change list to donetxt if $1=done (if/else? case?)
+	# TODO: should end script if invalid input
 
-# View all done tasks
-#view_done() {}
+	local list=$TODOTXT
+
+	echo ""
+	sed 's/^/- /' $list
+	echo ""
+}
 
 # Add a new todo
 add_todo() {
@@ -83,6 +89,10 @@ do
 			shift
 			add_todo "$*"
 			set --
+			;;
+		list|l)
+			list_todo $2
+			shift
 			;;
 		*)
 			usage
