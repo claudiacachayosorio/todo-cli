@@ -16,8 +16,7 @@ Usage: bash todo.sh <command> [<args>]
 
 Commands:
   li [done]                  View list of tasks.
-  t <task>                   Add new task.
-  t+ <tasks>... ;            Add multiple tasks.
+  t <task> [--<tasks>...]    Add new tasks.
   del [<line-number>]        Delete one or more tasks.
 
 EOF
@@ -63,29 +62,18 @@ view_list() {
 	echo ""
 }
 
-# Add a new task
+# Add new tasks
 # bash todo.sh t
 add_task() {
-	local new_task=$1
+	local task_str=$1
+	local div_regex="[[:space:]]*--[[:space:]]*"
 
-	while [[ -z $new_task ]]
+	while [[ -z $task_str ]]
 	do
-		read new_task
+		read task_str
 	done
 
-	echo $new_task >> $TODOTXT
-}
-
-# Add multiple tasks
-# bash todo.sh t+
-add_multiple_tasks() {
-	local task_str=""
-	local task_arr=()
-
-	read -d ";" task_str
-	IFS='\n' read -a task_arr <<< "$task_str"
-	#printf "%s\n" "${task_arr[@]}" >> $TODOTXT
-	echo $task_arr
+	echo $task_str | sed "s/$div_regex/\n/g" >> $TODOTXT
 }
 
 # Delete tasks
@@ -121,11 +109,6 @@ do
 		t)
 			shift 1
 			add_task "$*"
-			set --
-			;;
-		t+)
-			shift 1
-			add_multiple_tasks
 			set --
 			;;
 		del)
