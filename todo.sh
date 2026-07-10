@@ -15,11 +15,10 @@ usage() {
 Usage: bash todo.sh <command> [<args>]
 
 Commands:
-  t <task>
-    -m <task>
-	   <task>...;
-  li [done]
-  del [<line-number>]
+  li [done]                  View list of tasks.
+  t <task>                   Add new task.
+  t+ <tasks>... ;            Add multiple tasks.
+  del [<line-number>]        Delete one or more tasks.
 
 EOF
 	exit 0
@@ -64,33 +63,43 @@ view_list() {
 	echo ""
 }
 
-# Add a new todo
+# Add a new task
 # bash todo.sh t
-add_todo() {
-	local t_item=$1
-	local new_tasks=()
+add_task() {
+	local new_task=$1
 
-	while  [[ -z $t_item ]]
+	while [[ -z $new_task ]]
 	do
-		read t_item
+		read new_task
 	done
 
-	new_tasks+=$t_item
-	printf "%s\n" "${new_tasks[@]}" >> $TODOTXT
+	echo $new_task >> $TODOTXT
 }
 
-# Delete a todo
+# Add multiple tasks
+# bash todo.sh t+
+add_multiple_tasks() {
+	local task_str=""
+	local task_arr=()
+
+	read -d ";" task_str
+	IFS='\n' read -a task_arr <<< "$task_str"
+	#printf "%s\n" "${task_arr[@]}" >> $TODOTXT
+	echo $task_arr
+}
+
+# Delete tasks
 # bash todo.sh del
-#delete_todo() {}
+#delete_task() {}
 
-# Reword a todo
-#reword_todo() {}
+# Rewrite a task
+#rewrite_task() {}
 
-# Move a task from todo to done
-#todo_to_done() {}
+# Mark todo task as done
+#mark_as_done() {}
 
-# Move a task from done to todo
-#done_to_todo() {}
+# Mark done task as todo
+#mark_as_todo() {}
 
 
 
@@ -105,18 +114,23 @@ fi
 while [[ $# -gt 0 ]]
 do
 	case $1 in
-		t)
-			shift
-			add_todo "$*"
-			set --
-			;;
 		li)
 			view_list $2
 			set --
 			;;
+		t)
+			shift 1
+			add_task "$*"
+			set --
+			;;
+		t+)
+			shift 1
+			add_multiple_tasks
+			set --
+			;;
 		del)
-			shift
-			delete_todo "$@"
+			shift 1
+			delete_task "$@"
 			set --
 			;;
 		*)
