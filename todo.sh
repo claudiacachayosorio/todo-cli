@@ -40,7 +40,7 @@ DONETXT="./done.txt"
 # View list of tasks
 # bash todo.sh li
 view_list() {
-	local list_file=$TODOTXT
+	local li_file=$TODOTXT
 
 	if [[ -n $1 ]]
 	then
@@ -49,7 +49,7 @@ view_list() {
 
 		elif [[ $1 == "done" ]]
 		then
-			list_file=$DONETXT
+			li_file=$DONETXT
 
 		else
 			echo "error: '$1' is not a list option"
@@ -58,22 +58,22 @@ view_list() {
 	fi
 
 	echo ""
-	cat -n $list_file
+	cat -n $li_file
 	echo ""
 }
 
 # Add new tasks
 # bash todo.sh t
 add_task() {
-	local task_str=$1
-	local div_regex="[[:space:]]*--[[:space:]]*"
+	local t_input=$1
+	local t_dlm="[[:space:]]*--[[:space:]]*"
 
-	while [[ -z $task_str ]]
+	while [[ -z $t_input ]]
 	do
-		read task_str
+		read t_input
 	done
 
-	echo $task_str | sed "s/$div_regex/\n/g" >> $TODOTXT
+	echo $t_input | sed "s/$t_dlm/\n/g" >> $TODOTXT	
 }
 
 # Delete tasks
