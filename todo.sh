@@ -62,29 +62,44 @@ add_task() {
 
 # View list of tasks
 # bash todo.sh li
-# TODO: concat lists if both todo and done are passed as arguments
 # TODO: add argument to limit number of tasks displayed (ie: last 5 tasks)
 view_list() {
-	local li_file=$TODO_TXT
+	local li_names=("$@")
+	local li_name_i=""
 
-	if [[ -n $1 ]]
+	if [[ "${#li_names[@]}" -eq 0 ]]
 	then
-		if [[ $1 == "todo" ]]
-		then :
-
-		elif [[ $1 == "done" ]]
-		then
-			li_file=$DONE_TXT
-
-		else
-			echo "error: '$1' is not a list option"
-			return 1
-		fi
+		li_names=("todo")
 	fi
 
-	echo ""
-	cat -n $li_file
-	echo ""
+	for li_name_i in "${li_names[@]}"
+	do
+		if [[ "$li_name_i" == "todo" ]]
+		then
+			local li_todo_output=$(cat -n "$TODO_TXT")
+			cat <<- EOF
+
+			tasks to do:
+
+			$li_todo_output
+
+			EOF
+
+		elif [[ "$li_name_i" == "done" ]]
+		then
+			local li_done_output=$(cat -n "$DONE_TXT")
+			cat <<- EOF
+
+			tasks done:
+
+			$li_done_output
+
+			EOF
+
+		else
+			echo "error: '$li_name_i' is not a list option"
+		fi
+	done
 }
 
 # Delete tasks
@@ -110,11 +125,10 @@ case $1 in
 		add_task "$OPTIONS_STR"
 		;;
 	li)
-		view_list $2
+		view_list "${OPTIONS_ARR[@]}"
 		;;
 	del)
-		shift 1
-		delete_task "$@"
+		delete_task
 		;;
 	*)
 		usage
