@@ -47,7 +47,7 @@ add_task() {
 		read t_input
 	done
 
-	t_output=$(echo $t_input | sed "s/[[:space:]]*+[[:space:]]*/\n/g")
+	local t_output=$(echo $t_input | sed "s/[[:space:]]*+[[:space:]]*/\n/g")
 
 	printf "%s\n" "$t_output" >> $TODOTXT	\
 		&&	grep -xn "$t_output" $TODOTXT	\
