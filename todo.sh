@@ -28,9 +28,14 @@ EOF
 # Global variables
 # ===================================================================================== #
 
+# Arguments
+COMMAND=$1
+OPTIONS_ARR=("${@:2}")
+OPTIONS_STR="${*:2}"
+
 # Paths
-TODOTXT="./todo.txt"
-DONETXT="./done.txt"
+TODO_TXT="./todo.txt"
+DONE_TXT="./done.txt"
 
 
 
@@ -50,8 +55,8 @@ add_task() {
 
 	local t_output=$(echo $t_input | sed "s/$t_delim/\n/g")
 
-	printf "%s\n" "$t_output" >> $TODOTXT	\
-		&&	grep -xn "$t_output" $TODOTXT	\
+	printf "%s\n" "$t_output" >> $TODO_TXT	\
+		&&	grep -xn "$t_output" $TODO_TXT	\
 		|	awk -F':' '{ printf " + %3d  %s\n", $1, substr($0, index($0, ":") + 1) }'
 }
 
@@ -60,7 +65,7 @@ add_task() {
 # TODO: concat lists if both todo and done are passed as arguments
 # TODO: add argument to limit number of tasks displayed (ie: last 5 tasks)
 view_list() {
-	local li_file=$TODOTXT
+	local li_file=$TODO_TXT
 
 	if [[ -n $1 ]]
 	then
@@ -69,7 +74,7 @@ view_list() {
 
 		elif [[ $1 == "done" ]]
 		then
-			li_file=$DONETXT
+			li_file=$DONE_TXT
 
 		else
 			echo "error: '$1' is not a list option"
@@ -100,30 +105,18 @@ view_list() {
 # Parse arguments
 # ===================================================================================== #
 
-if [[ $# -eq 0 ]]
-then
-	usage
-fi
-
-while [[ $# -gt 0 ]]
-do
-	case $1 in
-		t)
-			shift 1
-			add_task "$*"
-			set --
-			;;
-		li)
-			view_list $2
-			set --
-			;;
-		del)
-			shift 1
-			delete_task "$@"
-			set --
-			;;
-		*)
-			usage
-			;;
-	esac
-done
+case $1 in
+	t)
+		add_task "$OPTIONS_STR"
+		;;
+	li)
+		view_list $2
+		;;
+	del)
+		shift 1
+		delete_task "$@"
+		;;
+	*)
+		usage
+		;;
+esac
