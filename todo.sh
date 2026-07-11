@@ -39,6 +39,8 @@ DONETXT="./done.txt"
 
 # Add new tasks
 # bash todo.sh t
+# TODO: make confirmation output conditional to if printf is successful (exit code)?
+# TODO: move confirmation output to separate function?
 add_task() {
 	local t_input=$1
 
@@ -59,6 +61,8 @@ add_task() {
 
 # View list of tasks
 # bash todo.sh li
+# TODO: concat lists if both todo and done are passed as arguments
+# TODO: add argument to limit number of tasks displayed (ie: last 5 tasks)
 view_list() {
 	local li_file=$TODOTXT
 
