@@ -39,8 +39,6 @@ DONETXT="./done.txt"
 
 # Add new tasks
 # bash todo.sh t
-# TODO: make confirmation output conditional to if printf is successful (exit code)?
-# TODO: move confirmation output to separate function?
 add_task() {
 	local t_input=$1
 
@@ -50,13 +48,10 @@ add_task() {
 	done
 
 	t_output=$(echo $t_input | sed "s/[[:space:]]*+[[:space:]]*/\n/g")
-	printf "%s\n" "$t_output" >> $TODOTXT
 
-	# Confirm new tasks added
-	grep -xn "$t_output" $TODOTXT |
-		awk -F':' '{
-			printf " + %3d  %s\n", $1, substr($0, index($0, ":") + 1)
-		}'
+	printf "%s\n" "$t_output" >> $TODOTXT	\
+		&&	grep -xn "$t_output" $TODOTXT	\
+		|	awk -F':' '{ printf " + %3d  %s\n", $1, substr($0, index($0, ":") + 1) }'
 }
 
 # View list of tasks
