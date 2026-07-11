@@ -41,13 +41,14 @@ DONETXT="./done.txt"
 # bash todo.sh t
 add_task() {
 	local t_input=$1
+	local t_delim="[[:space:]]*+[[:space:]]*"
 
 	while [[ -z $t_input ]]
 	do
 		read t_input
 	done
 
-	local t_output=$(echo $t_input | sed "s/[[:space:]]*+[[:space:]]*/\n/g")
+	local t_output=$(echo $t_input | sed "s/$t_delim/\n/g")
 
 	printf "%s\n" "$t_output" >> $TODOTXT	\
 		&&	grep -xn "$t_output" $TODOTXT	\
