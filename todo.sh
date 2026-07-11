@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ===================================================================================== #
-# todo.sh: A simple command-line todo list manager										#
+# todo-cli: a simple command line task manager											#
 # ===================================================================================== #
 
 
@@ -15,9 +15,9 @@ usage() {
 Usage: bash todo.sh <command> [<args>]
 
 Commands:
-  li [done]                  View list of tasks.
-  t <task> [--<tasks>...]    Add new tasks.
-  del [<line-number>]        Delete one or more tasks.
+  t <task> [+ <task> ...]    Add tasks.
+  li [todo | done]           View task list.
+  del <line-number ...>      Delete tasks.
 
 EOF
 	exit 0
@@ -36,6 +36,26 @@ DONETXT="./done.txt"
 
 # Core functions
 # ===================================================================================== #
+
+# Add new tasks
+# bash todo.sh t
+add_task() {
+	local t_input=$1
+
+	while [[ -z $t_input ]]
+	do
+		read t_input
+	done
+
+	t_output=$(echo $t_input | sed "s/[[:space:]]*+[[:space:]]*/\n/g")
+	printf "%s\n" "$t_output" >> $TODOTXT
+
+	# Confirm new tasks added
+	grep -xn "$t_output" $TODOTXT |
+		awk -F':' '{
+			printf " + %3d  %s\n", $1, substr($0, index($0, ":") + 1)
+		}'
+}
 
 # View list of tasks
 # bash todo.sh li
@@ -60,20 +80,6 @@ view_list() {
 	echo ""
 	cat -n $li_file
 	echo ""
-}
-
-# Add new tasks
-# bash todo.sh t
-add_task() {
-	local t_input=$1
-	local t_dlm="[[:space:]]*--[[:space:]]*"
-
-	while [[ -z $t_input ]]
-	do
-		read t_input
-	done
-
-	echo $t_input | sed "s/$t_dlm/\n/g" >> $TODOTXT	
 }
 
 # Delete tasks
@@ -102,13 +108,13 @@ fi
 while [[ $# -gt 0 ]]
 do
 	case $1 in
-		li)
-			view_list $2
-			set --
-			;;
 		t)
 			shift 1
 			add_task "$*"
+			set --
+			;;
+		li)
+			view_list $2
 			set --
 			;;
 		del)
