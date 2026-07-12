@@ -6,6 +6,7 @@
 
 
 
+
 # Usage
 # ===================================================================================== #
 
@@ -15,13 +16,18 @@ usage() {
 Usage: bash todo.sh <command> [<args>]
 
 Commands:
-  t <task> [+ <task> ...]    Add tasks.
-  v [todo | done]            View tasks.
-  del <line-number ...>      Delete tasks.
+  t <task-name> [+ <task-name> ...]
+  tl [{todo | done}[=<number-limit> | all] ...]
+  done <task-number> ...
+  undo <task-number> ...
+  del <task-number> ...
+  rew <task-number> <new-task-name>
+  help
 
 EOF
 	exit 0
 }
+
 
 
 
@@ -30,7 +36,7 @@ EOF
 
 # Arguments
 COMMAND=$1
-OPTIONS_ARR=("${@:2}")
+OPTIONS=("${@:2}")
 OPTIONS_STR="${*:2}"
 
 # Paths
@@ -39,19 +45,54 @@ DONE_TXT="./done.txt"
 
 
 
-# Helper functions
+
+# Core functions
 # ===================================================================================== #
 
-print_list() {
+# Add new tasks
+# bash todo.sh t
+
+add_task() {
+	# User input
+	local task_input=$1
+	local task_delim="[[:space:]]*+[[:space:]]*"
+
+	# If no tasks
+	while [[ -z $task_input ]]
+	do
+		# Prompt user input
+		read task_input
+	done
+
+	# Format tasks
+	local task_output=$(echo $task_input | sed "s/$task_delim/\n/g")
+
+	# Append tasks to txt file
+	printf "%s\n" "$task_output" >> $TODO_TXT	\
+		# If successful
+		&&	grep -xn "$task_output" $TODO_TXT	\
+		|	awk -F':' '{ printf " + %3d  %s\n", $1, substr($0, index($0, ":") + 1) }'
+}
+
+
+# View tasklist
+# bash todo.sh tl
+# TODO: add argument to limit number of tasks displayed (ie: last 5 tasks)
+
+print_tasklist() {
+	# If all required arguments
 	if [[ -n $1 && -n $2 ]]
 	then
-		local list_header=$1
+		# Required arguments
+		local header=$1
 		local file_path=$2
+		# Get list from txt file
 		local file_output=$(cat -n "$file_path")
 
+		# Formatted output
 		cat <<- EOF
 
-		$list_header
+		$header
 
 		$file_output
 
@@ -59,88 +100,83 @@ print_list() {
 	fi
 }
 
+tasklist_options() {
+	# Default options
+	local default="todo"
+	# Tasklist headers
+	local todo_header="tasks to do:"
+	local done_header="tasks done:"
 
-
-# Core functions
-# ===================================================================================== #
-
-# Add new tasks
-# bash todo.sh t
-add_task() {
-	local t_input=$1
-	local t_delim="[[:space:]]*+[[:space:]]*"
-
-	while [[ -z $t_input ]]
-	do
-		read t_input
-	done
-
-	local t_output=$(echo $t_input | sed "s/$t_delim/\n/g")
-
-	printf "%s\n" "$t_output" >> $TODO_TXT	\
-		&&	grep -xn "$t_output" $TODO_TXT	\
-		|	awk -F':' '{ printf " + %3d  %s\n", $1, substr($0, index($0, ":") + 1) }'
-}
-
-# View tasks
-# bash todo.sh v
-# TODO: add argument to limit number of tasks displayed (ie: last 5 tasks)
-view_tasks() {
-	local v_file_options=("$@")
-	local file_basename=""
-
-	if [[ "${#v_file_options[@]}" -eq 0 ]]
+	# If no options specified
+	if [[ $# -eq 0 ]]
 	then
-		v_file_options=("todo")
+		# Set to default
+		set -- "$@" "$default"
 	fi
 
-	for file_basename in "${v_file_options[@]}"
+	# Parse options
+	while [[ $# -gt 0 ]]
 	do
-		if [[ "$file_basename" == "todo" ]]
-		then
-			local list_header="tasks to do:"
-			print_list "$list_header" "$TODO_TXT"
+		case "$1" in
+			# Tasklist from todo.txt
+			todo|todo=*)
+				print_list "$todo_header" "$TODO_TXT"
+				shift
+				;;
 
-		elif [[ "$file_basename" == "done" ]]
-		then
-			local list_header="tasks done:"
-			print_list "$list_header" "$DONE_TXT"
+			# Tasklist from done.txt
+			done|done=*)
+				print_list "$done_header" "$DONE_TXT"
+				shift
+				;;
 
-		else
-			echo "error: '$file_basename' is not a valid input"
-		fi
+			# Invalid argument
+			*)
+				echo "error: '$1': invalid option"
+				return 1
+				;;
+		esac
 	done
 }
 
-# Delete tasks
-# bash todo.sh del
-#delete_task() {}
 
-# Rewrite a task
-#rewrite_task() {}
+# Mark task as done
+# bash todo.sh done
 
-# Mark todo task as done
 #mark_as_done() {}
 
-# Mark done task as todo
+
+# Mark task as todo
+# bash todo.sh undo
+
 #mark_as_todo() {}
 
 
+# Rewrite a task
+# bash todo.sh edit
 
-# Parse arguments
+#rewrite_task() {}
+
+
+# Delete tasks
+# bash todo.sh del
+
+#delete_task() {}
+
+
+
+
+# Point of entry
 # ===================================================================================== #
 
-case $1 in
-	t)
-		add_task "$OPTIONS_STR"
-		;;
-	v)
-		view_tasks "${OPTIONS_ARR[@]}"
-		;;
-	del)
-		delete_task
-		;;
-	*)
-		usage
-		;;
+# Parse arguments
+case $COMMAND in
+	t)		add_task "$OPTIONS_STR" ;;
+	tl)		tasklist_options "${OPTIONS[@]}" ;;
+	done)	mark_as_done "${OPTIONS[@]}" ;;
+	undo)	mark_as_todo "${OPTIONS[@]}" ;;
+	del)	delete_task "${OPTIONS[@]}" ;;
+	rew)	rewrite_task "${OPTIONS[@]}" ;;
+	help)	usage ;;
+	*)		echo "error: invalid command" ;;
 esac
