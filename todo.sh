@@ -39,6 +39,28 @@ DONE_TXT="./done.txt"
 
 
 
+# Helper functions
+# ===================================================================================== #
+
+print_list() {
+	if [[ -n $1 && -n $2 ]]
+	then
+		local list_header=$1
+		local file_path=$2
+		local file_output=$(cat -n "$file_path")
+
+		cat <<- EOF
+
+		$list_header
+
+		$file_output
+
+		EOF
+	fi
+}
+
+
+
 # Core functions
 # ===================================================================================== #
 
@@ -64,40 +86,28 @@ add_task() {
 # bash todo.sh v
 # TODO: add argument to limit number of tasks displayed (ie: last 5 tasks)
 view_tasks() {
-	local t_file_options=("$@")
-	local t_file_basename=""
+	local v_file_options=("$@")
+	local file_basename=""
 
-	if [[ "${#t_file_options[@]}" -eq 0 ]]
+	if [[ "${#v_file_options[@]}" -eq 0 ]]
 	then
-		t_file_options=("todo")
+		v_file_options=("todo")
 	fi
 
-	for t_file_basename in "${t_file_options[@]}"
+	for file_basename in "${v_file_options[@]}"
 	do
-		if [[ "$t_file_basename" == "todo" ]]
+		if [[ "$file_basename" == "todo" ]]
 		then
-			local t_file_output=$(cat -n "$TODO_TXT")
-			cat <<- EOF
+			local list_header="tasks to do:"
+			print_list "$list_header" "$TODO_TXT"
 
-			tasks to do:
-
-			$t_file_output
-
-			EOF
-
-		elif [[ "$t_file_basename" == "done" ]]
+		elif [[ "$file_basename" == "done" ]]
 		then
-			local t_file_output=$(cat -n "$DONE_TXT")
-			cat <<- EOF
-
-			tasks done:
-
-			$t_file_output
-
-			EOF
+			local list_header="tasks done:"
+			print_list "$list_header" "$DONE_TXT"
 
 		else
-			echo "error: '$t_file_basename' is not a valid input"
+			echo "error: '$file_basename' is not a valid input"
 		fi
 	done
 }
