@@ -16,7 +16,7 @@ Usage: bash todo.sh <command> [<args>]
 
 Commands:
   t <task> [+ <task> ...]    Add tasks.
-  li [todo | done]           View task list.
+  v [todo | done]            View tasks.
   del <line-number ...>      Delete tasks.
 
 EOF
@@ -60,44 +60,44 @@ add_task() {
 		|	awk -F':' '{ printf " + %3d  %s\n", $1, substr($0, index($0, ":") + 1) }'
 }
 
-# View list of tasks
-# bash todo.sh li
+# View tasks
+# bash todo.sh v
 # TODO: add argument to limit number of tasks displayed (ie: last 5 tasks)
-view_list() {
-	local li_names=("$@")
-	local li_name_i=""
+view_tasks() {
+	local t_file_options=("$@")
+	local t_file_basename=""
 
-	if [[ "${#li_names[@]}" -eq 0 ]]
+	if [[ "${#t_file_options[@]}" -eq 0 ]]
 	then
-		li_names=("todo")
+		t_file_options=("todo")
 	fi
 
-	for li_name_i in "${li_names[@]}"
+	for t_file_basename in "${t_file_options[@]}"
 	do
-		if [[ "$li_name_i" == "todo" ]]
+		if [[ "$t_file_basename" == "todo" ]]
 		then
-			local li_todo_output=$(cat -n "$TODO_TXT")
+			local t_file_output=$(cat -n "$TODO_TXT")
 			cat <<- EOF
 
 			tasks to do:
 
-			$li_todo_output
+			$t_file_output
 
 			EOF
 
-		elif [[ "$li_name_i" == "done" ]]
+		elif [[ "$t_file_basename" == "done" ]]
 		then
-			local li_done_output=$(cat -n "$DONE_TXT")
+			local t_file_output=$(cat -n "$DONE_TXT")
 			cat <<- EOF
 
 			tasks done:
 
-			$li_done_output
+			$t_file_output
 
 			EOF
 
 		else
-			echo "error: '$li_name_i' is not a list option"
+			echo "error: '$t_file_basename' is not a valid input"
 		fi
 	done
 }
@@ -124,8 +124,8 @@ case $1 in
 	t)
 		add_task "$OPTIONS_STR"
 		;;
-	li)
-		view_list "${OPTIONS_ARR[@]}"
+	v)
+		view_tasks "${OPTIONS_ARR[@]}"
 		;;
 	del)
 		delete_task
