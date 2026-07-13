@@ -7,26 +7,10 @@
 
 
 
-# Usage
+# Settings
 # ===================================================================================== #
 
-usage() {
-	cat << EOF
-
-Usage: bash todo.sh <command> [<args>]
-
-Commands:
-  add <task-name> [+ <task-name> ...]
-  list [{todo | done}[=<number-limit>] ...]
-  done <task-number> ...
-  undo <task-number> ...
-  delete <task-number> ...
-  edit <task-number> <new-name>
-  help
-
-EOF
-	exit 0
-}
+shopt -s extglob
 
 
 
@@ -43,6 +27,30 @@ OPTIONS_STR="${*:2}"
 TXT_DIR="./txt/"
 TODO_TXT="${TXT_DIR}todo.txt"
 DONE_TXT="${TXT_DIR}done.txt"
+
+
+
+
+# Usage
+# ===================================================================================== #
+
+usage() {
+	cat << EOF
+
+usage: bash todo.sh <command> [<args>]
+
+commands:
+  add <task-name> [+ <task-name> ...]
+  list [{todo | done}[=<number-limit>] ...]
+  done <task-number> ...
+  undo <task-number> ...
+  delete <task-number> ...
+  edit <task-number> <new-name>
+  help
+
+EOF
+	exit 0
+}
 
 
 
@@ -84,21 +92,41 @@ print_list() {
 	then
 		# Arguments
 		local option_str=$1
-		local header=$2
+		local list_title=$2
 
 		# Get list from txt file
 		local file_basename=$(tr -d '=0-9' <<< $option_str)
 		local file_path="${TXT_DIR}${file_basename}.txt"
 		local file_output=$(cat -n "$file_path")
 
-		# Get list length limit
+		# Get list length
+		local file_length=$(wc -l < $file_path)
 		local length_limit=$(tr -d 'a-z=' <<< $option_str)
 
-		# If length limit is specified
-		if [[ $length_limit =~ ^[0-9]+$ ]]
+		# If length_limit includes entire file
+		if [[ $length_limit -ge $file_length ]]
 		then
-			local file_output=$(tail -n "$length_limit" <<< "$file_output")
+			length_limit=""
 		fi
+
+		case $length_limit in
+			# If no limit
+			"")
+				local header="$list_title (ALL)"
+				;;
+
+			# If limit is specified
+			+([0-9]))
+				local header="$list_title (${length_limit} LATEST)"
+				file_output=$(tail -n "$length_limit" <<< "$file_output")
+				;;
+				
+			# Invalid input
+			*)
+				echo "error: '$length_limit' is not an integer"
+				return 1
+				;;
+		esac
 
 		# Formatted output
 		cat <<- EOF
@@ -127,19 +155,19 @@ list_tasks() {
 		case "$1" in
 			# Tasklist from todo.txt
 			todo|todo=*)
-				local header="tasks to do:"
-				print_list "$1" "$header"
+				local list_title="TASKS TO DO"
+				print_list "$1" "$list_title"
 				shift
 				;;
 
 			# Tasklist from done.txt
 			done|done=*)
-				local header="tasks done:"
-				print_list "$1" "$header"
+				local list_title="TASKS DONE"
+				print_list "$1" "$list_title"
 				shift
 				;;
 
-			# Invalid argument
+			# Invalid option
 			*)
 				echo "error: '$1': invalid option"
 				return 1
