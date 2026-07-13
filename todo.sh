@@ -24,9 +24,9 @@ OPTIONS=("${@:2}")
 OPTIONS_STR="${*:2}"
 
 # Paths
-TXT_DIR="./txt/"
-TODO_TXT="${TXT_DIR}todo.txt"
-DONE_TXT="${TXT_DIR}done.txt"
+DIR_TXT="./txt/"
+TODO_TXT="${DIR_TXT}todo.txt"
+DONE_TXT="${DIR_TXT}done.txt"
 
 
 
@@ -97,7 +97,7 @@ print_list() {
 
 		# Get list from txt file
 		local file_basename=$(tr -d '=0-9' <<< $option_str)
-		local file_path="${TXT_DIR}${file_basename}.txt"
+		local file_path="${DIR_TXT}${file_basename}.txt"
 		local file_output=$(cat -n "$file_path")
 
 		# Get list length
@@ -144,27 +144,26 @@ print_list() {
 }
 
 list_tasks() {
-	local default_options="todo"
 	local list_title=""
 
-	# If no options specified
+	# Default options
 	if [[ $# -eq 0 ]]
 	then
-		set -- "$@" "$default_options"
+		set -- "$@" "todo"
 	fi
 
 	# Parse options
 	while [[ $# -gt 0 ]]
 	do
 		case "$1" in
-			# Tasklist from todo.txt
+			# List from todo.txt
 			todo|todo=*)
 				list_title="TASKS TO DO"
 				print_list "$1" "$list_title"
 				shift
 				;;
 
-			# Tasklist from done.txt
+			# List from done.txt
 			done|done=*)
 				list_title="TASKS DONE"
 				print_list "$1" "$list_title"
@@ -173,7 +172,7 @@ list_tasks() {
 
 			# Invalid option
 			*)
-				echo "error: '$1': invalid option"
+				echo "error: '$1': invalid argument"
 				return 1
 				;;
 		esac
@@ -197,7 +196,50 @@ list_tasks() {
 # Delete tasks
 # bash todo.sh delete
 
-#delete_task() {}
+delete_task() {
+	local file_path=$1
+	local line_number=$2
+
+	echo "$1 line $2"
+}
+
+parse_delete() {
+	# Default path
+	local file_path="$TODO_TXT"
+
+	# If no arguments
+	while [[ -z $1 ]]
+	do
+		read -a options && set -- "${options[@]}"
+	done
+
+	while [[ $# -gt 0 ]]
+	do
+		case $1 in
+			todo|done)
+				if [[ -z $2 || ! $2 =~ ^[0-9]*$ ]]
+				then
+					echo "error: line number required"
+					return 1
+				else
+					file_path="${DIR_TXT}${1}.txt"
+					shift
+				fi
+				;;
+
+			+([0-9]))
+				delete_task $file_path $1
+				shift
+				;;
+
+			# Invalid input
+			*)
+				echo "error: '$1': invalid argument"
+				return 1
+				;;
+		esac
+	done
+}
 
 
 # Edit a task
@@ -219,6 +261,6 @@ case $COMMAND in
 	done)		mark_as_done "${OPTIONS[@]}" ;;
 	undo)		mark_as_todo "${OPTIONS[@]}" ;;
 	edit)		rewrite_task "${OPTIONS[@]}" ;;
-	delete)		delete_task "${OPTIONS[@]}" ;;
+	delete)		parse_delete "${OPTIONS[@]}" ;;
 	*)			echo "error: invalid command" ;;
 esac
