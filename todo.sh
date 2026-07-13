@@ -89,7 +89,6 @@ add_task() {
 # bash todo.sh list
 
 print_list() {
-	# If all required arguments
 	if [[ -n $1 && -n $2 ]]
 	then
 		local option_str=$1
@@ -131,13 +130,16 @@ print_list() {
 		esac
 
 		# Formatted output
-		cat <<- EOF
+		if [[ -n $file_output && -n $header ]]
+		then
+			cat <<- EOF
 
-		$header
+			$header
 
-		$file_output
+			$file_output
 
-		EOF
+			EOF
+		fi
 	fi
 }
 
