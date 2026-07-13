@@ -37,9 +37,10 @@ DONE_TXT="${TXT_DIR}done.txt"
 usage() {
 	cat << EOF
 
-usage: bash todo.sh <command> [<args>]
+USAGE
+  bash todo.sh <command> [<args>]
 
-commands:
+COMMANDS
   add <task-name> [+ <task-name> ...]
   list [{todo | done}[=<number-limit>] ...]
   done <task-number> ...
@@ -58,11 +59,12 @@ EOF
 # Functions
 # ===================================================================================== #
 
+# TODO: add today list?
+
 # Add new tasks
 # bash todo.sh add
 
 add_task() {
-	# User input
 	local task_input=$1
 	local task_delim="[[:space:]]*+[[:space:]]*"
 
@@ -90,9 +92,9 @@ print_list() {
 	# If all required arguments
 	if [[ -n $1 && -n $2 ]]
 	then
-		# Arguments
 		local option_str=$1
 		local list_title=$2
+		local header=""
 
 		# Get list from txt file
 		local file_basename=$(tr -d '=0-9' <<< $option_str)
@@ -112,12 +114,12 @@ print_list() {
 		case $length_limit in
 			# If no limit
 			"")
-				local header="$list_title (ALL)"
+				header="$list_title - ALL"
 				;;
 
 			# If limit is specified
 			+([0-9]))
-				local header="$list_title (${length_limit} LATEST)"
+				header="$list_title - $length_limit LATEST"
 				file_output=$(tail -n "$length_limit" <<< "$file_output")
 				;;
 				
@@ -140,13 +142,13 @@ print_list() {
 }
 
 list_tasks() {
-	# Default options
-	local default="todo"
+	local default_options="todo"
+	local list_title=""
 
 	# If no options specified
 	if [[ $# -eq 0 ]]
 	then
-		set -- "$@" "$default"
+		set -- "$@" "$default_options"
 	fi
 
 	# Parse options
@@ -155,14 +157,14 @@ list_tasks() {
 		case "$1" in
 			# Tasklist from todo.txt
 			todo|todo=*)
-				local list_title="TASKS TO DO"
+				list_title="TASKS TO DO"
 				print_list "$1" "$list_title"
 				shift
 				;;
 
 			# Tasklist from done.txt
 			done|done=*)
-				local list_title="TASKS DONE"
+				list_title="TASKS DONE"
 				print_list "$1" "$list_title"
 				shift
 				;;
@@ -179,6 +181,7 @@ list_tasks() {
 
 # Mark task as done
 # bash todo.sh done
+# TODO: add timestamp of when completed?
 
 #mark_as_done() {}
 
