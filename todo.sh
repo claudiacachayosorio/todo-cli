@@ -40,13 +40,14 @@ OPTIONS=("${@:2}")
 OPTIONS_STR="${*:2}"
 
 # Paths
-TODO_TXT="./todo.txt"
-DONE_TXT="./done.txt"
+TXT_DIR="./txt/"
+TODO_TXT="${TXT_DIR}todo.txt"
+DONE_TXT="${TXT_DIR}done.txt"
 
 
 
 
-# Core functions
+# Functions
 # ===================================================================================== #
 
 # Add new tasks
@@ -65,29 +66,39 @@ add_task() {
 	done
 
 	# Format tasks
-	local task_output=$(echo $task_input | sed "s/$task_delim/\n/g")
+	local task_output=$(sed "s/$task_delim/\n/g" <<< $task_input)
 
 	# Append tasks to txt file
 	printf "%s\n" "$task_output" >> $TODO_TXT	\
-		# If successful
 		&&	grep -xn "$task_output" $TODO_TXT	\
 		|	awk -F':' '{ printf " + %3d  %s\n", $1, substr($0, index($0, ":") + 1) }'
 }
 
 
-# View tasklist
+# View task list
 # bash todo.sh tl
-# TODO: add argument to limit number of tasks displayed (ie: last 5 tasks)
 
-print_tasklist() {
+print_list() {
 	# If all required arguments
 	if [[ -n $1 && -n $2 ]]
 	then
-		# Required arguments
-		local header=$1
-		local file_path=$2
+		# Arguments
+		local option_str=$1
+		local header=$2
+
 		# Get list from txt file
+		local file_basename=$(tr -d '=0-9' <<< $option_str)
+		local file_path="${TXT_DIR}${file_basename}.txt"
 		local file_output=$(cat -n "$file_path")
+
+		# Get list length limit
+		local length_limit=$(tr -d 'a-z=' <<< $option_str)
+
+		# If length limit is specified
+		if [[ $length_limit =~ ^[0-9]+$ ]]
+		then
+			local file_output=$(tail -n "$length_limit" <<< "$file_output")
+		fi
 
 		# Formatted output
 		cat <<- EOF
@@ -100,17 +111,13 @@ print_tasklist() {
 	fi
 }
 
-tasklist_options() {
+list_tasks() {
 	# Default options
 	local default="todo"
-	# Tasklist headers
-	local todo_header="tasks to do:"
-	local done_header="tasks done:"
 
 	# If no options specified
 	if [[ $# -eq 0 ]]
 	then
-		# Set to default
 		set -- "$@" "$default"
 	fi
 
@@ -120,13 +127,15 @@ tasklist_options() {
 		case "$1" in
 			# Tasklist from todo.txt
 			todo|todo=*)
-				print_list "$todo_header" "$TODO_TXT"
+				local header="tasks to do:"
+				print_list "$1" "$header"
 				shift
 				;;
 
 			# Tasklist from done.txt
 			done|done=*)
-				print_list "$done_header" "$DONE_TXT"
+				local header="tasks done:"
+				print_list "$1" "$header"
 				shift
 				;;
 
@@ -172,7 +181,7 @@ tasklist_options() {
 # Parse arguments
 case $COMMAND in
 	t)		add_task "$OPTIONS_STR" ;;
-	tl)		tasklist_options "${OPTIONS[@]}" ;;
+	tl)		list_tasks "${OPTIONS[@]}" ;;
 	done)	mark_as_done "${OPTIONS[@]}" ;;
 	undo)	mark_as_todo "${OPTIONS[@]}" ;;
 	del)	delete_task "${OPTIONS[@]}" ;;
