@@ -16,12 +16,12 @@ usage() {
 Usage: bash todo.sh <command> [<args>]
 
 Commands:
-  t <task-name> [+ <task-name> ...]
-  tl [{todo | done}[=<number-limit> | all] ...]
+  add <task-name> [+ <task-name> ...]
+  list [{todo | done}[=<number-limit>] ...]
   done <task-number> ...
   undo <task-number> ...
-  del <task-number> ...
-  rew <task-number> <new-task-name>
+  delete <task-number> ...
+  edit <task-number> <new-name>
   help
 
 EOF
@@ -51,7 +51,7 @@ DONE_TXT="${TXT_DIR}done.txt"
 # ===================================================================================== #
 
 # Add new tasks
-# bash todo.sh t
+# bash todo.sh add
 
 add_task() {
 	# User input
@@ -76,7 +76,7 @@ add_task() {
 
 
 # View task list
-# bash todo.sh tl
+# bash todo.sh list
 
 print_list() {
 	# If all required arguments
@@ -161,16 +161,16 @@ list_tasks() {
 #mark_as_todo() {}
 
 
-# Rewrite a task
-# bash todo.sh edit
-
-#rewrite_task() {}
-
-
 # Delete tasks
-# bash todo.sh del
+# bash todo.sh delete
 
 #delete_task() {}
+
+
+# Edit a task
+# bash todo.sh edit
+
+#edit_task() {}
 
 
 
@@ -180,12 +180,12 @@ list_tasks() {
 
 # Parse arguments
 case $COMMAND in
-	t)		add_task "$OPTIONS_STR" ;;
-	tl)		list_tasks "${OPTIONS[@]}" ;;
-	done)	mark_as_done "${OPTIONS[@]}" ;;
-	undo)	mark_as_todo "${OPTIONS[@]}" ;;
-	del)	delete_task "${OPTIONS[@]}" ;;
-	rew)	rewrite_task "${OPTIONS[@]}" ;;
-	help)	usage ;;
-	*)		echo "error: invalid command" ;;
+	help)		usage ;;
+	add)		add_task "$OPTIONS_STR" ;;
+	list)		list_tasks "${OPTIONS[@]}" ;;
+	done)		mark_as_done "${OPTIONS[@]}" ;;
+	undo)		mark_as_todo "${OPTIONS[@]}" ;;
+	edit)		rewrite_task "${OPTIONS[@]}" ;;
+	delete)		delete_task "${OPTIONS[@]}" ;;
+	*)			echo "error: invalid command" ;;
 esac
