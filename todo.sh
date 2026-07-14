@@ -200,7 +200,10 @@ delete_task() {
 	local file_path=$1
 	local line_number=$2
 
-	echo "$1 line $2"
+	echo "$file_path line $line_number"
+
+	# Get file length
+	# If line number isn't in file
 }
 
 parse_delete() {
@@ -216,6 +219,7 @@ parse_delete() {
 	while [[ $# -gt 0 ]]
 	do
 		case $1 in
+			# Change file path
 			todo|done)
 				if [[ -z $2 || ! $2 =~ ^[0-9]*$ ]]
 				then
@@ -227,6 +231,7 @@ parse_delete() {
 				fi
 				;;
 
+			# Main function
 			+([0-9]))
 				delete_task $file_path $1
 				shift
