@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # ===================================================================================== #
-# Description:		Adds tasks to txt file.
-# Synopsis:			bin/todo add <task> [+ <task> ...]
+# Description:		Delete tasks from txt file.
+# Synopsis:			bin/todo delete [<list-name>] <task-number> ...
 # ===================================================================================== #
 
 
@@ -10,6 +10,7 @@
 # Settings
 # ===================================================================================== #
 
+# Extended globbing
 shopt -s extglob
 
 
@@ -17,8 +18,8 @@ shopt -s extglob
 # Global variables
 # ===================================================================================== #
 
-DIR_TXT="${PROJECT_ROOT}/tests"
-TODO_TXT="${DIR_TXT}/todo.txt"
+readonly TXT_DIR="${PROJECT_ROOT}/tests"
+readonly TODO_TXT="${TXT_DIR}/todo.txt"
 
 
 
@@ -36,13 +37,13 @@ delete_task() {
 }
 
 parse_delete() {
-	# Default path
 	local file_path="$TODO_TXT"
+	local input
 
 	# If no arguments
 	while [[ -z $1 ]]
 	do
-		read -a options && set -- "${options[@]}"
+		read -a input && set -- "${input[@]}"
 	done
 
 	while [[ $# -gt 0 ]]
@@ -52,10 +53,10 @@ parse_delete() {
 			todo|done)
 				if [[ -z $2 || ! $2 =~ ^[0-9]*$ ]]
 				then
-					echo "error: line number required"
+					echo "error: '${1}.txt': task number required"
 					return 1
 				else
-					file_path="${DIR_TXT}${1}.txt"
+					file_path="${TXT_DIR}/${1}.txt"
 					shift
 				fi
 				;;

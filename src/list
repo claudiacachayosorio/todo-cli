@@ -10,6 +10,7 @@
 # Settings
 # ===================================================================================== #
 
+# Extended globbing
 shopt -s extglob
 
 
@@ -17,7 +18,7 @@ shopt -s extglob
 # Global variables
 # ===================================================================================== #
 
-DIR_TXT="${PROJECT_ROOT}/tests"
+readonly TXT_DIR="${PROJECT_ROOT}/tests"
 
 
 
@@ -25,63 +26,74 @@ DIR_TXT="${PROJECT_ROOT}/tests"
 # ===================================================================================== #
 
 print_list() {
-	if [[ -n $1 && -n $2 ]]
+	# If an argument is missing
+	if [[ -z $1 || -z $2 ]]
 	then
-		local option_str=$1
-		local list_title=$2
-		local header=""
+		return 1
+	fi
 
-		# Get list from txt file
-		local file_basename=$(tr -d '=0-9' <<< $option_str)
-		local file_path="${DIR_TXT}/${file_basename}.txt"
-		local file_output=$(cat -n "$file_path")
+	# Arguments
+	local option_str=$1
+	local list_title=$2
+	# Metadata variables
+	local list_length
+	local list_name
+	local file_path
+	local file_lengthS
+	# Output variables
+	local header
+	local file_output
 
-		# Get list length
-		local file_length=$(wc -l < $file_path)
-		local length_limit=$(tr -d 'a-z=' <<< $option_str)
+	# Options from input
+	list_name=$(tr -d '=0-9' <<< $option_str)
+	list_length=$(tr -d 'a-z=' <<< $option_str)
 
-		# If length_limit includes entire file
-		if [[ $length_limit -ge $file_length ]]
-		then
-			length_limit=""
-		fi
+	# File metadata
+	file_path="${TXT_DIR}/${list_name}.txt"
+	file_length=$(wc -l < $file_path)
 
-		case $length_limit in
-			# If no limit
-			"")
-				header="$list_title - ALL"
-				;;
+	# Get list from file
+	file_output=$(cat -n "$file_path")
 
-			# If limit is specified
-			+([0-9]))
-				header="$list_title - $length_limit LATEST"
-				file_output=$(tail -n "$length_limit" <<< "$file_output")
-				;;
-				
-			# Invalid input
-			*)
-				echo "error: '$length_limit' is not an integer"
-				return 1
-				;;
-		esac
+	# If list length encompasses entire file
+	if [[ $list_length -ge $file_length ]]
+	then
+		list_length=""
+	fi
 
-		# Formatted output
-		if [[ -n $file_output && -n $header ]]
-		then
-			cat <<- EOF
+	case $list_length in
+		# If no length input
+		"")
+			header="$list_title - ALL"
+			;;
 
-			$header
+		# If length is specified
+		+([0-9]))
+			header="$list_title - $list_length LATEST"
+			file_output=$(tail -n "$list_length" <<< "$file_output")
+			;;
 
-			$file_output
+		# Invalid input
+		*)
+			echo "error: '$list_length' is not an integer"
+			return 1
+			;;
+	esac
 
-			EOF
-		fi
+	# Formatted output
+	if [[ -n $file_output && -n $header ]]
+	then
+		cat <<- EOF
+
+		$header
+
+		$list_from_file
+
+		EOF
 	fi
 }
 
 list_tasks() {
-	local list_title=""
-
 	# Default options
 	if [[ $# -eq 0 ]]
 	then
@@ -94,14 +106,14 @@ list_tasks() {
 		case "$1" in
 			# List from todo.txt
 			todo|todo=*)
-				list_title="TASKS TO DO"
+				local list_title="TASKS TO DO"
 				print_list "$1" "$list_title"
 				shift
 				;;
 
 			# List from done.txt
 			done|done=*)
-				list_title="TASKS DONE"
+				local list_title="TASKS DONE"
 				print_list "$1" "$list_title"
 				shift
 				;;

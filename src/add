@@ -10,32 +10,30 @@
 # Global variables
 # ===================================================================================== #
 
-DIR_TXT="${PROJECT_ROOT}/tests"
-TODO_TXT="${DIR_TXT}/todo.txt"
-DONE_TXT="${DIR_TXT}/done.txt"
+readonly TXT_DIR="${PROJECT_ROOT}/tests"
+readonly TODO_TXT="${TXT_DIR}/todo.txt"
 
 
 
-# Main logic
+# Functions
 # ===================================================================================== #
 
-add_task() {
-	local task_input=$1
-	local task_delim="[[:space:]]*+[[:space:]]*"
+add_tasks() {
+	local input_str="$*"
+	local new_tasks
 
 	# If no tasks
-	while [[ -z $task_input ]]
+	while [[ -z $input_str ]]
 	do
-		# Prompt user input
-		read task_input
+		read input_str
 	done
 
 	# Format tasks
-	local task_output=$(sed "s/$task_delim/\n/g" <<< $task_input)
+	new_tasks=$(sed "s/[[:space:]]*+[[:space:]]*/\n/g" <<< $input_str)
 
 	# Append tasks to txt file
-	printf "%s\n" "$task_output" >> $TODO_TXT	\
-		&&	grep -xn "$task_output" $TODO_TXT	\
+	printf "%s\n" "$new_tasks" >> $TODO_TXT	\
+		&&	grep -xn "$new_tasks" $TODO_TXT	\
 		|	awk -F':' '{ printf " + %3d  %s\n", $1, substr($0, index($0, ":") + 1) }'
 }
 
@@ -44,4 +42,4 @@ add_task() {
 # Point of entry
 # ===================================================================================== #
 
-add_task "$*"
+add_tasks "$@"
