@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# ===================================================================================== #
+# Description:		Adds tasks to txt file.
+# Synopsis:			bin/todo add <task> [+ <task> ...]
+# ===================================================================================== #
+
+
+
+# Global variables
+# ===================================================================================== #
+
+DIR_TXT="${PROJECT_ROOT}/tests"
+TODO_TXT="${DIR_TXT}/todo.txt"
+DONE_TXT="${DIR_TXT}/done.txt"
+
+
+
+# Main logic
+# ===================================================================================== #
+
+add_task() {
+	local task_input=$1
+	local task_delim="[[:space:]]*+[[:space:]]*"
+
+	# If no tasks
+	while [[ -z $task_input ]]
+	do
+		# Prompt user input
+		read task_input
+	done
+
+	# Format tasks
+	local task_output=$(sed "s/$task_delim/\n/g" <<< $task_input)
+
+	# Append tasks to txt file
+	printf "%s\n" "$task_output" >> $TODO_TXT	\
+		&&	grep -xn "$task_output" $TODO_TXT	\
+		|	awk -F':' '{ printf " + %3d  %s\n", $1, substr($0, index($0, ":") + 1) }'
+}
+
+
+
+# Point of entry
+# ===================================================================================== #
+
+add_task "$*"

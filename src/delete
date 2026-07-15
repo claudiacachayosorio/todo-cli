@@ -1,0 +1,83 @@
+#!/bin/bash
+
+# ===================================================================================== #
+# Description:		Adds tasks to txt file.
+# Synopsis:			bin/todo add <task> [+ <task> ...]
+# ===================================================================================== #
+
+
+
+# Settings
+# ===================================================================================== #
+
+shopt -s extglob
+
+
+
+# Global variables
+# ===================================================================================== #
+
+DIR_TXT="${PROJECT_ROOT}/tests"
+TODO_TXT="${DIR_TXT}/todo.txt"
+
+
+
+# Main logic
+# ===================================================================================== #
+
+delete_task() {
+	local file_path=$1
+	local line_number=$2
+
+	echo "$file_path line $line_number"
+
+	# Get file length
+	# If line number isn't in file
+}
+
+parse_delete() {
+	# Default path
+	local file_path="$TODO_TXT"
+
+	# If no arguments
+	while [[ -z $1 ]]
+	do
+		read -a options && set -- "${options[@]}"
+	done
+
+	while [[ $# -gt 0 ]]
+	do
+		case $1 in
+			# Change file path
+			todo|done)
+				if [[ -z $2 || ! $2 =~ ^[0-9]*$ ]]
+				then
+					echo "error: line number required"
+					return 1
+				else
+					file_path="${DIR_TXT}${1}.txt"
+					shift
+				fi
+				;;
+
+			# Main function
+			+([0-9]))
+				delete_task $file_path $1
+				shift
+				;;
+
+			# Invalid input
+			*)
+				echo "error: '$1': invalid argument"
+				return 1
+				;;
+		esac
+	done
+}
+
+
+
+# Point of entry
+# ===================================================================================== #
+
+parse_delete "$@"

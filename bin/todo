@@ -1,0 +1,62 @@
+#!/bin/bash
+
+# ===================================================================================== #
+# Description:		Parses commands to manage task lists.
+# Synopsis:			bin/todo <command> [<args>]
+# ===================================================================================== #
+
+
+
+# Global variables
+# ===================================================================================== #
+
+BIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export PROJECT_ROOT="$(cd "$BIN_DIR/.." && pwd)"
+
+
+
+# Main logic
+# ===================================================================================== #
+
+execute_command() {
+	local command=$1
+	local script="${PROJECT_ROOT}/src/${command}"
+
+	if [[ -f "$script" ]]
+	then
+		shift
+		source "$script" "$@"
+
+	else
+		echo "error: '$command': command not found"
+		exit 1
+	fi
+}
+
+usage() {
+	cat << EOF
+
+USAGE
+  bash todo.sh <command> [<args>]
+
+COMMANDS
+  add <task-name> [+ <task-name> ...]
+  list [<list-name>[=<number-limit>] ...]
+  done <task-number> ...
+  undo <task-number> ...
+  delete <task-number> ...
+  edit <task-number> <new-name>
+
+EOF
+	exit 0
+}
+
+
+
+# Point of entry
+# ===================================================================================== #
+
+case $1 in
+	""|help)	usage ;;
+	*)			execute_command "$@" ;;
+esac
