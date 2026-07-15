@@ -15,14 +15,6 @@ shopt -s extglob
 
 
 
-# Global variables
-# ===================================================================================== #
-
-readonly TXT_DIR="${PROJECT_ROOT}/tests"
-readonly TODO_TXT="${TXT_DIR}/todo.txt"
-
-
-
 # Main logic
 # ===================================================================================== #
 
@@ -37,12 +29,13 @@ delete_task() {
 }
 
 parse_delete() {
+	# Default
 	local file_path="$TODO_TXT"
-	local input
 
 	# If no arguments
 	while [[ -z $1 ]]
 	do
+		local input
 		read -a input && set -- "${input[@]}"
 	done
 
@@ -56,7 +49,7 @@ parse_delete() {
 					echo "error: '${1}.txt': task number required"
 					return 1
 				else
-					file_path="${TXT_DIR}/${1}.txt"
+					file_path="${DATA_DIR}/${1}.txt"
 					shift
 				fi
 				;;

@@ -15,13 +15,6 @@ shopt -s extglob
 
 
 
-# Global variables
-# ===================================================================================== #
-
-readonly TXT_DIR="${PROJECT_ROOT}/tests"
-
-
-
 # Main logic
 # ===================================================================================== #
 
@@ -49,7 +42,7 @@ print_list() {
 	list_length=$(tr -d 'a-z=' <<< $option_str)
 
 	# File metadata
-	file_path="${TXT_DIR}/${list_name}.txt"
+	file_path="${DATA_DIR}/${list_name}.txt"
 	file_length=$(wc -l < $file_path)
 
 	# Get list from file
@@ -87,7 +80,7 @@ print_list() {
 
 		$header
 
-		$list_from_file
+		$file_output
 
 		EOF
 	fi

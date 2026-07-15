@@ -12,16 +12,18 @@
 
 readonly BIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-declare -grx PROJECT_ROOT="$(cd "$BIN_DIR/.." && pwd)"
+declare -grx APP_ROOT="$(cd "${BIN_DIR}/.." && pwd)"
+declare -grx DATA_DIR="${APP_ROOT}/txt"
+declare -grx TODO_TXT="${DATA_DIR}/todo.txt"
 
 
 
 # Main logic
 # ===================================================================================== #
 
-exec_subcommand() {
-	local subcommand=$1
-	local script="${PROJECT_ROOT}/src/${subcommand}"
+execute_subcommand() {
+	local subcommand="$1"
+	local script="${APP_ROOT}/src/${subcommand}"
 
 	if [[ -f "$script" ]]
 	then
@@ -29,7 +31,7 @@ exec_subcommand() {
 		source "$script" "$@"
 
 	else
-		echo "error: '$subcommand': command not found"
+		echo "error: '${subcommand}': command not found"
 		exit 1
 	fi
 }
@@ -59,5 +61,5 @@ EOF
 
 case $1 in
 	""|help)	usage ;;
-	*)			subcommand "$@" ;;
+	*)			execute_subcommand "$@" ;;
 esac
