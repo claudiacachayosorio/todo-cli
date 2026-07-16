@@ -10,7 +10,6 @@
 # Settings
 # ===================================================================================== #
 
-# Extended globbing
 shopt -s extglob
 
 
@@ -18,55 +17,61 @@ shopt -s extglob
 # Main logic
 # ===================================================================================== #
 
-delete_task() {
-	local file_path=$1
-	local line_number=$2
-
-	echo "$file_path line $line_number"
-
-	# Get file length
-	# If line number isn't in file
-}
-
-parse_delete() {
-	# Default
-	local file_path="$TODO_TXT"
-
-	# If no arguments
+delete_tasks() {
+	# If no parameters
 	while [[ -z $1 ]]
 	do
 		local input
 		read -a input && set -- "${input[@]}"
 	done
 
-	while [[ $# -gt 0 ]]
+	local total_deleted_lines=$#
+	local file_path="$TODO_TXT"
+
+	local line_count
+	local line_count_reduced
+	local line_count_result
+
+	if [[ $1 =~ ^[a-z]+$ ]]
+	then
+		file_path="${DATA_DIR}/${1}.txt"
+
+		if [[ ! -f "$file_path" ]]
+		then
+			echo "error: '${1}.txt': file not found"
+			return 1
+		fi
+
+		shift
+	fi
+
+	line_count=$(wc -l < $file_path)
+
+	local line_number
+	for line_number in "$@"
 	do
-		case $1 in
-			# Change file path
-			todo|done)
-				if [[ -z $2 || ! $2 =~ ^[0-9]*$ ]]
-				then
-					echo "error: '${1}.txt': task number required"
-					return 1
-				else
-					file_path="${DATA_DIR}/${1}.txt"
-					shift
-				fi
-				;;
+		if [[ ! $line_number =~ ^[0-9]+$ ]]
+		then
+			echo "error: '${line_number}' is not an integer"
+			return 1
 
-			# Main function
-			+([0-9]))
-				delete_task $file_path $1
-				shift
-				;;
+		elif [[ $line_number -eq 0 || $line_number -gt $line_count ]]
+		then
+			echo "error: line ${line_number} not found"
+			return 1
 
-			# Invalid input
-			*)
-				echo "error: '$1': invalid argument"
-				return 1
-				;;
-		esac
+		else
+			sed -i "${line_number}d" "$file_path"
+		fi
 	done
+
+	line_count_reduced=$(( line_count - total_lines ))
+	line_count_result=$( wc -l < $file_path )
+
+	if [[ $line_count_result -ne $line_count_reduced ]]
+	then
+		return 1
+	fi
 }
 
 
@@ -74,4 +79,4 @@ parse_delete() {
 # Point of entry
 # ===================================================================================== #
 
-parse_delete "$@"
+delete_tasks "$@"
