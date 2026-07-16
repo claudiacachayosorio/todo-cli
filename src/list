@@ -2,7 +2,7 @@
 
 # ===================================================================================== #
 # Description:		Prints list of tasks.
-# Synopsis:			bin/todo list [<list-name>][=<number-limit>] ...
+# Synopsis:			bin/todo list [<list-name>] [<task-count>]
 # ===================================================================================== #
 
 
@@ -10,7 +10,6 @@
 # Settings
 # ===================================================================================== #
 
-# Extended globbing
 shopt -s extglob
 
 
@@ -38,15 +37,15 @@ print_list() {
 	local file_output
 
 	# Options from input
-	list_name=$(tr -d '=0-9' <<< $option_str)
-	list_length=$(tr -d 'a-z=' <<< $option_str)
+	list_name=$( tr -d '=0-9' <<< $option_str )
+	list_length=$( tr -d 'a-z=' <<< $option_str )
 
 	# File metadata
 	file_path="${DATA_DIR}/${list_name}.txt"
-	file_length=$(wc -l < $file_path)
+	file_length=$( wc -l < $file_path )
 
 	# Get list from file
-	file_output=$(cat -n "$file_path")
+	file_output=$( cat -n "$file_path" )
 
 	# If list length encompasses entire file
 	if [[ $list_length -ge $file_length ]]
@@ -63,7 +62,7 @@ print_list() {
 		# If length is specified
 		+([0-9]))
 			header="$list_title - $list_length LATEST"
-			file_output=$(tail -n "$list_length" <<< "$file_output")
+			file_output=$( tail -n "$list_length" <<< "$file_output" )
 			;;
 
 		# Invalid input
@@ -87,35 +86,34 @@ print_list() {
 }
 
 list_tasks() {
-	# Default options
-	if [[ $# -eq 0 ]]
+	if [[ $# -gt 2 ]]
 	then
-		set -- "$@" "todo"
+		echo "error: too many arguments"
+		return 1
 	fi
 
-	# Parse options
+	local file_path="$TODO_TXT"
+	local task_count="all"
+
 	while [[ $# -gt 0 ]]
 	do
 		case "$1" in
-			# List from todo.txt
-			todo|todo=*)
-				local list_title="TASKS TO DO"
-				print_list "$1" "$list_title"
-				shift
-				;;
+			+([0-9]) | all)
+				task_count=$1
+				shift ;;
 
-			# List from done.txt
-			done|done=*)
-				local list_title="TASKS DONE"
-				print_list "$1" "$list_title"
-				shift
-				;;
+			+([a-z]))
+				file_path="${DATA_DIR}/${1}.txt"
+				if [[ ! -f $file_path ]]
+				then
+					echo "error: '${1}.txt': file not found"
+					return 1
+				fi
+				shift ;;
 
-			# Invalid option
 			*)
-				echo "error: '$1': invalid argument"
-				return 1
-				;;
+				echo "error: '${1}': invalid argument"
+				return 1 ;;
 		esac
 	done
 }

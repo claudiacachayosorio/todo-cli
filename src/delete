@@ -18,7 +18,7 @@ shopt -s extglob
 # ===================================================================================== #
 
 delete_tasks() {
-	# If no parameters
+	# If no parameters // TO BE REMOVED
 	while [[ -z $1 ]]
 	do
 		local input
