@@ -18,12 +18,11 @@ shopt -s extglob
 # ===================================================================================== #
 
 delete_tasks() {
-	# If no parameters // TO BE REMOVED
-	while [[ -z $1 ]]
-	do
-		local input
-		read -a input && set -- "${input[@]}"
-	done
+	if [[ $# -eq 0 ]]
+	then
+		echo "error: argument required"
+		exit 1
+	fi
 
 	local total_deleted_lines=$#
 	local file_path="$TODO_TXT"

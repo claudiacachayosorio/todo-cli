@@ -11,14 +11,14 @@
 # ===================================================================================== #
 
 add_tasks() {
+	if [[ $# -eq 0 ]]
+	then
+		echo "error: argument required"
+		exit 1
+	fi
+
 	local input_str="$*"
 	local new_tasks
-
-	# If no tasks
-	while [[ -z $input_str ]]
-	do
-		read input_str
-	done
 
 	# Format tasks
 	new_tasks=$(sed "s/[[:space:]]*+[[:space:]]*/\n/g" <<< $input_str)
