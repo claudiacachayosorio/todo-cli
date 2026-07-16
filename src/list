@@ -2,7 +2,7 @@
 
 # ===================================================================================== #
 # Description:		Prints list of tasks.
-# Synopsis:			bin/todo list [<list-name>] [<task-count>]
+# Synopsis:			bin/todo list [<list-name>] [<list-length>]
 # ===================================================================================== #
 
 
@@ -17,74 +17,6 @@ shopt -s extglob
 # Main logic
 # ===================================================================================== #
 
-print_list() {
-	# If an argument is missing
-	if [[ -z $1 || -z $2 ]]
-	then
-		return 1
-	fi
-
-	# Arguments
-	local option_str=$1
-	local list_title=$2
-	# Metadata variables
-	local list_length
-	local list_name
-	local file_path
-	local file_lengthS
-	# Output variables
-	local header
-	local file_output
-
-	# Options from input
-	list_name=$( tr -d '=0-9' <<< $option_str )
-	list_length=$( tr -d 'a-z=' <<< $option_str )
-
-	# File metadata
-	file_path="${DATA_DIR}/${list_name}.txt"
-	file_length=$( wc -l < $file_path )
-
-	# Get list from file
-	file_output=$( cat -n "$file_path" )
-
-	# If list length encompasses entire file
-	if [[ $list_length -ge $file_length ]]
-	then
-		list_length=""
-	fi
-
-	case $list_length in
-		# If no length input
-		"")
-			header="$list_title - ALL"
-			;;
-
-		# If length is specified
-		+([0-9]))
-			header="$list_title - $list_length LATEST"
-			file_output=$( tail -n "$list_length" <<< "$file_output" )
-			;;
-
-		# Invalid input
-		*)
-			echo "error: '$list_length' is not an integer"
-			return 1
-			;;
-	esac
-
-	# Formatted output
-	if [[ -n $file_output && -n $header ]]
-	then
-		cat <<- EOF
-
-		$header
-
-		$file_output
-
-		EOF
-	fi
-}
-
 list_tasks() {
 	if [[ $# -gt 2 ]]
 	then
@@ -92,23 +24,27 @@ list_tasks() {
 		return 1
 	fi
 
-	local file_path="$TODO_TXT"
-	local task_count="all"
+	local list_name="todo"
+	local list_length=""
+
+	local file_path
+	local file_length
+	local file_output
+	local header
 
 	while [[ $# -gt 0 ]]
 	do
 		case "$1" in
-			+([0-9]) | all)
-				task_count=$1
+			0)
+				echo "error: list length must be a positive integer"
+				return 1 ;;
+
+			+([0-9]))
+				list_length=$1
 				shift ;;
 
 			+([a-z]))
-				file_path="${DATA_DIR}/${1}.txt"
-				if [[ ! -f $file_path ]]
-				then
-					echo "error: '${1}.txt': file not found"
-					return 1
-				fi
+				list_name=$1
 				shift ;;
 
 			*)
@@ -116,6 +52,45 @@ list_tasks() {
 				return 1 ;;
 		esac
 	done
+
+	file_path="${DATA_DIR}/${list_name}.txt"
+
+	if [[ ! -f $file_path ]]
+	then
+		echo "error: '${list_name}.txt': file not found"
+		return 1
+	fi
+
+	file_length=$( wc -l < $file_path )
+
+	if [[ $list_length -ge $file_length ]]
+	then
+		list_length=""
+	fi
+
+	case "$list_name" in
+		todo)	header="TASKS TO DO" ;;
+		done)	header="TASKS DONE" ;;
+		*)		header="${^^list_name} TASKS" ;;
+	esac
+
+	file_output=$( cat -n "$file_path" )
+
+	if [[ $list_length =~ ^[0-9]+$ ]]
+	then
+		header+=" | RECENTLY ADDED (${list_length})"
+		file_output=$( tail -n "$list_length" <<< "$file_output" )
+	else
+		header+=" | *"
+	fi
+
+	cat <<- EOF
+
+	$header
+
+	$file_output
+
+	EOF
 }
 
 
