@@ -10,36 +10,34 @@
 # Settings
 # ===================================================================================== #
 
+set -euo pipefail
 shopt -s extglob
 
 
 
-# Main logic
+# Functions
 # ===================================================================================== #
 
-list_tasks() {
+check_arg_count() {
 	if [[ $# -gt 2 ]]
 	then
 		echo "error: too many arguments"
 		return 1
 	fi
+}
 
-	local list_name="todo"
-	local list_length=""
-
-	local file_path
-	local file_length
-	local file_output
-	local header
+parse_args() {
+	list_name="todo"
+	list_length="all"
 
 	while [[ $# -gt 0 ]]
 	do
 		case "$1" in
 			0)
-				echo "error: list length must be a positive integer"
+				echo "error: '${1}': list length must be a positive integer"
 				return 1 ;;
 
-			+([0-9]))
+			+([0-9]) | all)
 				list_length=$1
 				shift ;;
 
@@ -52,45 +50,101 @@ list_tasks() {
 				return 1 ;;
 		esac
 	done
+}
 
-	file_path="${DATA_DIR}/${list_name}.txt"
-
-	if [[ ! -f $file_path ]]
+validate_path() {
+	if [[ ! -f $list_path ]]
 	then
 		echo "error: '${list_name}.txt': file not found"
 		return 1
 	fi
+}
 
-	file_length=$( wc -l < $file_path )
+validate_length() {
+	local path="$1"
+	local set_length=$2
 
-	if [[ $list_length -ge $file_length ]]
+	local file_length
+	file_length=$( wc -l < "$path" )
+
+	if [[ $set_length -ge $file_length ]]
 	then
-		list_length=""
+		set_length="all"
 	fi
 
-	case "$list_name" in
-		todo)	header="TASKS TO DO" ;;
-		done)	header="TASKS DONE" ;;
-		*)		header="${^^list_name} TASKS" ;;
+	echo $set_length
+}
+
+get_list() {
+	local path="$1"
+	local length=$2
+	local output
+
+	output=$( cat -n "$path" )
+
+	if [[ $length =~ ^[0-9]+$ ]]
+	then
+		output=$( tail -n "$length" <<< "$output")
+	fi
+
+	echo "$output"
+}
+
+get_header() {
+	local name="$1"
+	local length=$2
+	local output
+
+	case "$name" in
+		todo)		output="TASKS TO DO" ;;
+		done)		output="TASKS DONE" ;;
+		*)			output="${^^name} TASKS" ;;
 	esac
 
-	file_output=$( cat -n "$file_path" )
+	case $length in
+		+([0-9]))	output+=" | RECENTLY ADDED (${length})" ;;
+		all)		output+=" | *" ;;
+		*)			return 1 ;;
+	esac
 
-	if [[ $list_length =~ ^[0-9]+$ ]]
-	then
-		header+=" | RECENTLY ADDED (${list_length})"
-		file_output=$( tail -n "$list_length" <<< "$file_output" )
-	else
-		header+=" | *"
-	fi
+	echo "$output"
+}
+
+print_list() {
+	local list="$1"
+	local header="$2"
 
 	cat <<- EOF
 
 	$header
 
-	$file_output
+	$list
 
 	EOF
+}
+
+main() {
+	check_arg_count "$@"
+
+	local list_name
+	local list_length
+	parse_args "$@"
+
+	local list_path="${DATA_DIR}/${list_name}.txt"
+	validate_path
+
+	if [[ $list_length =~ ^[0-9]+$ ]]
+	then
+		list_length=$( validate_length "$list_path" $list_length )
+	fi
+
+	local list_content
+	list_content=$( get_list "$list_path" $list_length )
+
+	local list_header
+	list_header=$( get_header "$list_name" $list_length )
+
+	print_list "$list_content" "$list_header"
 }
 
 
@@ -98,4 +152,4 @@ list_tasks() {
 # Point of entry
 # ===================================================================================== #
 
-list_tasks "$@"
+main "$@"
