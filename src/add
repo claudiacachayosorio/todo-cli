@@ -2,31 +2,73 @@
 
 # ===================================================================================== #
 # Description:		Adds tasks to txt file.
-# Synopsis:			bin/todo add <task> [+ <task> ...]
+# Synopsis:			bin/todo add [+<list-name>] <task>
 # ===================================================================================== #
 
 
 
-# Main logic
+# Settings
 # ===================================================================================== #
 
-add_tasks() {
+set -euo pipefail
+
+
+
+# Functions
+# ===================================================================================== #
+
+check_arg_count() {
 	if [[ $# -eq 0 ]]
 	then
 		echo "error: argument required"
-		exit 1
+		return 1
+	fi
+}
+
+get_list() {
+	local list="todo"
+
+	if [[ "$1" =~ ^\+[a-z]+$ ]]
+	then
+		list=${1#\+}
+		shift
 	fi
 
-	local input_str="$*"
-	local new_tasks
+	echo "$list"
+}
 
-	# Format tasks
-	new_tasks=$(sed "s/[[:space:]]*+[[:space:]]*/\n/g" <<< $input_str)
+validate_path() {
+	local path="$1"
+	local name="$2"
 
-	# Append tasks to txt file
-	printf "%s\n" "$new_tasks" >> $TODO_TXT	\
-		&&	grep -xn "$new_tasks" $TODO_TXT	\
-		|	awk -F':' '{ printf " + %3d  %s\n", $1, substr($0, index($0, ":") + 1) }'
+	if [[ ! -f $path ]]
+	then
+		echo "error: '${list}.txt': file not found"
+		return 1
+	fi
+}
+
+add_tasks() {
+	local tasks_string="$1"
+
+	printf "%s\n" "$tasks_string" >> "$output_path" \
+	&& grep -xq "$tasks_string" "$output_path"
+}
+
+main() {
+	check_arg_count "$@"
+
+	local list_name
+	list_name=$( get_list "$1" )
+
+	local output_path="${DATA_DIR}/${list_name}.txt"
+	validate_path "$output_path" "$list_name"
+
+	local raw_tasks="$*"
+	local tasks
+	tasks=$( format_tasks "$raw_tasks" )
+
+	add_tasks "$tasks" "$output_path"
 }
 
 
@@ -34,4 +76,4 @@ add_tasks() {
 # Point of entry
 # ===================================================================================== #
 
-add_tasks "$@"
+main "$@"

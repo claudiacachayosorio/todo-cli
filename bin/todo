@@ -43,8 +43,8 @@ USAGE
   bin/todo <command> [<args>]
 
 COMMANDS
-  add <task-name> [+ <task-name> ...]
-  list [<list-name>[=<number-limit>] ...]
+  add [+<list-name>] <task>
+  list [<list-name>] [<list-length>]
   done <task-number> ...
   undo <task-number> ...
   delete [<list-name>] <task-number> ...
@@ -60,6 +60,6 @@ EOF
 # ===================================================================================== #
 
 case $1 in
-	""|help)	usage ;;
+	"" | help)	usage ;;
 	*)			execute_subcommand "$@" ;;
 esac

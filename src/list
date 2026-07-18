@@ -53,9 +53,12 @@ parse_args() {
 }
 
 validate_path() {
-	if [[ ! -f $list_path ]]
+	local path="$1"
+	local name="$2"
+
+	if [[ ! -f $path ]]
 	then
-		echo "error: '${list_name}.txt': file not found"
+		echo "error: '${name}.txt': file not found"
 		return 1
 	fi
 }
@@ -98,6 +101,7 @@ get_header() {
 	case "$name" in
 		todo)		output="TASKS TO DO" ;;
 		done)		output="TASKS DONE" ;;
+		today)		output="TODAY'S TASKS" ;;
 		*)			output="${^^name} TASKS" ;;
 	esac
 
@@ -131,7 +135,7 @@ main() {
 	parse_args "$@"
 
 	local list_path="${DATA_DIR}/${list_name}.txt"
-	validate_path
+	validate_path "$list_path" "$list_name"
 
 	if [[ $list_length =~ ^[0-9]+$ ]]
 	then
