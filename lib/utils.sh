@@ -1,11 +1,9 @@
 #!/bin/bash
 
 # ===================================================================================== #
-# Description:		Shared utilities.
+# Description:		Shared utilities for todo.sh and subcommands.
 # ===================================================================================== #
 
-set -euo pipefail
-shopt -s extglob
 
 # Argument:	Error message (string)
 error_exit() {
@@ -14,15 +12,17 @@ error_exit() {
 	exit 1
 }
 
+
 # Argument:	Error message (string)
 log_error() {
 	local message="$1"
 	echo "error: ${message}" >&2
 }
 
+
 # Arguments:
-#	$1		Minimum number of arguments: integer or "x"
-#	$2		Maximum number of arguments: integer or "x"
+#	$1		Minimum number of arguments: integer or "x" (if no minimum)
+#	$2		Maximum number of arguments: integer or "x" (if no maximum)
 #	$3...	All arguments passed into the subcommand: "$@"
 validate_arg_count() {
 	local min="$1"
@@ -31,35 +31,44 @@ validate_arg_count() {
 
 	case "$min" in
 		x)	: ;;
+
 		[1-9])
 			if [[ $# -lt $min ]]
 			then
 				log_error "missing argument"
 				return 1
-			fi ;;
-		*)	error_exit "unexpected argument" ;;
+			fi
+			;;
+
+		*)	error_exit "'${min}': invalid argument" ;;
 	esac
 
 	case "$max" in
 		x)	: ;;
+
 		[1-9])
 			if [[ $# -gt $max ]]
 			then
 				log_error "too many arguments"
 				return 1
-			fi ;;
-		*)	error_exit "unexpected argument" ;;
+			fi
+			;;
+
+		*)	error_exit "'${max}': invalid argument" ;;
 	esac
 }
+
 
 # Argument:	File path to be validated (string)
 validate_file_exists() {
 	local path="$1"
+
 	if [[ ! -f $path ]]
 	then
 		error_exit "'$(basename "$path")': file not found"
 	fi
 }
+
 
 # Arguments:
 #	$1		Line number of selected task as ID to validate (integer)
@@ -71,24 +80,29 @@ validate_task_id() {
 
 	case $id in
 		0)	error_exit "task id must be a positive integer" ;;
+
 		+([0-9]))
 			if [[ $id -gt $line_count ]]
 			then
 				error_exit "task '${id}' not found in $(basename "$path")"
-			fi ;;
+			fi
+			;;
+
 		*)	error_exit "'${id}' is not an integer" ;;
 	esac
 }
+
 
 # Arguments:
 #	$1		Path to newly modified file (string)
 #	$2		Expected line count after adding/removing lines (integer)
 validate_line_count() {
 	local path="$1"
-	local expected_line_count=$2
-	local current_line_count=$(wc -l "$path")
+	local expected_count=$2
+	local current_count
+	current_count=$(wc -l < "$path")
 
-	if [[ $current_line_count -ne $expected_line_count ]]
+	if [[ $current_count -ne $expected_count ]]
 	then
 		error_exit "unexpected line count"
 	fi

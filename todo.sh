@@ -1,35 +1,32 @@
 #!/bin/bash
 
 # ===================================================================================== #
-# Description:		Parses commands to manage task lists.
-# Synopsis:			bash todo.sh <command> [<args>]
+# Description:		Initializes app's shared logic and variables.
+# Synopsis:			bash todo.sh <subcommand> [<args>]
 # ===================================================================================== #
 
 
-# Settings ============================================================================ #
-
 set -euo pipefail
+shopt -s extglob
 
-
-# Global variables ==================================================================== #
 
 declare -grx APP_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 declare -grx LIB_DIR="${APP_ROOT}/lib"
 declare -grx SUB_DIR="${LIB_DIR}/subcommands"
 declare -grx DATA_DIR="${APP_ROOT}/txt"
-
+declare -grx TODOTXT="${DATA_DIR}/todo.txt"
+declare -grx DONETXT="${DATA_DIR}/done.txt"
 readonly UTILS="${LIB_DIR}/utils.sh"
 
-
-# Sourcing ============================================================================ #
 
 if [[ -f "$UTILS" ]]
 then
 	source "$UTILS"
 else
-	echo "error: utils.sh not found"
+	echo "error: utils.sh not found" >&2
 	exit 1
 fi
+
 
 exec_subcommand() {
 	local subcommand="$1"
@@ -40,12 +37,15 @@ exec_subcommand() {
 		shift
 		source "$script" "$@"
 	else
-		log_user_error "'${subcommand}': command not found"
+		log_error "'${subcommand}': command not found"
 		return 1
 	fi
 }
 
-case $1 in
-	"")		exec_subcommand "help" ;;
-	*)		exec_subcommand "$@" ;;
-esac
+
+if [[ $# -eq 0 ]]
+then
+	exec_subcommand "help"
+else
+	exec_subcommand "$@"
+fi

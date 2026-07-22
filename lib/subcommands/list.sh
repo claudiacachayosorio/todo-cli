@@ -4,19 +4,9 @@
 # Description:		Prints list of tasks.
 # Synopsis:			bash todo.sh list [<list-name>] [<list-length>]
 # ===================================================================================== #
+# todo: footer number of tasks (list length) out of total number of tasks (file length)
 # todo: add option for length (earliest, sort by? (if tags))
 
-
-
-# Settings
-# ===================================================================================== #
-
-set -euo pipefail
-shopt -s extglob
-
-
-# Functions
-# ===================================================================================== #
 
 parse_args() {
 	list_name="todo"
@@ -26,7 +16,7 @@ parse_args() {
 	do
 		case "$1" in
 			0)
-				log_user_error "list length must be a positive integer"
+				log_error "list length must be a positive integer"
 				return 1 ;;
 
 			+([0-9]) | all)
@@ -38,11 +28,12 @@ parse_args() {
 				shift ;;
 
 			*)
-				log_user_error "'${1}': invalid argument"
+				log_error "'${1}': invalid argument"
 				return 1 ;;
 		esac
 	done
 }
+
 
 validate_length() {
 	local path="$1"
@@ -59,11 +50,11 @@ validate_length() {
 	echo $set_length
 }
 
+
 get_list() {
 	local path="$1"
 	local length=$2
 	local output
-
 	output=$( cat -n "$path" )
 
 	if [[ $length =~ ^[0-9]+$ ]]
@@ -74,6 +65,7 @@ get_list() {
 	echo "$output"
 }
 
+
 get_header() {
 	local name="$1"
 	local length=$2
@@ -82,7 +74,7 @@ get_header() {
 	case "$name" in
 		todo)		output="TASKS TO DO" ;;
 		done)		output="TASKS DONE" ;;
-		*)			output="${^^name} TASKS" ;;
+		*)			output="${name^^} TASKS" ;;
 	esac
 
 	case $length in
@@ -93,6 +85,7 @@ get_header() {
 
 	echo "$output"
 }
+
 
 print_list() {
 	local list="$1"
@@ -106,6 +99,7 @@ print_list() {
 
 	EOF
 }
+
 
 main() {
 	validate_arg_count "x" "2" "$@"
@@ -131,8 +125,5 @@ main() {
 	print_list "$list_content" "$list_header"
 }
 
-
-# Point of entry
-# ===================================================================================== #
 
 main "$@"

@@ -6,23 +6,9 @@
 # ===================================================================================== #
 
 
-
-# Settings
-# ===================================================================================== #
-
-shopt -s extglob
-
-
-
-# Main logic
-# ===================================================================================== #
-
 delete_tasks() {
 	local total_deleted_lines=$#
-	local file_path="$TODO_TXT"
-
-	local line_count
-	local expected_line_count
+	local file_path="$TODOTXT"
 
 	if [[ $1 =~ ^[a-z]+$ ]]
 	then
@@ -31,6 +17,7 @@ delete_tasks() {
 		shift
 	fi
 
+	local line_count
 	line_count=$(wc -l < $file_path)
 
 	local line_number
@@ -38,12 +25,12 @@ delete_tasks() {
 	do
 		if [[ ! $line_number =~ ^[0-9]+$ ]]
 		then
-			log_user_error "'${line_number}' is not an integer"
+			log_error "'${line_number}' is not an integer"
 			return 1
 
 		elif [[ $line_number -eq 0 || $line_number -gt $line_count ]]
 		then
-			log_user_error "line ${line_number} not found"
+			log_error "line ${line_number} not found"
 			return 1
 
 		else
@@ -51,14 +38,16 @@ delete_tasks() {
 		fi
 	done
 
-	expected_line_count=$(( line_count - total_lines ))
+	local expected_line_count
+	expected_line_count=$(( line_count - total_deleted_lines ))
 	validate_line_count "$file_path" $expected_line_count
 }
 
 
+main() {
+	validate_arg_count "1" "x" "$@"
+	delete_tasks "$@"
+}
 
-# Point of entry
-# ===================================================================================== #
 
-validate_arg_count "1" "x" "$@"
-delete_tasks "$@"
+main "$@"
