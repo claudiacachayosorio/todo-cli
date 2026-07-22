@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # ===================================================================================== #
-# Description:		Delete tasks from txt file.
-# Synopsis:			bin/todo delete [<list-name>] <task-number> ...
+# Description:		Deletes tasks from txt file.
+# Synopsis:			bash todo.sh delete [<list-name>] <task-number> ...
 # ===================================================================================== #
 
 
@@ -18,29 +18,16 @@ shopt -s extglob
 # ===================================================================================== #
 
 delete_tasks() {
-	if [[ $# -eq 0 ]]
-	then
-		echo "error: argument required"
-		exit 1
-	fi
-
 	local total_deleted_lines=$#
 	local file_path="$TODO_TXT"
 
 	local line_count
-	local line_count_reduced
-	local line_count_result
+	local expected_line_count
 
 	if [[ $1 =~ ^[a-z]+$ ]]
 	then
 		file_path="${DATA_DIR}/${1}.txt"
-
-		if [[ ! -f "$file_path" ]]
-		then
-			echo "error: '${1}.txt': file not found"
-			return 1
-		fi
-
+		validate_file_exists "$file_path"
 		shift
 	fi
 
@@ -51,12 +38,12 @@ delete_tasks() {
 	do
 		if [[ ! $line_number =~ ^[0-9]+$ ]]
 		then
-			echo "error: '${line_number}' is not an integer"
+			log_user_error "'${line_number}' is not an integer"
 			return 1
 
 		elif [[ $line_number -eq 0 || $line_number -gt $line_count ]]
 		then
-			echo "error: line ${line_number} not found"
+			log_user_error "line ${line_number} not found"
 			return 1
 
 		else
@@ -64,13 +51,8 @@ delete_tasks() {
 		fi
 	done
 
-	line_count_reduced=$(( line_count - total_lines ))
-	line_count_result=$( wc -l < $file_path )
-
-	if [[ $line_count_result -ne $line_count_reduced ]]
-	then
-		return 1
-	fi
+	expected_line_count=$(( line_count - total_lines ))
+	validate_line_count "$file_path" $expected_line_count
 }
 
 
@@ -78,4 +60,5 @@ delete_tasks() {
 # Point of entry
 # ===================================================================================== #
 
+validate_arg_count "1" "x" "$@"
 delete_tasks "$@"

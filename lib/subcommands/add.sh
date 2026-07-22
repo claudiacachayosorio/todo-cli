@@ -2,8 +2,9 @@
 
 # ===================================================================================== #
 # Description:		Adds tasks to txt file.
-# Synopsis:			bin/todo add [+<list-name>] <task>
+# Synopsis:			bash todo.sh add [+<list-name>] <task>
 # ===================================================================================== #
+# todo: add creation date => switch from long string to array of strings
 
 
 
@@ -17,14 +18,6 @@ set -euo pipefail
 # Functions
 # ===================================================================================== #
 
-check_arg_count() {
-	if [[ $# -eq 0 ]]
-	then
-		echo "error: argument required"
-		return 1
-	fi
-}
-
 get_list() {
 	local list="todo"
 
@@ -37,17 +30,6 @@ get_list() {
 	echo "$list"
 }
 
-validate_path() {
-	local path="$1"
-	local name="$2"
-
-	if [[ ! -f $path ]]
-	then
-		echo "error: '${list}.txt': file not found"
-		return 1
-	fi
-}
-
 add_tasks() {
 	local tasks_string="$1"
 
@@ -56,17 +38,17 @@ add_tasks() {
 }
 
 main() {
-	check_arg_count "$@"
+	validate_arg_count "1" "x" "$@"
 
 	local list_name
-	list_name=$( get_list "$1" )
+	list_name=$(get_list "$1")
 
 	local output_path="${DATA_DIR}/${list_name}.txt"
-	validate_path "$output_path" "$list_name"
+	validate_file_exists "$output_path"
 
 	local raw_tasks="$*"
 	local tasks
-	tasks=$( format_tasks "$raw_tasks" )
+	tasks=$(format_tasks "$raw_tasks")
 
 	add_tasks "$tasks" "$output_path"
 }

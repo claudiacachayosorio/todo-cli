@@ -2,8 +2,9 @@
 
 # ===================================================================================== #
 # Description:		Prints list of tasks.
-# Synopsis:			bin/todo list [<list-name>] [<list-length>]
+# Synopsis:			bash todo.sh list [<list-name>] [<list-length>]
 # ===================================================================================== #
+# todo: add option for length (earliest, sort by? (if tags))
 
 
 
@@ -14,17 +15,8 @@ set -euo pipefail
 shopt -s extglob
 
 
-
 # Functions
 # ===================================================================================== #
-
-check_arg_count() {
-	if [[ $# -gt 2 ]]
-	then
-		echo "error: too many arguments"
-		return 1
-	fi
-}
 
 parse_args() {
 	list_name="todo"
@@ -34,7 +26,7 @@ parse_args() {
 	do
 		case "$1" in
 			0)
-				echo "error: '${1}': list length must be a positive integer"
+				log_user_error "list length must be a positive integer"
 				return 1 ;;
 
 			+([0-9]) | all)
@@ -46,21 +38,10 @@ parse_args() {
 				shift ;;
 
 			*)
-				echo "error: '${1}': invalid argument"
+				log_user_error "'${1}': invalid argument"
 				return 1 ;;
 		esac
 	done
-}
-
-validate_path() {
-	local path="$1"
-	local name="$2"
-
-	if [[ ! -f $path ]]
-	then
-		echo "error: '${name}.txt': file not found"
-		return 1
-	fi
 }
 
 validate_length() {
@@ -101,7 +82,6 @@ get_header() {
 	case "$name" in
 		todo)		output="TASKS TO DO" ;;
 		done)		output="TASKS DONE" ;;
-		today)		output="TODAY'S TASKS" ;;
 		*)			output="${^^name} TASKS" ;;
 	esac
 
@@ -128,14 +108,14 @@ print_list() {
 }
 
 main() {
-	check_arg_count "$@"
+	validate_arg_count "x" "2" "$@"
 
 	local list_name
 	local list_length
 	parse_args "$@"
 
 	local list_path="${DATA_DIR}/${list_name}.txt"
-	validate_path "$list_path" "$list_name"
+	validate_file_exists "$list_path"
 
 	if [[ $list_length =~ ^[0-9]+$ ]]
 	then
@@ -150,7 +130,6 @@ main() {
 
 	print_list "$list_content" "$list_header"
 }
-
 
 
 # Point of entry
