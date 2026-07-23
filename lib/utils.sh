@@ -60,7 +60,7 @@ validate_arg_count() {
 
 
 # Argument:	File path to be validated (string)
-validate_file_exists() {
+assert_file_exists() {
 	local path="$1"
 
 	if [[ ! -f $path ]]
@@ -71,8 +71,36 @@ validate_file_exists() {
 
 
 # Arguments:
+#	$1		Path to txt file (string)
+#	$2		Task content (string)
+assert_task_exists() {
+	local txt_file="$1"
+	local task="$2"
+
+	if ! grep -qF "$task" "$txt_file"
+	then
+		error_exit "'${task}' was not found in '$(basename "$path")'"
+	fi
+}
+
+
+# Arguments:
+#	$1		Path to txt file (string)
+#	$2		Task content (string)
+assert_task_deleted() {
+	local txt_file="$1"
+	local task="$2"
+
+	if grep -qF "$task" "$txt_file"
+	then
+		error_exit "'${task}' still exists in '$(basename "$path")'"
+	fi
+}
+
+
+# Arguments:
 #	$1		Line number of selected task as ID to validate (integer)
-#	$2		Path for the txt file where the task is stored (string)
+#	$2		Path to txt file (string)
 validate_task_id() {
 	local id=$1
 	local path="$2"
@@ -94,7 +122,7 @@ validate_task_id() {
 
 
 # Arguments:
-#	$1		Path to newly modified file (string)
+#	$1		Path to txt file (string)
 #	$2		Expected line count after adding/removing lines (integer)
 validate_line_count() {
 	local path="$1"

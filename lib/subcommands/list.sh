@@ -109,7 +109,7 @@ main() {
 	parse_args "$@"
 
 	local list_path="${DATA_DIR}/${list_name}.txt"
-	validate_file_exists "$list_path"
+	assert_file_exists "$list_path"
 
 	if [[ $list_length =~ ^[0-9]+$ ]]
 	then

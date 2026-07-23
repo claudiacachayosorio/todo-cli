@@ -23,6 +23,7 @@ main() {
 
 	local task_string="[${date_created}] ${initial_string}"
 	add_tasks "$task_string"
+	assert_task_exists "$TODOTXT" "$task_string"
 }
 
 

@@ -13,7 +13,7 @@ delete_tasks() {
 	if [[ $1 =~ ^[a-z]+$ ]]
 	then
 		file_path="${DATA_DIR}/${1}.txt"
-		validate_file_exists "$file_path"
+		assert_file_exists "$file_path"
 		shift
 	fi
 
