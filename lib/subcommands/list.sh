@@ -2,7 +2,7 @@
 
 # ===================================================================================== #
 # Description:		Prints list of tasks.
-# Synopsis:			bash todo.sh list [<list-name>] [<list-length>]
+# Synopsis:			bash todo.sh list [<list>] [<task-count>]
 # ===================================================================================== #
 # todo: footer number of tasks (list length) out of total number of tasks (file length)
 # todo: add option for length (earliest, sort by? (if tags))

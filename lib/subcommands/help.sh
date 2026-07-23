@@ -9,14 +9,14 @@ usage() {
 	cat << EOF
 
 USAGE
-bin/todo <command> [<args>]
+bash todo.sh <command> [<args>]
 
 COMMANDS
-add [<list-name>:] <task>
-list [<list-name>] [<list-length>]
-done <task-number> ...
-undo <task-number> ...
-delete [<list-name>] <task-number> ...
+add     [<list>:] <task> [+<project> ...] [@<context> ...]
+list    [<list>] [<task-count>]
+done    [<list>] <task-number> ...
+undo    <task-number> ...
+delete  [<list>] <task-number> ...
 
 EOF
 	return 0

@@ -2,9 +2,8 @@
 
 # ===================================================================================== #
 # Description:		Adds tasks to txt file.
-# Synopsis:			bash todo.sh add [<list-name>:] <task> [<@tag> ...]
+# Synopsis:			bash todo.sh add [<list>:] <task> [+<project> ...] [@<context> ...]
 # ===================================================================================== #
-# TODO: multiple tasks at once
 
 
 parse_args() {
@@ -20,7 +19,7 @@ parse_args() {
 		fi
 	fi
 
-	raw_task="$*"
+	task_text="$*"
 }
 
 
@@ -35,7 +34,7 @@ main() {
 	validate_arg_count "1" "x" "$@"
 
 	local list_name="todo"
-	local raw_task
+	local task_text
 	parse_args "$@"
 
 	local dest_path="${DATA_DIR}/${list_name}.txt"
@@ -44,7 +43,7 @@ main() {
 	local date_created
 	date_created=$(date +%F)
 
-	local new_task="[${date_created}] ${raw_task}"
+	local new_task="[${date_created}] ${task_text}"
 	add_tasks "$dest_path" "$new_task"
 	assert_task_exists "$dest_path" "$new_task"
 }
