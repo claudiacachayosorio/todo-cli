@@ -7,23 +7,6 @@
 # ===================================================================================== #
 
 
-parse_args() {
-	if [[ "$1" =~ ^[a-z]+:$ ]]
-	then
-		if [[ "$1" == "done:" ]]
-		then
-			log_error "new tasks cannot be added to done.txt"
-			return 1
-		else
-			dest_stem=${1%:}
-			shift
-		fi
-	fi
-
-	task_text="$*"
-}
-
-
 add_tasks() {
 	local dest="$1"
 	local task="$2"
@@ -31,23 +14,31 @@ add_tasks() {
 }
 
 
-main() {
-	validate_arg_count "1" "x" "$@"
+# EXECUTION FLOW ====================================================================== #
 
-	local dest_stem="todo"
-	local task_text
-	parse_args "$@"
+validate_arg_count "1" "x" "$@"
 
-	local dest_path="${DATA_DIR}/${dest_stem}.txt"
-	assert_file_exists "$dest_path"
+DEST_STEM="todo"
 
-	local date_created
-	date_created=$(date +%F)
+if [[ "$1" =~ ^[a-z]+:$ ]]
+then
+	if [[ "$1" == "done:" ]]
+	then
+		log_error "new tasks cannot be added to done.txt"
+		return 1
+	else
+		DEST_STEM=${1%:}
+		shift
+	fi
+fi
 
-	local new_task="[${date_created}] ${task_text}"
-	add_tasks "$dest_path" "$new_task"
-	assert_task_exists "$dest_path" "$new_task"
-}
+TASK_CONTENT="$*"
 
+DEST_PATH="${DATA_DIR}/${DEST_STEM}.txt"
+assert_file_exists "$DEST_PATH"
 
-main "$@"
+DATE_CREATED=$(date +%F)
+NEW_TASK="[${DATE_CREATED}] ${TASK_CONTENT}"
+
+add_tasks "$DEST_PATH" "$NEW_TASK"
+assert_task_exists "$DEST_PATH" "$NEW_TASK"

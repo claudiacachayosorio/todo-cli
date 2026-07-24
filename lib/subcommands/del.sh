@@ -40,10 +40,7 @@ delete_tasks() {
 }
 
 
-main() {
-	validate_arg_count "1" "x" "$@"
-	delete_tasks "$@"
-}
+# EXECUTION FLOW ====================================================================== #
 
-
-main "$@"
+validate_arg_count "1" "x" "$@"
+delete_tasks "$@"
