@@ -1,53 +1,21 @@
 #!/bin/bash
 
 # ===================================================================================== #
-# Description:		Prints list of tasks.
-# Synopsis:			bash todo.sh list [<list>] [<task-count>]
+# Description:		Prints list of queried tasks.
+# Synopsis:			bash todo.sh list [<file-stem>:] [<search-term>
+#					[OR <search-term> ...] ...]
 # ===================================================================================== #
 # todo: footer number of tasks (list length) out of total number of tasks (file length)
-# todo: add option for length (earliest, sort by? (if tags))
 
 
 parse_args() {
-	list_name="todo"
-	list_length="all"
-
-	while [[ $# -gt 0 ]]
-	do
-		case "$1" in
-			0)
-				log_error "list length must be a positive integer"
-				return 1 ;;
-
-			+([0-9]) | all)
-				list_length=$1
-				shift ;;
-
-			+([a-z]))
-				list_name=$1
-				shift ;;
-
-			*)
-				log_error "'${1}': invalid argument"
-				return 1 ;;
-		esac
-	done
-}
-
-
-validate_length() {
-	local path="$1"
-	local set_length=$2
-
-	local file_length
-	file_length=$( wc -l < "$path" )
-
-	if [[ $set_length -ge $file_length ]]
+	if [[ "$1" =~ ^[a-z]+:$ ]]
 	then
-		set_length="all"
+		list_name=${1%:}
+		shift
 	fi
 
-	echo $set_length
+	keywords="$@"
 }
 
 
@@ -57,43 +25,14 @@ get_list() {
 	local output
 	output=$( cat -n "$path" )
 
-	if [[ $length =~ ^[0-9]+$ ]]
-	then
-		output=$( tail -n "$length" <<< "$output")
-	fi
-
-	echo "$output"
-}
-
-
-get_header() {
-	local name="$1"
-	local length=$2
-	local output
-
-	case "$name" in
-		todo)		output="TASKS TO DO" ;;
-		done)		output="TASKS DONE" ;;
-		*)			output="${name^^} TASKS" ;;
-	esac
-
-	case $length in
-		+([0-9]))	output+=" | RECENTLY ADDED (${length})" ;;
-		all)		output+=" | *" ;;
-		*)			return 1 ;;
-	esac
-
 	echo "$output"
 }
 
 
 print_list() {
 	local list="$1"
-	local header="$2"
 
 	cat <<- EOF
-
-	$header
 
 	$list
 
@@ -102,27 +41,17 @@ print_list() {
 
 
 main() {
-	validate_arg_count "x" "2" "$@"
-
-	local list_name
-	local list_length
+	local list_name="todo"
+	local keywords
 	parse_args "$@"
 
 	local list_path="${DATA_DIR}/${list_name}.txt"
 	assert_file_exists "$list_path"
 
-	if [[ $list_length =~ ^[0-9]+$ ]]
-	then
-		list_length=$( validate_length "$list_path" $list_length )
-	fi
-
 	local list_content
-	list_content=$( get_list "$list_path" $list_length )
+	list_content=$( get_list "$list_path" )
 
-	local list_header
-	list_header=$( get_header "$list_name" $list_length )
-
-	print_list "$list_content" "$list_header"
+	print_list "$list_content" 
 }
 
 

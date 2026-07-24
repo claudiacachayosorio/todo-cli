@@ -2,7 +2,7 @@
 
 # ===================================================================================== #
 # Description:		Initializes app's shared logic and variables.
-# Synopsis:			bash todo.sh <subcommand> [<args>]
+# Synopsis:			bash todo.sh <subcommand> [<argument>...]
 # ===================================================================================== #
 
 

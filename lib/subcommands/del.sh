@@ -2,7 +2,7 @@
 
 # ===================================================================================== #
 # Description:		Deletes tasks from txt file.
-# Synopsis:			bash todo.sh delete [<list-name>] <task-number> ...
+# Synopsis:			bash todo.sh del [<file-stem>] <line-number>...
 # ===================================================================================== #
 
 
