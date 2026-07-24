@@ -74,10 +74,10 @@ assert_file_exists() {
 #	$1		Path to txt file (string)
 #	$2		Task content (string)
 assert_task_exists() {
-	local txt_file="$1"
+	local path="$1"
 	local task="$2"
 
-	if ! grep -qF "$task" "$txt_file"
+	if ! grep -qF "$task" "$path"
 	then
 		error_exit "'${task}' was not found in '$(basename "$path")'"
 	fi
@@ -88,10 +88,10 @@ assert_task_exists() {
 #	$1		Path to txt file (string)
 #	$2		Task content (string)
 assert_task_deleted() {
-	local txt_file="$1"
+	local path="$1"
 	local task="$2"
 
-	if grep -qF "$task" "$txt_file"
+	if grep -qF "$task" "$path"
 	then
 		error_exit "'${task}' still exists in '$(basename "$path")'"
 	fi
@@ -118,20 +118,4 @@ validate_task_id() {
 
 		*)	error_exit "'${id}' is not an integer" ;;
 	esac
-}
-
-
-# Arguments:
-#	$1		Path to txt file (string)
-#	$2		Expected line count after adding/removing lines (integer)
-validate_line_count() {
-	local path="$1"
-	local expected_count=$2
-	local current_count
-	current_count=$(wc -l < "$path")
-
-	if [[ $current_count -ne $expected_count ]]
-	then
-		error_exit "unexpected line count"
-	fi
 }

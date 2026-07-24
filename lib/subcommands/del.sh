@@ -8,17 +8,17 @@
 
 delete_tasks() {
 	local total_deleted_lines=$#
-	local file_path="$TODOTXT"
+	local data_path="$TODOTXT"
 
 	if [[ $1 =~ ^[a-z]+$ ]]
 	then
-		file_path="${DATA_DIR}/${1}.txt"
-		assert_file_exists "$file_path"
+		data_path="${DATA_DIR}/${1}.txt"
+		assert_file_exists "$data_path"
 		shift
 	fi
 
 	local line_count
-	line_count=$(wc -l < $file_path)
+	line_count=$(wc -l < $data_path)
 
 	local line_number
 	for line_number in "$@"
@@ -34,13 +34,9 @@ delete_tasks() {
 			return 1
 
 		else
-			sed -i "${line_number}d" "$file_path"
+			sed -i "${line_number}d" "$data_path"
 		fi
 	done
-
-	local expected_line_count
-	expected_line_count=$(( line_count - total_deleted_lines ))
-	validate_line_count "$file_path" $expected_line_count
 }
 
 

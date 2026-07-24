@@ -11,11 +11,11 @@
 parse_args() {
 	if [[ "$1" =~ ^[a-z]+:$ ]]
 	then
-		list_name=${1%:}
+		data_stem=${1%:}
 		shift
 	fi
 
-	keywords="$@"
+	search_terms="$@"
 }
 
 
@@ -41,15 +41,15 @@ print_list() {
 
 
 main() {
-	local list_name="todo"
+	local data_stem="todo"
 	local keywords
 	parse_args "$@"
 
-	local list_path="${DATA_DIR}/${list_name}.txt"
-	assert_file_exists "$list_path"
+	local data_path="${DATA_DIR}/${data_stem}.txt"
+	assert_file_exists "$data_path"
 
 	local list_content
-	list_content=$( get_list "$list_path" )
+	list_content=$( get_list "$data_path" )
 
 	print_list "$list_content" 
 }

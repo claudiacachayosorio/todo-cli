@@ -15,7 +15,7 @@ parse_args() {
 			log_error "new tasks cannot be added to done.txt"
 			return 1
 		else
-			list_name=${1%:}
+			dest_stem=${1%:}
 			shift
 		fi
 	fi
@@ -34,11 +34,11 @@ add_tasks() {
 main() {
 	validate_arg_count "1" "x" "$@"
 
-	local list_name="todo"
+	local dest_stem="todo"
 	local task_text
 	parse_args "$@"
 
-	local dest_path="${DATA_DIR}/${list_name}.txt"
+	local dest_path="${DATA_DIR}/${dest_stem}.txt"
 	assert_file_exists "$dest_path"
 
 	local date_created
