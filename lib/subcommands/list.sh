@@ -13,21 +13,6 @@ get_full_list() {
 	cat -n "$path" | sed -E "s/${space}/\1 /g; s/${date}//g"
 }
 
-filter_output() {
-	local data="$1"
-	shift
-
-	local keyword
-	local output
-
-	for keyword in "$@"
-	do
-		output=$(echo "$data" | grep -iF "$keyword" || true)
-	done
-
-	echo "$output"
-}
-
 get_footer() {
 	local path="$1"
 	local list="$2"
@@ -76,12 +61,14 @@ fi
 
 KEYWORDS="$@"
 INDEXED_TASKS=$(get_full_list "$SRC_PATH")
+LIST_CONTENT="$INDEXED_TASKS"
 
 if [[ $# -gt 0 ]]
 then
-	LIST_CONTENT=$(filter_output "$INDEXED_TASKS" "$KEYWORDS")
-else
-	LIST_CONTENT="$INDEXED_TASKS"
+	for KEYWORD in "$@"
+	do
+		LIST_CONTENT=$(echo "$INDEXED_TASKS" | grep -iF "$KEYWORD" || true)
+	done
 fi
 
 LIST_FOOTER=$(get_footer "$SRC_PATH" "$LIST_CONTENT")
