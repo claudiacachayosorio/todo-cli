@@ -5,29 +5,45 @@
 # Synopsis:		bash todo.sh list [<file-stem>:] [<search-term>
 #				[OR <search-term> ...] ...]
 # ===================================================================================== #
-# TODO: footer number of tasks (list length) out of total number of tasks (file length)
 
 get_list() {
 	local path="$1"
 	local terms="$2"
-
-	if [[ -z "$terms" ]]
-	then
-		cat -n "$path"
-	fi
+	cat -n "$path"
 }
 
 format_list() {
 	local raw="$1"
-	local output="${raw//\[????-??-??\] /}"
+	local space="^[[:space:]]*([0-9]+)[[:space:]]*"
+	local date="\[[0-9]{4}-[0-9]{2}-[0-9]{2}\][[:space:]]*"
+
+	local output
+	output=$(sed -E "s/${space}/\1 /g; s/${date}//g" <<< "$raw")
 	echo "$output"
+}
+
+get_footer() {
+	local path="$1"
+	local list="$2"
+
+	local file_lc
+	file_lc=$(wc -l < "$path")
+	local list_lc
+	list_lc=$(printf '%s\n' "$list" | wc -l)
+
+	local filename="${path##*/}"
+	local stem="${filename%.*}"
+	echo "${stem^^}: ${list_lc} of ${file_lc} tasks"
 }
 
 print_list() {
 	local list="$1"
+	local footer="$2"
 	cat <<- EOF
 
 	$list
+	--
+	$footer
 	EOF
 }
 
@@ -35,6 +51,7 @@ print_list() {
 # EXECUTION FLOW ====================================================================== #
 
 DATA_PATH="$TODOTXT"
+
 if [[ $# -gt 0 ]]
 then
 	if [[ "$1" =~ ^[a-z]+:$ ]]
@@ -48,4 +65,5 @@ SEARCH_TERMS="$@"
 
 RAW_CONTENT=$(get_list "$DATA_PATH" "$SEARCH_TERMS")
 LIST_CONTENT=$(format_list "$RAW_CONTENT")
-print_list "$LIST_CONTENT"
+LIST_FOOTER=$(get_footer "$DATA_PATH" "$LIST_CONTENT")
+print_list "$LIST_CONTENT" "$LIST_FOOTER"

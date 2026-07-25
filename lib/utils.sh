@@ -103,7 +103,7 @@ validate_task_id() {
 
 		+([0-9]))
 			local line_count
-			line_count=$(wc -l "$path")
+			line_count=$(wc -l < "$path")
 
 			if [[ $id -gt $line_count ]]
 			then
