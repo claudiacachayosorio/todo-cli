@@ -54,10 +54,10 @@ assert_file_exists() {
 
 
 # Arguments:
-#	$1 File stem: STR
+#	$1 Filename: STR
 get_data_path() {
-	local stem=${1%:}
-	local path="${DATA_DIR}/${stem}.txt"
+	local filename="$1"
+	local path="${DATA_DIR}/${filename}"
 	assert_file_exists "$path"
 	echo "$path"
 }

@@ -2,7 +2,7 @@
 
 # ===================================================================================== #
 # Description:	Adds tasks to txt file.
-# Synopsis:		bash todo.sh add [<file-stem>:] <task [+<project-tag>...]
+# Synopsis:		bash todo.sh add [<filename>] <task [+<project-tag>...]
 #				[@<context-tag>...] ...>
 # ===================================================================================== #
 

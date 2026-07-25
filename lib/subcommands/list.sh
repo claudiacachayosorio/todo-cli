@@ -2,11 +2,11 @@
 
 # ===================================================================================== #
 # Description:	Prints list of queried tasks.
-# Synopsis:		bash todo.sh list [<file-stem>:] [<search-term>
+# Synopsis:		bash todo.sh list [<filename>] [<search-term>
 #				[OR <search-term> ...] ...]
 # ===================================================================================== #
 
-get_list() {
+get_full_list() {
 	local path="$1"
 	local terms="$2"
 	cat -n "$path"
@@ -44,26 +44,26 @@ print_list() {
 	$list
 	--
 	$footer
+
 	EOF
 }
 
 
 # EXECUTION FLOW ====================================================================== #
 
-DATA_PATH="$TODOTXT"
-
+SRC_PATH="$TODOTXT"
 if [[ $# -gt 0 ]]
 then
 	if [[ "$1" =~ ^[a-z]+:$ ]]
 	then
-		DATA_PATH=$(get_data_path "$1")
+		SRC_PATH=$(get_data_path "$1")
 		shift
 	fi
 fi
 
 SEARCH_TERMS="$@"
 
-RAW_CONTENT=$(get_list "$DATA_PATH" "$SEARCH_TERMS")
+RAW_CONTENT=$(get_full_list "$SRC_PATH" "$SEARCH_TERMS")
 LIST_CONTENT=$(format_list "$RAW_CONTENT")
-LIST_FOOTER=$(get_footer "$DATA_PATH" "$LIST_CONTENT")
+LIST_FOOTER=$(get_footer "$SRC_PATH" "$LIST_CONTENT")
 print_list "$LIST_CONTENT" "$LIST_FOOTER"
