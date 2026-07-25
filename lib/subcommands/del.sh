@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # ===================================================================================== #
-# Description:		Deletes tasks from txt file.
-# Synopsis:			bash todo.sh del [<file-stem>] <line-number>...
+# Description:	Deletes tasks from txt file.
+# Synopsis:		bash todo.sh del [<file-stem>] <line-number>...
 # ===================================================================================== #
 
 
@@ -42,5 +42,5 @@ delete_tasks() {
 
 # EXECUTION FLOW ====================================================================== #
 
-validate_arg_count "1" "x" "$@"
+validate_arg_count "$#" "-lt" "1"
 delete_tasks "$@"

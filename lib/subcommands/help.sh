@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # ===================================================================================== #
-# Description:		Displays usage manual.
-# Synopsis:			bash todo.sh help
+# Description:	Displays usage manual.
+# Synopsis:		bash todo.sh help
 # ===================================================================================== #
 
 usage() {

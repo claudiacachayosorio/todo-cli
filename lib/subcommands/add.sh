@@ -1,15 +1,15 @@
 #!/bin/bash
 
 # ===================================================================================== #
-# Description:		Adds tasks to txt file.
-# Synopsis:			bash todo.sh add [<file-stem>:] <task [+<project-tag>...]
-#					[@<context-tag>...] ...>
+# Description:	Adds tasks to txt file.
+# Synopsis:		bash todo.sh add [<file-stem>:] <task [+<project-tag>...]
+#				[@<context-tag>...] ...>
 # ===================================================================================== #
 
 
 # EXECUTION FLOW ====================================================================== #
 
-validate_arg_count "1" "x" "$@"
+validate_arg_count "$#" "-lt" "1"
 
 DEST_PATH="$TODOTXT"
 if [[ "$1" =~ ^[a-z]+:$ ]]

@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # ===================================================================================== #
-# Description:		Prints list of queried tasks.
-# Synopsis:			bash todo.sh list [<file-stem>:] [<search-term>
-#					[OR <search-term> ...] ...]
+# Description:	Prints list of queried tasks.
+# Synopsis:		bash todo.sh list [<file-stem>:] [<search-term>
+#				[OR <search-term> ...] ...]
 # ===================================================================================== #
 # TODO: footer number of tasks (list length) out of total number of tasks (file length)
 

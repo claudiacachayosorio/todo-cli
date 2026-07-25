@@ -1,11 +1,12 @@
 #!/bin/bash
 
 # ===================================================================================== #
-# Description:		Shared utilities for todo.sh and subcommands.
+# Description:	Shared utilities for todo.sh and subcommands.
 # ===================================================================================== #
 
 
-# Argument:	Error message (string)
+# Arguments:
+#	$1 Error message: STR
 error_exit() {
 	local message="$1"
 	echo "error: ${message}" >&2
@@ -13,7 +14,8 @@ error_exit() {
 }
 
 
-# Argument:	Error message (string)
+# Arguments:
+#	$1 Error message: STR
 log_error() {
 	local message="$1"
 	echo "error: ${message}" >&2
@@ -21,45 +23,27 @@ log_error() {
 
 
 # Arguments:
-#	$1		Minimum number of arguments: integer or "x" (if no minimum)
-#	$2		Maximum number of arguments: integer or "x" (if no maximum)
-#	$3...	All arguments passed into the subcommand: "$@"
+# 	$1 Function's argument count: $#
+# 	$2 Comparison operator: STR
+#		-lt (less than minimum)
+#		-gt (greater than maximum)
+#		-ne (not equal to fixed count)
+#	$3 Minimum, maximum or fixed count: INT
 validate_arg_count() {
-	local min="$1"
-	local max="$2"
-	shift 2
+	local actual_count=$1
+	local op=$2
+	local ref_count=$3
 
-	case "$min" in
-		x)	: ;;
-
-		[1-9])
-			if [[ $# -lt $min ]]
-			then
-				log_error "missing argument"
-				return 1
-			fi
-			;;
-
-		*)	error_exit "'${min}': invalid argument" ;;
-	esac
-
-	case "$max" in
-		x)	: ;;
-
-		[1-9])
-			if [[ $# -gt $max ]]
-			then
-				log_error "too many arguments"
-				return 1
-			fi
-			;;
-
-		*)	error_exit "'${max}': invalid argument" ;;
-	esac
+	if [[ $actual_count $op $ref_count ]]
+	then
+		log_error "invalid number of arguments"
+		return 1
+	fi
 }
 
 
-# Argument:	File path to be validated (string)
+# Arguments:
+#	$1 File path to be validated: STR
 assert_file_exists() {
 	local path="$1"
 	if [[ ! -f $path ]]
@@ -69,7 +53,8 @@ assert_file_exists() {
 }
 
 
-# Argument:	File stem from subcommand argument (string)
+# Arguments:
+#	$1 File stem: STR
 get_data_path() {
 	local stem=${1%:}
 	local path="${DATA_DIR}/${stem}.txt"
@@ -79,8 +64,8 @@ get_data_path() {
 
 
 # Arguments:
-#	$1		Path to txt file (string)
-#	$2		Task content (string)
+#	$1 Path to txt file: STR
+#	$2 Task content: STR
 assert_task_exists() {
 	local path="$1"
 	local task="$2"
@@ -93,8 +78,8 @@ assert_task_exists() {
 
 
 # Arguments:
-#	$1		Path to txt file (string)
-#	$2		Task content (string)
+#	$1 Path to txt file: STR
+#	$2 Task content: STR
 assert_task_deleted() {
 	local path="$1"
 	local task="$2"
@@ -107,18 +92,19 @@ assert_task_deleted() {
 
 
 # Arguments:
-#	$1		Line number of selected task as ID to validate (integer)
-#	$2		Path to txt file (string)
+#	$1 Line number of selected task as ID to validate: INT
+#	$2 Path to txt file: STR
 validate_task_id() {
 	local id="$1"
 	local path="$2"
-	local line_count
-	line_count=$(wc -l "$path")
 
 	case "$id" in
 		0)	error_exit "task id must be a positive integer" ;;
 
 		+([0-9]))
+			local line_count
+			line_count=$(wc -l "$path")
+
 			if [[ $id -gt $line_count ]]
 			then
 				error_exit "task '${id}' not found in ${path##*/}"

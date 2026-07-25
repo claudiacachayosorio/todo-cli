@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # ===================================================================================== #
-# Description:		Initializes app's shared logic and variables.
-# Synopsis:			bash todo.sh <subcommand> [<argument>...]
+# Description:	Initializes app's shared logic and variables.
+# Synopsis:		bash todo.sh <subcommand> [<argument>...]
 # ===================================================================================== #
 
 
