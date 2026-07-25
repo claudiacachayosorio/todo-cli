@@ -11,9 +11,9 @@ shopt -s extglob
 
 
 declare -grx APP_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+declare -grx DATA_DIR="${APP_ROOT}/data"
 declare -grx LIB_DIR="${APP_ROOT}/lib"
 declare -grx SUB_DIR="${LIB_DIR}/subcommands"
-declare -grx DATA_DIR="${APP_ROOT}/txt"
 declare -grx TODOTXT="${DATA_DIR}/todo.txt"
 declare -grx DONETXT="${DATA_DIR}/done.txt"
 readonly UTILS="${LIB_DIR}/utils.sh"

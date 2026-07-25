@@ -10,9 +10,7 @@
 get_list() {
 	local path="$1"
 	local length=$2
-	local output
-	output=$(cat -n "$path")
-	echo "$output"
+	cat -n "$path"
 }
 
 print_list() {
@@ -27,18 +25,14 @@ print_list() {
 
 # EXECUTION FLOW ====================================================================== #
 
-DATA_STEM="todo"
-
+DATA_PATH="$TODOTXT"
 if [[ "$1" =~ ^[a-z]+:$ ]]
 then
-	DATA_STEM=${1%:}
+	DATA_PATH=$(get_data_path "$1")
 	shift
 fi
 
 SEARCH_TERMS="$@"
-
-DATA_PATH="${DATA_DIR}/${DATA_STEM}.txt"
-assert_file_exists "$DATA_PATH"
 
 LIST_CONTENT=$(get_list "$DATA_PATH")
 print_list "$LIST_CONTENT"

@@ -62,11 +62,19 @@ validate_arg_count() {
 # Argument:	File path to be validated (string)
 assert_file_exists() {
 	local path="$1"
-
 	if [[ ! -f $path ]]
 	then
-		error_exit "'$(basename "$path")': file not found"
+		error_exit "'${$path##*/}': file not found"
 	fi
+}
+
+
+# Argument:	File stem from subcommand argument (string)
+get_data_path() {
+	local stem=${1%:}
+	local path="${DATA_DIR}/${stem}.txt"
+	assert_file_exists "$path"
+	echo "$path"
 }
 
 
@@ -79,7 +87,7 @@ assert_task_exists() {
 
 	if ! grep -qF "$task" "$path"
 	then
-		error_exit "'${task}' was not found in '$(basename "$path")'"
+		error_exit "'${task}' was not found in '${path##*/}'"
 	fi
 }
 
@@ -93,7 +101,7 @@ assert_task_deleted() {
 
 	if grep -qF "$task" "$path"
 	then
-		error_exit "'${task}' still exists in '$(basename "$path")'"
+		error_exit "'${task}' still exists in '${path##*/}'"
 	fi
 }
 
@@ -102,17 +110,18 @@ assert_task_deleted() {
 #	$1		Line number of selected task as ID to validate (integer)
 #	$2		Path to txt file (string)
 validate_task_id() {
-	local id=$1
+	local id="$1"
 	local path="$2"
-	local line_count=$(wc -l "$path")
+	local line_count
+	line_count=$(wc -l "$path")
 
-	case $id in
+	case "$id" in
 		0)	error_exit "task id must be a positive integer" ;;
 
 		+([0-9]))
 			if [[ $id -gt $line_count ]]
 			then
-				error_exit "task '${id}' not found in $(basename "$path")"
+				error_exit "task '${id}' not found in ${path##*/}"
 			fi
 			;;
 
