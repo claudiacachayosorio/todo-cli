@@ -9,8 +9,18 @@
 
 get_list() {
 	local path="$1"
-	local length=$2
-	cat -n "$path"
+	local terms="$2"
+
+	if [[ -z "$terms" ]]
+	then
+		cat -n "$path"
+	fi
+}
+
+format_list() {
+	local raw="$1"
+	local output="${raw//\[????-??-??\] /}"
+	echo "$output"
 }
 
 print_list() {
@@ -18,7 +28,6 @@ print_list() {
 	cat <<- EOF
 
 	$list
-
 	EOF
 }
 
@@ -26,13 +35,17 @@ print_list() {
 # EXECUTION FLOW ====================================================================== #
 
 DATA_PATH="$TODOTXT"
-if [[ "$1" =~ ^[a-z]+:$ ]]
+if [[ $# -gt 0 ]]
 then
-	DATA_PATH=$(get_data_path "$1")
-	shift
+	if [[ "$1" =~ ^[a-z]+:$ ]]
+	then
+		DATA_PATH=$(get_data_path "$1")
+		shift
+	fi
 fi
 
 SEARCH_TERMS="$@"
 
-LIST_CONTENT=$(get_list "$DATA_PATH")
+RAW_CONTENT=$(get_list "$DATA_PATH" "$SEARCH_TERMS")
+LIST_CONTENT=$(format_list "$RAW_CONTENT")
 print_list "$LIST_CONTENT"

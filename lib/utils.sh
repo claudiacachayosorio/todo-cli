@@ -34,7 +34,7 @@ validate_arg_count() {
 	local op=$2
 	local ref_count=$3
 
-	if [[ $actual_count $op $ref_count ]]
+	if [ $actual_count $op $ref_count ]
 	then
 		log_error "invalid number of arguments"
 		return 1
@@ -48,7 +48,7 @@ assert_file_exists() {
 	local path="$1"
 	if [[ ! -f $path ]]
 	then
-		error_exit "'${$path##*/}': file not found"
+		error_exit "'${path##*/}': file not found"
 	fi
 }
 
