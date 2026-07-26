@@ -16,10 +16,10 @@ get_footer() {
 	local path="$1"
 	local list="$2"
 
+	local list_lc
+	list_lc=$(printf '%s' "$list" | grep -c "^")
 	local file_lc
 	file_lc=$(wc -l < "$path")
-	local list_lc
-	list_lc=$(printf '%s\n' "$list" | wc -l)
 
 	local filename="${path##*/}"
 	local stem="${filename%.*}"
@@ -32,8 +32,7 @@ print_list() {
 
 	if [[ -z "$list" ]]
 	then
-		echo "No match found."
-		return 0
+		list="No match found."
 	fi
 
 	cat <<- EOF
