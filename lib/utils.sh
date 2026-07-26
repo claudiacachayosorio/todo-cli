@@ -4,7 +4,6 @@
 # Description:	Shared utilities for todo.sh and subcommands.
 # ===================================================================================== #
 
-
 # Arguments:
 #	$1 Error message: STR
 error_exit() {
@@ -13,14 +12,12 @@ error_exit() {
 	exit 1
 }
 
-
 # Arguments:
 #	$1 Error message: STR
 log_error() {
 	local message="$1"
 	echo "error: ${message}" >&2
 }
-
 
 # Arguments:
 # 	$1 Function's argument count: $#
@@ -41,9 +38,8 @@ validate_arg_count() {
 	fi
 }
 
-
 # Arguments:
-#	$1 File path to be validated: STR
+#	$1 File path: STR
 assert_file_exists() {
 	local path="$1"
 	if [[ ! -f $path ]]
@@ -52,6 +48,16 @@ assert_file_exists() {
 	fi
 }
 
+# Arguments:
+#	$1 File path: STR
+assert_file_not_empty() {
+	local path="$1"
+	if [[ ! -s "$path" ]]
+	then
+		echo "${SRC_PATH##*/} is currently empty"
+		return 1
+	fi
+}
 
 # Arguments:
 #	$1 Filename: STR
@@ -61,7 +67,6 @@ get_data_path() {
 	assert_file_exists "$path"
 	echo "$path"
 }
-
 
 # Arguments:
 #	$1 Path to txt file: STR
@@ -76,7 +81,6 @@ assert_task_exists() {
 	fi
 }
 
-
 # Arguments:
 #	$1 Path to txt file: STR
 #	$2 Task content: STR
@@ -89,7 +93,6 @@ assert_task_deleted() {
 		error_exit "'${task}' still exists in '${path##*/}'"
 	fi
 }
-
 
 # Arguments:
 #	$1 Line number of selected task as ID to validate: INT

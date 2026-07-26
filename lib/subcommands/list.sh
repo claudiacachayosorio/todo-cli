@@ -2,8 +2,7 @@
 
 # ===================================================================================== #
 # Description:	Prints list of queried tasks.
-# Synopsis:		bash todo.sh list [<filename>] [<search-term>
-#				[OR <search-term> ...] ...]
+# Synopsis:		bash todo.sh list [<filename>] [<keyword> [OR <keyword> ...] ...]
 # ===================================================================================== #
 
 get_full_list() {
@@ -30,6 +29,13 @@ get_footer() {
 print_list() {
 	local list="$1"
 	local footer="$2"
+
+	if [[ -z "$list" ]]
+	then
+		echo "No match found."
+		return 0
+	fi
+
 	cat <<- EOF
 
 	$list
@@ -53,11 +59,7 @@ then
 	fi
 fi
 
-if [[ ! -s "$SRC_PATH" ]]
-then
-	echo "'${SRC_PATH##*/}' is currently empty"
-	return 0
-fi
+assert_file_not_empty "$SRC_PATH"
 
 KEYWORDS="$@"
 INDEXED_TASKS=$(get_full_list "$SRC_PATH")
