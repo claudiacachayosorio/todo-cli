@@ -12,28 +12,38 @@ get_full_list() {
 	cat -n "$path" | sed -E "s/${space}/\1 /g; s/${date}//g"
 }
 
+stream_data() {
+	local stream="$1"
+	local and_keywords="$2"
+	local keyword
+
+	for keyword in $and_keywords
+	do
+		stream=$(echo "$stream" | grep -iwF "$keyword")
+	done
+	echo "$stream"
+}
+
 generate_stream() {
-	local input="$1"
+	local data="$1"
 	local query="$2"
-
 	local or_blocks
-	IFS="|" read -ra or_blocks <<< "$query"
-
 	local block
-	local current_stream
 
+	IFS="|" read -ra or_blocks <<< "$query"
 	for block in "${or_blocks[@]}"
 	do
-		current_stream="$input"
-		local term
-
-		for term in $block
-		do
-			current_stream=$(echo "$current_stream" | grep -iwF "$term")
-		done
-
-		echo "$current_stream"
+		stream_data "$data" "$block"
 	done
+}
+
+filter_tasks() {
+	local tasks="$1"
+	local raw_query="$2"
+	local clean_query
+
+	clean_query=$(sed -E "s/[[:space:]]or[[:space:]]/|/gI" <<< "$raw_query")
+	generate_stream "$tasks" "$clean_query" | sort -nu
 }
 
 get_footer() {
@@ -85,12 +95,11 @@ fi
 assert_file_not_empty "$SRC_PATH"
 INDEXED_TASKS=$(get_full_list "$SRC_PATH")
 LIST_CONTENT="$INDEXED_TASKS"
+QUERY_STR="$*"
 
-if [[ -n "$*" ]]
+if [[ -n "$QUERY_STR" ]]
 then
-	RAW_QUERY="$*"
-	QUERY_STRING=$(sed -E "s/[[:space:]]or[[:space:]]/|/gI" <<< "$RAW_QUERY")
-	LIST_CONTENT=$(generate_stream "$INDEXED_TASKS" "$QUERY_STRING" | sort -nu)
+	LIST_CONTENT=$(filter_tasks "$INDEXED_TASKS" "$QUERY_STR")
 fi
 
 LIST_FOOTER=$(get_footer "$SRC_PATH" "$LIST_CONTENT")
