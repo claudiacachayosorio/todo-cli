@@ -5,11 +5,10 @@
 # Synopsis:		bash todo.sh list [<filename>] [<keyword> [OR <keyword> ...] ...]
 # ===================================================================================== #
 
-get_full_list() {
-	local path="$1"
-	local space="^[[:space:]]*([0-9]+)[[:space:]]*"
-	local date="\[[0-9]{4}-[0-9]{2}-[0-9]{2}\][[:space:]]*"
-	cat -n "$path" | sed -E "s/${space}/\1 /g; s/${date}//g"
+get_all_tasks() {
+	local src="$1"
+	assert_file_not_empty "$src"
+	cat -n "$src"
 }
 
 stream_data() {
@@ -26,11 +25,11 @@ stream_data() {
 
 generate_stream() {
 	local data="$1"
-	local query="$2"
+	local query_str="$2"
 	local or_blocks
 	local block
 
-	IFS="|" read -ra or_blocks <<< "$query"
+	IFS="|" read -ra or_blocks <<< "$query_str"
 	for block in "${or_blocks[@]}"
 	do
 		stream_data "$data" "$block"
@@ -44,6 +43,20 @@ filter_tasks() {
 
 	clean_query=$(sed -E "s/[[:space:]]or[[:space:]]/|/gI" <<< "$raw_query")
 	generate_stream "$tasks" "$clean_query" | sort -nu
+}
+
+get_list() {
+	local path="$1"
+	local query="$2"
+	local all_tasks
+
+	if [[ -z "$query" ]]
+	then
+		get_all_tasks "$path"
+	else
+		all_tasks=$(get_all_tasks "$path")
+		filter_tasks "$all_tasks" "$query"
+	fi
 }
 
 get_footer() {
@@ -93,14 +106,10 @@ then
 fi
 
 assert_file_not_empty "$SRC_PATH"
-INDEXED_TASKS=$(get_full_list "$SRC_PATH")
-LIST_CONTENT="$INDEXED_TASKS"
-QUERY_STR="$*"
 
-if [[ -n "$QUERY_STR" ]]
-then
-	LIST_CONTENT=$(filter_tasks "$INDEXED_TASKS" "$QUERY_STR")
-fi
+QUERY="$*"
+QUERIED_LIST=$(get_list "$SRC_PATH" "$QUERY")
+#LIST_CONTENT=$(format_tasks "$QUERIED_LIST")
 
-LIST_FOOTER=$(get_footer "$SRC_PATH" "$LIST_CONTENT")
-print_list "$LIST_CONTENT" "$LIST_FOOTER"
+LIST_FOOTER=$(get_footer "$SRC_PATH" "$QUERIED_LIST")
+print_list "$QUERIED_LIST" "$LIST_FOOTER"

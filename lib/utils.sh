@@ -117,3 +117,11 @@ validate_task_id() {
 		*)	error_exit "'${id}' is not an integer" ;;
 	esac
 }
+
+# Arguments:
+#	$1 Tasks: STR
+format_tasks() {
+	local str="$1"
+	#local date="\[[0-9]{4}-[0-9]{2}-[0-9]{2}\]"
+	#sed -E "s/^ +([0-9]+) +/\1:/g" <<< "$str"
+}
