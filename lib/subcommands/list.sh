@@ -12,6 +12,30 @@ get_full_list() {
 	cat -n "$path" | sed -E "s/${space}/\1 /g; s/${date}//g"
 }
 
+generate_stream() {
+	local input="$1"
+	local query="$2"
+
+	local or_blocks
+	IFS="|" read -ra or_blocks <<< "$query"
+
+	local block
+	local current_stream
+
+	for block in "${or_blocks[@]}"
+	do
+		current_stream="$input"
+		local term
+
+		for term in $block
+		do
+			current_stream=$(echo "$current_stream" | grep -iwF "$term")
+		done
+
+		echo "$current_stream"
+	done
+}
+
 get_footer() {
 	local path="$1"
 	local list="$2"
@@ -59,17 +83,14 @@ then
 fi
 
 assert_file_not_empty "$SRC_PATH"
-
-KEYWORDS="$@"
 INDEXED_TASKS=$(get_full_list "$SRC_PATH")
 LIST_CONTENT="$INDEXED_TASKS"
 
-if [[ $# -gt 0 ]]
+if [[ -n "$*" ]]
 then
-	for KEYWORD in "$@"
-	do
-		LIST_CONTENT=$(echo "$INDEXED_TASKS" | grep -iF "$KEYWORD" || true)
-	done
+	RAW_QUERY="$*"
+	QUERY_STRING=$(sed -E "s/[[:space:]]or[[:space:]]/|/gI" <<< "$RAW_QUERY")
+	LIST_CONTENT=$(generate_stream "$INDEXED_TASKS" "$QUERY_STRING" | sort -nu)
 fi
 
 LIST_FOOTER=$(get_footer "$SRC_PATH" "$LIST_CONTENT")
