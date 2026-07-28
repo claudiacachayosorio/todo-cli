@@ -5,43 +5,49 @@
 # Synopsis:		bash todo.sh <subcommand> [<argument>...]
 # ===================================================================================== #
 
-
 set -euo pipefail
 shopt -s extglob
 
+declare -r TODO_APP_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+declare -r TODO_CONFIG="${TODO_APP_ROOT}/todo.cfg"
 
-declare -grx APP_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-declare -grx DATA_DIR="${APP_ROOT}/data"
-declare -grx LIB_DIR="${APP_ROOT}/lib"
-declare -grx SUB_DIR="${LIB_DIR}/subcommands"
-declare -grx TODOTXT="${DATA_DIR}/todo.txt"
-declare -grx DONETXT="${DATA_DIR}/done.txt"
-readonly UTILS="${LIB_DIR}/utils.sh"
-
-
-if [[ -f "$UTILS" ]]
+if [[ ! -f "$TODO_CONFIG" ]]
 then
-	source "$UTILS"
-else
-	echo "error: utils.sh not found" >&2
+	echo "Error: Configuration file not found." >&2
 	exit 1
 fi
 
+source "$TODO_CONFIG"
+
+declare -r TODO_LIB_DIR="${TODO_APP_ROOT}/${LIB_DIR}"
+declare -r TODO_SUB_DIR="${TODO_APP_ROOT}/subcommands"
+declare -r TODO_DATA_DIR="${TODO_APP_ROOT}/${DATA_DIR}"
+
+declare -r TODO_UTILS="${TODO_LIB_DIR}/utils.sh"
+declare -r TODO_ACTIVE_DATA="${TODO_DATA_DIR}/${TODO_FILE}"
+declare -r TODO_ARCHIVE_DATA="${TODO_DATA_DIR}/${DONE_FILE}"
+
+if [[ ! -f "$TODO_UTILS" ]]
+then
+	echo "Error: Utilities file not found." >&2
+	exit 1
+fi
+
+source "$TODO_UTILS"
 
 exec_subcommand() {
 	local subcommand="$1"
-	local script="${SUB_DIR}/${subcommand}.sh"
+	local script="${TODO_SUB_DIR}/${subcommand}.sh"
 
-	if [[ -f "$script" ]]
+	if [[ ! -f "$script" ]]
 	then
-		shift
-		source "$script" "$@"
-	else
 		log_error "'${subcommand}': command not found"
 		return 1
 	fi
-}
 
+	shift
+	source "$script" "$@"
+}
 
 if [[ $# -eq 0 ]]
 then

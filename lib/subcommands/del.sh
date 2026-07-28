@@ -8,11 +8,11 @@
 
 delete_tasks() {
 	local total_deleted_lines=$#
-	local data_path="$TODOTXT"
+	local data_path="$TODO_ACTIVE_DATA"
 
 	if [[ $1 =~ ^[a-z]+$ ]]
 	then
-		data_path="${DATA_DIR}/${1}.txt"
+		data_path="${TODO_DATA_DIR}/${1}.txt"
 		assert_file_exists "$data_path"
 		shift
 	fi

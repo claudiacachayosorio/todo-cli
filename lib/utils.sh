@@ -54,7 +54,7 @@ assert_file_not_empty() {
 	local path="$1"
 	if [[ ! -s "$path" ]]
 	then
-		echo "${SRC_PATH##*/} is currently empty"
+		echo "${path##*/} is currently empty"
 		return 1
 	fi
 }
@@ -63,7 +63,7 @@ assert_file_not_empty() {
 #	$1 Filename: STR
 get_data_path() {
 	local filename="$1"
-	local path="${DATA_DIR}/${filename}"
+	local path="${TODO_DATA_DIR}/${filename}"
 	assert_file_exists "$path"
 	echo "$path"
 }

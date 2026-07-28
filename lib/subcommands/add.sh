@@ -11,7 +11,7 @@
 
 validate_arg_count "$#" "-lt" "1"
 
-DEST_PATH="$TODOTXT"
+DEST_PATH="$TODO_ACTIVE_DATA"
 if [[ "$1" =~ ^[a-z]+:$ ]]
 then
 	if [[ "$1" == "done:" ]]

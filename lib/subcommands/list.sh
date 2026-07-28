@@ -94,7 +94,7 @@ print_list() {
 
 # EXECUTION FLOW ====================================================================== #
 
-SRC_PATH="$TODOTXT"
+SRC_PATH="$TODO_ACTIVE_DATA"
 
 if [[ $# -gt 0 ]]
 then
