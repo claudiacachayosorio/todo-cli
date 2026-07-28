@@ -119,9 +119,30 @@ validate_task_id() {
 }
 
 # Arguments:
-#	$1 Tasks: STR
-format_tasks() {
+#	$1 Tasks being formatted: STR
+#	$2 Include date option: "true", "false"
+format_task_date() {
 	local str="$1"
-	#local date="\[[0-9]{4}-[0-9]{2}-[0-9]{2}\]"
-	#sed -E "s/^ +([0-9]+) +/\1:/g" <<< "$str"
+	local opt_include="$2"
+	local date="[0-9]{4}-[0-9]{2}-[0-9]{2}"
+	local date_subs=""
+
+	if [[ "$opt_include" == "true" ]]
+	then
+		date_subs="\1"
+	fi
+	sed -E "s/\[(${date})\](.+)/\2|${date_subs}/g" <<< "$str"
+}
+
+# Arguments:
+#	$1 Tasks: STR
+#	$2 Include date option: "true" or "false"
+format_tasks() {
+	local tasks="$1"
+	local date_opt="$2"
+	local ws="[[:space:]]*"
+
+	format_task_date "$tasks" "$date_opt"	|
+	sed -E "s/^${ws}([0-9]+)${ws}/\1|/g"	|
+	column -t -s '|'
 }

@@ -85,7 +85,7 @@ print_list() {
 	cat <<- EOF
 
 	$list
-	--
+	
 	$footer
 
 	EOF
@@ -108,8 +108,9 @@ fi
 assert_file_not_empty "$SRC_PATH"
 
 QUERY="$*"
+INCLUDE_DATE="false"
 QUERIED_LIST=$(get_list "$SRC_PATH" "$QUERY")
-#LIST_CONTENT=$(format_tasks "$QUERIED_LIST")
+LIST_CONTENT=$(format_tasks "$QUERIED_LIST" "$INCLUDE_DATE")
 
-LIST_FOOTER=$(get_footer "$SRC_PATH" "$QUERIED_LIST")
-print_list "$QUERIED_LIST" "$LIST_FOOTER"
+LIST_FOOTER=$(get_footer "$SRC_PATH" "$LIST_CONTENT")
+print_list "$LIST_CONTENT" "$LIST_FOOTER"
