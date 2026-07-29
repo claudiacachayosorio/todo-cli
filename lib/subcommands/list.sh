@@ -108,7 +108,6 @@ fi
 assert_file_not_empty "$SRC_PATH"
 
 QUERY="$*"
-INCLUDE_DATE="false"
 QUERIED_LIST=$(get_list "$SRC_PATH" "$QUERY")
 LIST_CONTENT=$(format_tasks "$QUERIED_LIST" "$INCLUDE_DATE")
 

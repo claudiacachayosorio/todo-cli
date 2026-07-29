@@ -72,18 +72,6 @@ get_data_path() {
 }
 
 # Arguments:
-#	$1 Task content: STR
-#	$2 Path to txt file: STR
-assert_task_exists() {
-	local task_str="$1"
-	local path="$2"
-	if ! grep -qF "$task_str" "$path"
-	then
-		error_exit "Task was not found."
-	fi
-}
-
-# Arguments:
 #	$1 Path to txt file: STR
 #	$2 Task content: STR
 assert_task_deleted() {
@@ -121,28 +109,23 @@ validate_task_id() {
 
 # Arguments:
 #	$1 Tasks being formatted: STR
-#	$2 Include date option: "true", "false"
 format_task_date() {
 	local str="$1"
-	local opt_include="$2"
 	local date_subs=""
-
-	if [[ "$opt_include" == "true" ]]
+	if [[ "$INCLUDE_DATE" == "true" ]]
 	then
-		date_subs="\1"
+		date_subs="\1|"
 	fi
 
-	sed -E "s/\[(${REGEX_DATE})\]${ALL_WS}(.+)/\2|${date_subs}/g" <<< "$str"
+	sed -E "s/\[(${REGEX_DATE})\]${ALL_WS}/${date_subs}/g" <<< "$str"
 }
 
 # Arguments:
 #	$1 Tasks: STR
-#	$2 Include date option: "true", "false"
 format_tasks() {
 	local tasks="$1"
-	local date_opt="$2"
 
-	format_task_date "$tasks" "$date_opt"			|
-	sed -E "s/^${ALL_WS}([0-9]+)${ALL_WS}/\1|/g"	|
-	column -t -s '|'
+	format_task_date "$tasks"						|
+	sed -E "s/^${ALL_WS}([0-9]+):?${ALL_WS}/\1|/g"	|
+	column -t -s '|' -o ' '
 }
