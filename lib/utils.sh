@@ -11,7 +11,7 @@ ALL_WS="[[:space:]]*"
 #	$1 Error message: STR
 error_exit() {
 	local message="$1"
-	echo "error: ${message}" >&2
+	echo "Error: ${message}" >&2
 	exit 1
 }
 
@@ -19,7 +19,7 @@ error_exit() {
 #	$1 Error message: STR
 log_error() {
 	local message="$1"
-	echo "error: ${message}" >&2
+	echo "Error: ${message}" >&2
 }
 
 # Arguments:
@@ -36,7 +36,7 @@ validate_arg_count() {
 
 	if [ $actual_count $op $ref_count ]
 	then
-		log_error "invalid number of arguments"
+		log_error "Invalid number of arguments."
 		return 1
 	fi
 }
@@ -47,7 +47,7 @@ assert_file_exists() {
 	local path="$1"
 	if [[ ! -f $path ]]
 	then
-		error_exit "'${path##*/}': file not found"
+		error_exit "File not found."
 	fi
 }
 
@@ -57,7 +57,7 @@ assert_file_not_empty() {
 	local path="$1"
 	if [[ ! -s "$path" ]]
 	then
-		echo "${path##*/} is currently empty"
+		echo "File currently empty."
 		return 1
 	fi
 }
@@ -72,15 +72,14 @@ get_data_path() {
 }
 
 # Arguments:
-#	$1 Path to txt file: STR
-#	$2 Task content: STR
+#	$1 Task content: STR
+#	$2 Path to txt file: STR
 assert_task_exists() {
-	local path="$1"
-	local task="$2"
-
-	if ! grep -qF "$task" "$path"
+	local task_str="$1"
+	local path="$2"
+	if ! grep -qF "$task_str" "$path"
 	then
-		error_exit "'${task}' was not found in '${path##*/}'"
+		error_exit "Task was not found."
 	fi
 }
 
@@ -88,12 +87,11 @@ assert_task_exists() {
 #	$1 Path to txt file: STR
 #	$2 Task content: STR
 assert_task_deleted() {
-	local path="$1"
-	local task="$2"
-
-	if grep -qF "$task" "$path"
+	local task_str="$1"
+	local path="$2"
+	if grep -qF "$task_str" "$path"
 	then
-		error_exit "'${task}' still exists in '${path##*/}'"
+		error_exit "Task still exists."
 	fi
 }
 
@@ -105,7 +103,7 @@ validate_task_id() {
 	local path="$2"
 
 	case "$id" in
-		0)	error_exit "task id must be a positive integer" ;;
+		0)	error_exit "Task ID must be a positive integer." ;;
 
 		+([0-9]))
 			local line_count
@@ -113,11 +111,11 @@ validate_task_id() {
 
 			if [[ $id -gt $line_count ]]
 			then
-				error_exit "task '${id}' not found in ${path##*/}"
+				error_exit "Task ${id} not found."
 			fi
 			;;
 
-		*)	error_exit "'${id}' is not an integer" ;;
+		*)	error_exit "${id} is not an integer." ;;
 	esac
 }
 
@@ -133,6 +131,7 @@ format_task_date() {
 	then
 		date_subs="\1"
 	fi
+
 	sed -E "s/\[(${REGEX_DATE})\]${ALL_WS}(.+)/\2|${date_subs}/g" <<< "$str"
 }
 
