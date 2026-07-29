@@ -41,7 +41,7 @@ filter_tasks() {
 	local raw_query="$2"
 	local clean_query
 
-	clean_query=$(sed -E "s/[[:space:]]or[[:space:]]/|/gI" <<< "$raw_query")
+	clean_query=$(sed -E "s/${ALL_WS}or${ALL_WS}/|/gI" <<< "$raw_query")
 	generate_stream "$tasks" "$clean_query" | sort -nu
 }
 

@@ -20,10 +20,10 @@ fi
 source "$TODO_CONFIG"
 
 declare -r TODO_LIB_DIR="${TODO_APP_ROOT}/${LIB_DIR}"
-declare -r TODO_SUB_DIR="${TODO_APP_ROOT}/subcommands"
-declare -r TODO_DATA_DIR="${TODO_APP_ROOT}/${DATA_DIR}"
-
+declare -r TODO_SUB_DIR="${TODO_LIB_DIR}/subcommands"
 declare -r TODO_UTILS="${TODO_LIB_DIR}/utils.sh"
+
+declare -r TODO_DATA_DIR="${TODO_APP_ROOT}/${DATA_DIR}"
 declare -r TODO_ACTIVE_DATA="${TODO_DATA_DIR}/${TODO_FILE}"
 declare -r TODO_ARCHIVE_DATA="${TODO_DATA_DIR}/${DONE_FILE}"
 

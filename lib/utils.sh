@@ -4,6 +4,9 @@
 # Description:	Shared utilities for todo.sh and subcommands.
 # ===================================================================================== #
 
+REGEX_DATE="[0-9]{4}-[0-9]{2}-[0-9]{2}"
+ALL_WS="[[:space:]]*"
+
 # Arguments:
 #	$1 Error message: STR
 error_exit() {
@@ -124,25 +127,23 @@ validate_task_id() {
 format_task_date() {
 	local str="$1"
 	local opt_include="$2"
-	local date="[0-9]{4}-[0-9]{2}-[0-9]{2}"
 	local date_subs=""
 
 	if [[ "$opt_include" == "true" ]]
 	then
 		date_subs="\1"
 	fi
-	sed -E "s/\[(${date})\](.+)/\2|${date_subs}/g" <<< "$str"
+	sed -E "s/\[(${REGEX_DATE})\]${ALL_WS}(.+)/\2|${date_subs}/g" <<< "$str"
 }
 
 # Arguments:
 #	$1 Tasks: STR
-#	$2 Include date option: "true" or "false"
+#	$2 Include date option: "true", "false"
 format_tasks() {
 	local tasks="$1"
 	local date_opt="$2"
-	local ws="[[:space:]]*"
 
-	format_task_date "$tasks" "$date_opt"	|
-	sed -E "s/^${ws}([0-9]+)${ws}/\1|/g"	|
+	format_task_date "$tasks" "$date_opt"			|
+	sed -E "s/^${ALL_WS}([0-9]+)${ALL_WS}/\1|/g"	|
 	column -t -s '|'
 }
