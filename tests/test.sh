@@ -6,11 +6,11 @@
 # ===================================================================================== #
 
 
-ALT_DATE_FORMAT="DD/MM/YY"
+ALT_DATE_FORMAT="MM.DD"
 
 ONELINE_SPACED_STR="   31 2014-03-20    bake brownies @baking   "
 MULTILINE_SPACED_STR="   33 2020-12-30 pick up dry cleaner
-		34    2021-01-02    find playlists +wedding
+		34    2021-01-02    find playlists +wedding   
 
 35  2021-01-02  buy sunscreen @shopping    "
 
@@ -37,8 +37,13 @@ test_format_date() {
 	format_date "$multiline" "$DEFAULT_DATE_REGEX" "$format"
 }
 
+test_handle_date() {
+	echo -e "\nhandle_date"
+	handle_date "$oneline"
+}
+
 
 # EXECUTION FLOW ====================================================================== #
 
 test_clean_spaces "$ONELINE_SPACED_STR" "$MULTILINE_SPACED_STR"
-test_format_date "$ALT_DATE_FORMAT_DDMMYY" "$ONELINE_CLEAN_STR" "$MULTILINE_CLEAN_STR"
+test_format_date "$ALT_DATE_FORMAT" "$ONELINE_CLEAN_STR" "$MULTILINE_CLEAN_STR"

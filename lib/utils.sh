@@ -73,7 +73,7 @@ validate_task_id() {
 	local -r id="$1"
 	local -r path="$2"
 	local line_count
-	line_count=$(wc -l < "$path")
+	line_count="$(wc -l < "$path")"
 
 	case "$id" in
 		0)			error_exit "Task ID must be a positive integer." ;;
@@ -86,7 +86,7 @@ validate_task_id() {
 #	$1 STR	Raw input
 clean_spaces() {
 	local -r str="$1"
-	awk '{$1=$1} NF' <<< "$str"
+	awk '$1=$1' <<< "$str"
 }
 
 # Arguments:
@@ -95,28 +95,28 @@ clean_spaces() {
 #	$3 STR	Column input separator: "$COL_INPUT_SEPARATOR"
 format_task_layout() {
 	local -r str="$1"
-	local -r date="$2"
-	local -r sep="$3"
+	local -r date="${2:-DEFAULT_DATE_REGEX}"
+	local -r sep="${3:-COL_INPUT_SEPARATOR}"
 	sed -E "s/^([0-9]+) ?:?(${date}) /\1${sep}\2${sep}/" <<< "$str"
 }
 
 # Arguments:
 #	$1 STR	Display date format from config: "$DISPLAY_DATE_FORMAT"
 get_date_cmd_format() {
-	local -r initial_str="$1"
+	local -r display_format="${1:-DISPLAY_DATE_FORMAT}"
 	local -r year_format="${initial_str//[^Y]/}"
-	local format="+${initial_str^^}"
+	local cmd_format="+${initial_str^^}"
 
 	case "$year_format" in
 		"")		: ;;
-		YY)		format="${format//YY/%y}" ;;
-		YYYY)	format="${format//YYYY/%Y}" ;;
-		*)		format="${format//+(Y)/%Y}" ;;
+		YY)		cmd_format="${cmd_format//YY/%y}" ;;
+		YYYY)	cmd_format="${cmd_format//YYYY/%Y}" ;;
+		*)		cmd_format="${cmd_format//+(Y)/%Y}" ;;
 	esac
 
-	format="${format//+(M)/%m}"
-	format="${format//+(D)/%d}"
-	echo "$format"
+	cmd_format="${cmd_format//+(M)/%m}"
+	cmd_format="${cmd_format//+(D)/%d}"
+	echo "$cmd_format"
 }
 
 # Arguments:
@@ -125,19 +125,19 @@ get_date_cmd_format() {
 #	$3 STR	Display date format from config: "$DISPLAY_DATE_FORMAT"
 format_date() {
 	local -r tasks="$1"
-	local -r current_regex="$2"
-	local -r cfg_format="$3"
-	local format
+	local -r current_regex="${2:-DEFAULT_DATE_REGEX}"
+	local -r cfg_format="${3:-DISPLAY_DATE_FORMAT}"
+	local cmd_format
 	local line
 	local src_date
 	local formatted_date
 
-	format="$(get_date_cmd_format "$cfg_format")"
+	cmd_format="$(get_date_cmd_format "$cfg_format")"
 
 	while IFS= read -r line; do
 		if [[ "$line" =~ $current_regex ]]; then
 			src_date="${BASH_REMATCH[0]}"
-			formatted_date="$(date -d "$src_date" "$format")"
+			formatted_date="$(date -d "$src_date" "$cmd_format")"
 			echo "${line/$src_date/$formatted_date}"
 		fi
 	done <<< "$tasks"
@@ -149,6 +149,8 @@ format_date() {
 handle_date() {
 	local -r str="$1"
 	local -r sep="$2"
+	local -r 
+	local -r cfg_display_date="$4"
 
 	if [[ "$DISPLAY_DATE" == "false" ]]; then
 		sed -E "s/${DEFAULT_DATE_REGEX}${sep}//g" <<< "$str"
