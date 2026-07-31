@@ -83,6 +83,17 @@ validate_task_id() {
 }
 
 # Arguments:
+#	$1 STR	Task content
+#	$2 STR	Path to data file
+assert_task_exists() {
+	local -r str="$1"
+	local -r path="$2"
+	if ! grep -Fn "$str" "$path"; then
+		error_exit "Task was not saved in ${path##*/}."
+	fi
+}
+
+# Arguments:
 #	$1 STR	Raw input
 clean_spaces() {
 	local -r str="$1"
