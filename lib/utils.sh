@@ -1,13 +1,8 @@
 #!/bin/bash
 
 # ===================================================================================== #
-# Description:	Shared utilities for todo.sh and subcommands.
+# Description:	Shared utilities for todo-cli.
 # ===================================================================================== #
-
-COL_INPUT_SEPARATOR="|"
-COL_OUTPUT_SEPARATOR=" "
-DEFAULT_DATE_FORMAT="YYYY-MM-DD"
-DEFAULT_DATE_REGEX="[0-9]{4}-[0-9]{2}-[0-9]{2}"
 
 # Arguments:
 #	$1 STR	Error message
@@ -25,13 +20,15 @@ log_error() {
 }
 
 # Arguments:
-# 	$1 INT	Function's argument count: "$#"
-# 	$2 STR	Rule type: "min", "max", "strict"
-#	$3 INT	Reference count
+# 	$1 STR	Rule type: "min", "max", "strict"
+#	$2 INT	Reference count
+# 	$3 INT	Function's argument count: "$#"
+#	$4 STR	Custom error message (optional)
 validate_arg_count() {
-	local -r actual_count=$1
-	local -r rule=$2
-	local -r ref_count=$3
+	local -r rule="$1"
+	local -r ref_count="$2"
+	local -r actual_count="$3"
+	local -r err_message="${4:-Invalid number of arguments.}"
 	local valid_count
 
 	case "$rule" in
@@ -42,7 +39,7 @@ validate_arg_count() {
 	esac
 
 	if [[ "$valid_count" == "false" ]]; then
-		log_error "Invalid number of arguments."
+		log_error "$err_message"
 		return 1
 	fi
 }
@@ -98,87 +95,4 @@ assert_task_exists() {
 clean_spaces() {
 	local -r str="$1"
 	awk '$1=$1' <<< "$str"
-}
-
-# Arguments:
-#	$1 STR	Tasks
-#	$2 STR	Date regex pattern: "$DEFAULT_DATE_REGEX"
-#	$3 STR	Column input separator: "$COL_INPUT_SEPARATOR"
-format_task_layout() {
-	local -r str="$1"
-	local -r date="${2:-DEFAULT_DATE_REGEX}"
-	local -r sep="${3:-COL_INPUT_SEPARATOR}"
-	sed -E "s/^([0-9]+) ?:?(${date}) /\1${sep}\2${sep}/" <<< "$str"
-}
-
-# Arguments:
-#	$1 STR	Display date format from config: "$DISPLAY_DATE_FORMAT"
-get_date_cmd_format() {
-	local -r display_format="${1:-DISPLAY_DATE_FORMAT}"
-	local -r year_format="${initial_str//[^Y]/}"
-	local cmd_format="+${initial_str^^}"
-
-	case "$year_format" in
-		"")		: ;;
-		YY)		cmd_format="${cmd_format//YY/%y}" ;;
-		YYYY)	cmd_format="${cmd_format//YYYY/%Y}" ;;
-		*)		cmd_format="${cmd_format//+(Y)/%Y}" ;;
-	esac
-
-	cmd_format="${cmd_format//+(M)/%m}"
-	cmd_format="${cmd_format//+(D)/%d}"
-	echo "$cmd_format"
-}
-
-# Arguments:
-#	$1 STR	Tasks
-#	$2 STR	Regex pattern for date as stored in txt files: "$DEFAULT_DATE_REGEX"
-#	$3 STR	Display date format from config: "$DISPLAY_DATE_FORMAT"
-format_date() {
-	local -r tasks="$1"
-	local -r current_regex="${2:-DEFAULT_DATE_REGEX}"
-	local -r cfg_format="${3:-DISPLAY_DATE_FORMAT}"
-	local cmd_format
-	local line
-	local src_date
-	local formatted_date
-
-	cmd_format="$(get_date_cmd_format "$cfg_format")"
-
-	while IFS= read -r line; do
-		if [[ "$line" =~ $current_regex ]]; then
-			src_date="${BASH_REMATCH[0]}"
-			formatted_date="$(date -d "$src_date" "$cmd_format")"
-			echo "${line/$src_date/$formatted_date}"
-		fi
-	done <<< "$tasks"
-}
-
-# Arguments:
-#	$1 STR	Tasks
-#	$2 STR	Separator
-handle_date() {
-	local -r str="$1"
-	local -r sep="$2"
-	local -r 
-	local -r cfg_display_date="$4"
-
-	if [[ "$DISPLAY_DATE" == "false" ]]; then
-		sed -E "s/${DEFAULT_DATE_REGEX}${sep}//g" <<< "$str"
-		return 0
-	fi
-
-	if [[ "${DISPLAY_DATE_FORMAT^^}" != "$DEFAULT_DATE_FORMAT" ]]; then
-		format_date "$str" "$DEFAULT_DATE_REGEX" "$DISPLAY_DATE_FORMAT"
-	fi
-}
-
-# Arguments:
-#	$1 STR	Tasks
-format_tasks() {
-	local -r tasks_str="$1"
-	clean_spaces "$tasks_str" \
-	| format_task_layout "$DEFAULT_DATE_REGEX" "$COL_INPUT_SEPARATOR" \
-	| handle_date "$COL_INPUT_SEPARATOR" \
-	| column -t -s "$COL_INPUT_SEPARATOR" -o "$COL_OUTPUT_SEPARATOR"
 }

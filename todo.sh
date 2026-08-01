@@ -1,58 +1,53 @@
 #!/bin/bash
 
 # ===================================================================================== #
-# Description:	Initializes app's shared logic and variables.
-# Synopsis:		bash todo.sh <subcommand> [<argument>...]
+# Description:	todo-cli's main script.
+# Command:		bash todo.sh
 # ===================================================================================== #
 
 set -euo pipefail
 shopt -s extglob
 
-declare -r TODO_APP_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-declare -r TODO_CONFIG="${TODO_APP_ROOT}/todo.cfg"
+readonly TODO_APP_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-if [[ ! -f "$TODO_CONFIG" ]]; then
-	echo "Error: Configuration file not found." >&2
-	exit 1
+readonly TODO_CONFIG="${TODO_APP_ROOT}/todo.cfg"
+if [[ -f "$TODO_CONFIG" ]]; then
+	source "$TODO_CONFIG"
 fi
 
-source "$TODO_CONFIG"
+readonly TODO_LIB_DIR="${TODO_APP_ROOT}/lib"
+source "${TODO_LIB_DIR}/vars.sh"
+source "${TODO_LIB_DIR}/utils.sh"
+source "${TODO_LIB_DIR}/api.sh"
+source "${TODO_LIB_DIR}/ui.sh"
 
-declare -r TODO_LIB_DIR="${TODO_APP_ROOT}/${LIB_DIR}"
-declare -r TODO_DATA_DIR="${TODO_APP_ROOT}/${DATA_DIR}"
-declare -r TODO_TEST_DIR="${TODO_APP_ROOT}/tests"
-declare -r TODO_SUB_DIR="${TODO_LIB_DIR}/subcommands"
+readonly TODO_DATA_DIR="${TODO_APP_ROOT}/data"
+readonly TODO_ACTIVE_DATA="${TODO_DATA_DIR}/todo.txt"
+readonly TODO_ARCHIVE_DATA="${TODO_DATA_DIR}/done.txt"
+mkdir -p "$TODO_DATA_DIR"
+touch "$TODO_ACTIVE_DATA"
+touch "$TODO_ARCHIVE_DATA"
 
-declare -r TODO_UTILS="${TODO_LIB_DIR}/utils.sh"
-declare -r TODO_ACTIVE_DATA="${TODO_DATA_DIR}/${TODO_FILE}"
-declare -r TODO_ARCHIVE_DATA="${TODO_DATA_DIR}/${DONE_FILE}"
-
-if [[ ! -f "$TODO_UTILS" ]]; then
-	echo "Error: Utilities file not found." >&2
-	exit 1
-fi
-
-source "$TODO_UTILS"
-
-run_script() {
-	local -r stem="$1"
-	local -r dir="$2"
-	local -r script="${dir}/${stem}.sh"
-
-	if [[ ! -f "$script" ]]; then
-		log_error "Script not found."
-		return 1
-	else
-		shift
-		source "$script" "$@"
+main() {
+	if [[ $# -eq 0 ]]; then
+		todo_help
 	fi
+
+	local -r command="${1:-}"
+	shift
+
+	case "$command" in
+		help)		todo_help "$@" ;;
+		add)		todo_add "$@" ;;
+		list|ls)	todo_list "$@" ;;
+		remove|rm)	todo_remove "$@" ;;
+		done)		todo_done "$@" ;;
+		undo)		todo_undo "$@" ;;
+		*)
+			log_error "'${command}': Invalid command."
+			return 1
+			;;
+	esac
 }
 
-if [[ "$#" -eq 0 ]]; then
-	run_script "help" "$TODO_SUB_DIR"
-else
-	case "$1" in
-		test)	run_script "$1" "$TODO_TEST_DIR" ;;
-		*)		run_script "$1" "$TODO_SUB_DIR" ;;
-	esac
-fi
+main "$@"
