@@ -30,16 +30,17 @@ todo_help() {
 # =========================================================================== #
 
 todo_add() {
-	echo "add: '${*}'"
-	#validate_arg_count "min" "1" "$#"
-	#local -r task_content="$*"
-	#local date_created
-	#local new_task
+	validate_arg_count "min" "1" "$#"
+	local -r raw_input="$*"
 
-	#date_created="$(date +%F)"
-	#new_task="${date_created} ${task_content}"
-	#printf "%s\n" "$new_task" >> "$TODO_ACTIVE_DATA"
-	#assert_task_exists "$new_task" "$TODO_ACTIVE_DATA"
+	local task_description
+	task_description="$(clean_spaces "$raw_input")"
+	local date_created
+	date_created="$(date +%F)"
+
+	local -r task="${date_created} ${task_description}"
+	printf "%s\n" "$task" >> "$TODO_ACTIVE_DATA"
+	assert_task_exists "$task" "$TODO_ACTIVE_DATA"
 }
 
 # =========================================================================== #
@@ -47,7 +48,7 @@ todo_add() {
 # =========================================================================== #
 
 todo_del() {
-	echo "remove: '${*}'"
+	echo "del: '${*}'"
 	#validate_arg_count "min" "1" "$#"
 	#local total_deleted_lines="$#"
 	#local data_path="$TODO_ACTIVE_DATA"

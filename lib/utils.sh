@@ -29,12 +29,12 @@ validate_arg_count() {
 	local -r ref_count="$2"
 	local -r actual_count="$3"
 	local -r err_message="${4:-Invalid number of arguments.}"
-	local valid_count
+	local valid_count="false"
 
 	case "$rule" in
-		min)	if (( actual_count < ref_count )); then valid_count="false"; fi ;;
-		max)	if (( actual_count > ref_count )); then valid_count="false"; fi ;;
-		strict)	if (( actual_count != ref_count )); then valid_count="false"; fi ;;
+		min)	if (( actual_count >= ref_count )); then valid_count="true"; fi ;;
+		max)	if (( actual_count <= ref_count )); then valid_count="true"; fi ;;
+		strict)	if (( actual_count == ref_count )); then valid_count="true"; fi ;;
 		*)		error_exit "Invalid argument." ;;
 	esac
 
@@ -82,11 +82,21 @@ validate_task_id() {
 # Arguments:
 #	$1 STR	Task content
 #	$2 STR	Path to data file
+#	$3 STR	Print confirmation message: "true" or "false" (optional)
 assert_task_exists() {
-	local -r str="$1"
+	local -r task="$1"
 	local -r path="$2"
-	if ! grep -Fn "$str" "$path"; then
-		error_exit "Task was not saved in ${path##*/}."
+	local -r print_success="${3:-$PRINT_CONFIRMATION_MESSAGE}"
+	local match
+	match="$(grep -Fn "$task" "$path")"
+
+	if [[ -z "$match" ]]; then
+		error_exit "Task was not saved to ${path##*/}."
+	fi
+
+	if [[ "$print_success" == "true" ]]; then
+		echo "--"
+		echo "${match/:/ }"
 	fi
 }
 
