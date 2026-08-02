@@ -1,1 +1,4 @@
-data/*
+*.txt
+*.tap
+*.log
+.bats-cache/
