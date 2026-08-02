@@ -179,7 +179,7 @@ format_tasks() {
 }
 
 todo_list() {
-	echo "list: $*"
+	echo "list: '${*}'"
 	#local src_path="$TODO_ACTIVE_DATA"
 	#local query
 	#local queried_list

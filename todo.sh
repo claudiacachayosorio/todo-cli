@@ -38,7 +38,7 @@ main() {
 
 	case "$command" in
 		help)		todo_help "$@" ;;
-		add)		todo_add "$@" ;;
+		add|+)		todo_add "$@" ;;
 		list|ls)	todo_list "$@" ;;
 		remove|rm)	todo_remove "$@" ;;
 		done)		todo_done "$@" ;;
