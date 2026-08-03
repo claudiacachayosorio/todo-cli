@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-
 # =========================================================================== #
 # Description:	todo-cli's main script.
 # Command:		bash todo.sh

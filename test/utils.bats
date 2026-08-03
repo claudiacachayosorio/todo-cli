@@ -1,5 +1,4 @@
 #!/usr/bin/env bats
-
 # =========================================================================== #
 # Description:	Unit tests for todo-cli's utility functions.
 # Command:		bats test/utils.bats
