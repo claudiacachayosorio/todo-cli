@@ -3,16 +3,16 @@
 # Description:	Unit tests for todo-cli's constant variables.
 # Command:			bats test/vars.bats
 # =========================================================================== #
+load "test_helper"
+
+TEST_TODO_VARS_FILE="${TEST_TODO_APP_ROOT}/lib/vars.sh"
+TEST_TODO_CONFIG_VARS=(
+	"TODO_VERBOSE"
+	"TODO_DISPLAY_DATE"
+	"TODO_DATE_FORMAT"
+)
 
 setup() {
-	load test_helper
-	export TEST_TODO_VARS_FILE="${TEST_TODO_APP_ROOT}/lib/vars.sh"
-	declare -g TEST_TODO_CONFIG_VARS=(
-		"TODO_VERBOSE"
-		"TODO_DISPLAY_DATE"
-		"TODO_DATE_FORMAT"
-	)
-
 	local var; for var in "${TEST_TODO_CONFIG_VARS[@]}"; do
 		unset "$var"
 	done

@@ -3,18 +3,27 @@
 # Description:	Unit tests for todo-cli's utility functions.
 # Command:			bats test/utils.bats
 # =========================================================================== #
+load "test_helper"
+
+TEST_TODO_DEFAULT_STDERR="${TEST_TODO_ERR_LABEL} An unknown error has occurred."
+TEST_TODO_FIXTURE_CMD="todo.sh add"
 
 setup() {
-	load test_helper
-	test_todo_setup_sandbox
+	#test_todo_setup_sandbox
 	source "$TEST_TODO_APP_SCRIPT"
 }
 
-teardown() {
-	test_todo_teardown_sandbox
-}
+#teardown() {
+#	test_todo_teardown_sandbox
+#}
 
-TEST_TODO_FIXTURE_CMD="todo.sh add"
+test_todo_assert_default_stderr() {
+	local err_util="$1"
+	run --separate-stderr "$err_util"
+	assert_stderr "$TEST_TODO_DEFAULT_STDERR"
+	run --separate-stderr "$err_util" ""
+	assert_stderr "$TEST_TODO_DEFAULT_STDERR"
+}
 
 # _todo_error_exit
 # =========================================================================== #
@@ -24,6 +33,10 @@ TEST_TODO_FIXTURE_CMD="todo.sh add"
 	test_todo_assert_loud_failure "$err_message"
 }
 
+@test "_todo_error_exit uses default when error message is missing or empty" {
+	test_todo_assert_default_stderr "_todo_error_exit"
+}
+
 # _todo_log_error
 # =========================================================================== #
 @test "_todo_log_error prints message exclusively to stderr" {
@@ -31,6 +44,10 @@ TEST_TODO_FIXTURE_CMD="todo.sh add"
 	run --separate-stderr _todo_log_error "$err_message"
 	test_todo_assert_quiet_success
 	assert_stderr "${TEST_TODO_ERR_LABEL} ${err_message}"
+}
+
+@test "_todo_log_error uses default when error message is missing or empty" {
+	test_todo_assert_default_stderr "_todo_log_error"
 }
 
 # _todo_validate_strict_arg_count

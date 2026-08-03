@@ -3,9 +3,9 @@
 # Description:	Unit tests for todo-cli's core logic.
 # Command:			bats test/app.bats
 # =========================================================================== #
+load "test_helper"
 
 setup() {
-	load test_helper
 	test_todo_setup_sandbox
 	source "$TEST_TODO_APP_SCRIPT"
 }

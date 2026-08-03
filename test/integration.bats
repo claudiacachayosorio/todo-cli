@@ -3,9 +3,9 @@
 # Description:	Integration tests for todo-cli.
 # Command:			bats test/integration.bats
 # =========================================================================== #
+load "test_helper"
 
 setup() {
-	load test_helper
 	test_todo_setup_sandbox
 	source "$TEST_TODO_APP_SCRIPT"
 }
