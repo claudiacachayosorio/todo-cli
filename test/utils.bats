@@ -8,13 +8,13 @@ load "test_helper"
 TEST_TODO_DEFAULT_STDERR="${TEST_TODO_ERR_LABEL} An unknown error has occurred."
 
 setup() {
-	#test_todo_setup_sandbox
+	test_todo_setup_sandbox
 	source "$TEST_TODO_APP_SCRIPT"
 }
 
-#teardown() {
-#	test_todo_teardown_sandbox
-#}
+teardown() {
+	test_todo_teardown_sandbox
+}
 
 test_todo_assert_default_stderr() {
 	local err_util="$1"
@@ -99,9 +99,16 @@ test_todo_assert_default_stderr() {
 
 # _todo_assert_file_exists
 # =========================================================================== #
-#@test "_todo_assert_file_exists fails when target file doesn't exist" {}
+@test "_todo_assert_file_exists fails when target file doesn't exist" {
+	local fixture_file="mystery.txt"
+	run --separate-stderr _todo_assert_file_exists "${TEST_TODO_SANDBOX}/${fixture_file}"
+	test_todo_assert_loud_failure "'${fixture_file}' not found."
+}
 
-#@test "_todo_assert_file_exists passes when target file exists" {}
+@test "_todo_assert_file_exists passes when target file exists" {
+	run _todo_assert_file_exists "$TEST_TODO_DB_ACTIVE"
+	test_todo_assert_quiet_success
+}
 
 # _todo_assert_file_not_empty
 # =========================================================================== #

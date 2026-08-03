@@ -66,7 +66,7 @@ _todo_sanitize_string() {
 _todo_assert_file_exists() {
 	local -r path="$1"
 	if [[ ! -f $path ]]; then
-		_todo_error_exit "File not found."
+		_todo_error_exit "'${path##*/}' not found."
 	fi
 }
 
