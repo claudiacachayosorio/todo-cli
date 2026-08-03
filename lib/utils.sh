@@ -25,7 +25,7 @@ _todo_log_error() {
 _todo_validate_strict_arg_count() {
 	local -r expected="$1"
 	local -r actual="$2"
-	local -r func="${3:-This function}"
+	local -r func="${3:-}"
 	if [[ "$actual" -ne "$expected" ]]; then
 		_todo_log_error "${func}${func:+: }exact argument count: ${expected}"
 		return 1
@@ -39,7 +39,7 @@ _todo_validate_strict_arg_count() {
 _todo_validate_min_arg_count() {
 	local -r min="$1"
 	local -r actual="$2"
-	local -r func="${3:-This function}"
+	local -r func="${3:-}"
 	if [[ "$actual" -lt "$min" ]]; then
 		_todo_log_error "${func}${func:+: }minimum argument count: ${min}"
 		return 1
