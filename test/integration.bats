@@ -1,7 +1,7 @@
 #!/usr/bin/env bats
 # =========================================================================== #
 # Description:	Integration tests for todo-cli.
-# Command:		bats test/integration.bats
+# Command:			bats test/integration.bats
 # =========================================================================== #
 
 setup() {

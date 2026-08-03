@@ -174,7 +174,7 @@ _todo_format_task_layout() {
 }
 
 _todo_get_date_cmd_format() {
-	local -r display_format="${1:-TODO_DISPLAY_DATE_FORMAT}"
+	local -r display_format="${1:-TODO_DATE_FORMAT}"
 	local -r year_format="${initial_str//[^Y]/}"
 	local cmd_format="+${initial_str^^}"
 
@@ -193,7 +193,7 @@ _todo_get_date_cmd_format() {
 _todo_format_date() {
 	local -r tasks="$1"
 	local -r current_regex="${2:-TODO_DATE_REGEX}"
-	local -r cfg_format="${3:-TODO_DISPLAY_DATE_FORMAT}"
+	local -r cfg_format="${3:-TODO_DATE_FORMAT}"
 	local cmd_format
 	local line
 	local src_date
@@ -219,8 +219,8 @@ _todo_handle_date() {
 		return 0
 	fi
 
-	if [[ "${TODO_DISPLAY_DATE_FORMAT^^}" != "YYYY-MM-DD" ]]; then
-		_todo_format_date "$str" "$TODO_DATE_REGEX" "$TODO_DISPLAY_DATE_FORMAT"
+	if [[ "${TODO_DATE_FORMAT^^}" != "YYYY-MM-DD" ]]; then
+		_todo_format_date "$str" "$TODO_DATE_REGEX" "$TODO_DATE_FORMAT"
 	fi
 }
 

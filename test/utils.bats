@@ -1,7 +1,7 @@
 #!/usr/bin/env bats
 # =========================================================================== #
 # Description:	Unit tests for todo-cli's utility functions.
-# Command:		bats test/utils.bats
+# Command:			bats test/utils.bats
 # =========================================================================== #
 
 setup() {
@@ -21,7 +21,7 @@ TEST_TODO_FIXTURE_CMD="todo.sh add"
 @test "_todo_error_exit prints message to stderr and terminates with expected status" {
 	local err_message="File not found."
 	run --separate-stderr _todo_error_exit "$err_message"
-	test_todo_assert_failure_message "$err_message"
+	test_todo_assert_loud_failure "$err_message"
 }
 
 # _todo_log_error
@@ -38,9 +38,9 @@ TEST_TODO_FIXTURE_CMD="todo.sh add"
 @test "_todo_validate_strict_arg_count rejects mismatched counts" {
 	local err_message="${TEST_TODO_FIXTURE_CMD} requires exactly 3 argument(s)."
 	run --separate-stderr _todo_validate_strict_arg_count 3 2 "$TEST_TODO_FIXTURE_CMD"
-	test_todo_assert_failure_message "$err_message"
+	test_todo_assert_loud_failure "$err_message"
 	run --separate-stderr _todo_validate_strict_arg_count 3 4 "$TEST_TODO_FIXTURE_CMD"
-	test_todo_assert_failure_message "$err_message"
+	test_todo_assert_loud_failure "$err_message"
 }
 
 @test "_todo_validate_strict_arg_count quietly accepts matching counts" {
@@ -53,7 +53,7 @@ TEST_TODO_FIXTURE_CMD="todo.sh add"
 @test "_todo_validate_min_arg_count rejects count lower than minimum" {
 	local err_message="${TEST_TODO_FIXTURE_CMD} requires a minimum of 3 argument(s)."
 	run --separate-stderr _todo_validate_min_arg_count 3 2 "$TEST_TODO_FIXTURE_CMD"
-	test_todo_assert_failure_message "$err_message"
+	test_todo_assert_loud_failure "$err_message"
 }
 
 @test "_todo_validate_min_arg_count quietly accepts count greater than or equal to minimum" {
@@ -68,7 +68,7 @@ TEST_TODO_FIXTURE_CMD="todo.sh add"
 @test "_todo_validate_max_arg_count rejects count higher than maximum" {
 	local err_message="${TEST_TODO_FIXTURE_CMD} allows a maximum of 3 argument(s)."
 	run --separate-stderr _todo_validate_max_arg_count 3 4 "$TEST_TODO_FIXTURE_CMD"
-	test_todo_assert_failure_message "$err_message"
+	test_todo_assert_loud_failure "$err_message"
 }
 
 @test "_todo_validate_max_arg_count quietly accepts count lower than or equal to maximum" {

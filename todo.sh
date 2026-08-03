@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # =========================================================================== #
 # Description:	todo-cli's main script.
-# Command:		bash todo.sh
+# Command:			bash todo.sh
 # =========================================================================== #
 
 set -euo pipefail
@@ -40,7 +40,7 @@ main() {
 		list)	todo_list "$@" ;;
 		help)	todo_help "$@" ;;
 		*)
-			todo_log_error "'${command}': Invalid command."
+			_todo_log_error "'${command}': Invalid command."
 			return 1 ;;
 	esac
 }

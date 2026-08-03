@@ -29,7 +29,7 @@ test_todo_assert_quiet_success() {
 	refute_output
 }
 
-test_todo_assert_failure_message() {
+test_todo_assert_loud_failure() {
 	local err_message="$1"
 	assert_failure
 	assert_stderr "${TEST_TODO_ERR_LABEL} ${err_message}"
