@@ -6,6 +6,7 @@
 load "test_helper"
 
 TEST_TODO_DEFAULT_STDERR="${TEST_TODO_ERR_LABEL} An unknown error has occurred."
+TEST_TODO_FIXTURE_FUNC="todo_add"
 
 setup() {
 	test_todo_setup_sandbox
@@ -52,10 +53,10 @@ test_todo_assert_default_stderr() {
 # _todo_validate_strict_arg_count
 # =========================================================================== #
 @test "_todo_validate_strict_arg_count rejects mismatched counts" {
-	local err_desc="This command requires exactly 3 argument(s)."
-	run --separate-stderr _todo_validate_strict_arg_count 3 2
+	local err_desc="${TEST_TODO_FIXTURE_FUNC}: exact argument count: 3"
+	run --separate-stderr _todo_validate_strict_arg_count 3 2 "$TEST_TODO_FIXTURE_FUNC"
 	test_todo_assert_loud_failure "$err_desc"
-	run --separate-stderr _todo_validate_strict_arg_count 3 4
+	run --separate-stderr _todo_validate_strict_arg_count 3 4 "$TEST_TODO_FIXTURE_FUNC"
 	test_todo_assert_loud_failure "$err_desc"
 }
 
@@ -67,8 +68,8 @@ test_todo_assert_default_stderr() {
 # _todo_validate_min_arg_count
 # =========================================================================== #
 @test "_todo_validate_min_arg_count rejects count lower than minimum" {
-	local err_desc="This command requires a minimum of 3 argument(s)."
-	run --separate-stderr _todo_validate_min_arg_count 3 2
+	local err_desc="${TEST_TODO_FIXTURE_FUNC}: minimum argument count: 3"
+	run --separate-stderr _todo_validate_min_arg_count 3 2 "$TEST_TODO_FIXTURE_FUNC"
 	test_todo_assert_loud_failure "$err_desc"
 }
 
@@ -82,8 +83,8 @@ test_todo_assert_default_stderr() {
 # _todo_validate_max_arg_count
 # =========================================================================== #
 @test "_todo_validate_max_arg_count rejects count higher than maximum" {
-	local err_desc="This command allows a maximum of 3 argument(s)."
-	run --separate-stderr _todo_validate_max_arg_count 3 4
+	local err_desc="${TEST_TODO_FIXTURE_FUNC}: maximum argument count: 3"
+	run --separate-stderr _todo_validate_max_arg_count 3 4 "$TEST_TODO_FIXTURE_FUNC"
 	test_todo_assert_loud_failure "$err_desc"
 }
 
@@ -100,9 +101,9 @@ test_todo_assert_default_stderr() {
 # _todo_assert_file_exists
 # =========================================================================== #
 @test "_todo_assert_file_exists fails when target file doesn't exist" {
-	local fixture_file="mystery.txt"
-	run --separate-stderr _todo_assert_file_exists "${TEST_TODO_SANDBOX}/${fixture_file}"
-	test_todo_assert_loud_failure "'${fixture_file}' not found."
+	local target_file="mystery.txt"
+	run --separate-stderr _todo_assert_file_exists "${TEST_TODO_SANDBOX}/${target_file}"
+	test_todo_assert_loud_failure "${target_file} not found."
 }
 
 @test "_todo_assert_file_exists passes when target file exists" {

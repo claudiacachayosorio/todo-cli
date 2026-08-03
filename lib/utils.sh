@@ -21,11 +21,13 @@ _todo_log_error() {
 # Arguments:
 #	$1 INT	Expected argument count
 #	$2 INT	Actual argument count: "$#"
+# $3 STR	Function name (optional)
 _todo_validate_strict_arg_count() {
 	local -r expected="$1"
 	local -r actual="$2"
+	local -r func="${3:-This function}"
 	if [[ "$actual" -ne "$expected" ]]; then
-		_todo_log_error "This command requires exactly ${expected} argument(s)."
+		_todo_log_error "${func}${func:+: }exact argument count: ${expected}"
 		return 1
 	fi
 }
@@ -33,11 +35,13 @@ _todo_validate_strict_arg_count() {
 # Arguments:
 #	$1 INT	Minimum argument count
 #	$2 INT	Actual argument count: "$#"
+# $3 STR	Function name (optional)
 _todo_validate_min_arg_count() {
 	local -r min="$1"
 	local -r actual="$2"
+	local -r func="${3:-This function}"
 	if [[ "$actual" -lt "$min" ]]; then
-		_todo_log_error "This command requires a minimum of ${min} argument(s)."
+		_todo_log_error "${func}${func:+: }minimum argument count: ${min}"
 		return 1
 	fi
 }
@@ -45,11 +49,13 @@ _todo_validate_min_arg_count() {
 # Arguments:
 #	$1 INT	Maximum argument count
 #	$2 INT	Actual argument count: "$#"
+# $3 STR	Function name (optional)
 _todo_validate_max_arg_count() {
 	local -r max="$1"
 	local -r actual="$2"
+	local -r func="${3:-}"
 	if [[ "$actual" -gt "$max" ]]; then
-		_todo_log_error "This command allows a maximum of ${max} argument(s)."
+		_todo_log_error "${func}${func:+: }maximum argument count: ${max}"
 		return 1
 	fi
 }
@@ -66,7 +72,7 @@ _todo_sanitize_string() {
 _todo_assert_file_exists() {
 	local -r path="$1"
 	if [[ ! -f $path ]]; then
-		_todo_error_exit "'${path##*/}' not found."
+		_todo_error_exit "${path##*/} not found."
 	fi
 }
 
