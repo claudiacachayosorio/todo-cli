@@ -6,28 +6,26 @@
 # Arguments:
 #	$1 STR	Error message (optional)
 _todo_error_exit() {
-	local -r message="${1:-An unknown error has occurred.}"
-	echo "Error: ${message}" >&2
+	local -r err_desc="${1:-An unknown error has occurred.}"
+	echo "Error: ${err_desc}" >&2
 	exit 1
 }
 
 # Arguments:
 #	$1 STR	Error message (optional)
 _todo_log_error() {
-	local -r message="${1:-An unknown error has occurred.}"
-	echo "Error: ${message}" >&2
+	local -r err_desc="${1:-An unknown error has occurred.}"
+	echo "Error: ${err_desc}" >&2
 }
 
 # Arguments:
 #	$1 INT	Expected argument count
 #	$2 INT	Actual argument count: "$#"
-#	$3 STR	Command's name for error message (optional)
 _todo_validate_strict_arg_count() {
 	local -r expected="$1"
 	local -r actual="$2"
-	local -r command="${3-:Command}"
 	if [[ "$actual" -ne "$expected" ]]; then
-		_todo_log_error "${command} requires exactly ${expected} argument(s)."
+		_todo_log_error "This command requires exactly ${expected} argument(s)."
 		return 1
 	fi
 }
@@ -35,13 +33,11 @@ _todo_validate_strict_arg_count() {
 # Arguments:
 #	$1 INT	Minimum argument count
 #	$2 INT	Actual argument count: "$#"
-#	$3 STR	Command's name for error message (optional)
 _todo_validate_min_arg_count() {
 	local -r min="$1"
 	local -r actual="$2"
-	local -r command="${3-:Command}"
 	if [[ "$actual" -lt "$min" ]]; then
-		_todo_log_error "${command} requires a minimum of ${min} argument(s)."
+		_todo_log_error "This command requires a minimum of ${min} argument(s)."
 		return 1
 	fi
 }
@@ -49,13 +45,11 @@ _todo_validate_min_arg_count() {
 # Arguments:
 #	$1 INT	Maximum argument count
 #	$2 INT	Actual argument count: "$#"
-#	$3 STR	Command's name for error message (optional)
 _todo_validate_max_arg_count() {
 	local -r max="$1"
 	local -r actual="$2"
-	local -r command="${3-:Command}"
 	if [[ "$actual" -gt "$max" ]]; then
-		_todo_log_error "${command} allows a maximum of ${max} argument(s)."
+		_todo_log_error "This command allows a maximum of ${max} argument(s)."
 		return 1
 	fi
 }
