@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # =========================================================================== #
 # Description:	Shared utilities for todo-cli.
@@ -7,7 +7,7 @@
 # Arguments:
 #	$1 STR	Error message
 error_exit() {
-	local -r message="$1"
+	local -r message="${1:-An unknown error has occurred.}"
 	echo "Error: ${message}" >&2
 	exit 1
 }
@@ -15,7 +15,7 @@ error_exit() {
 # Arguments:
 #	$1 STR	Error message
 log_error() {
-	local -r message="$1"
+	local -r message="${1:-An unknown error has occurred.}"
 	echo "Error: ${message}" >&2
 }
 

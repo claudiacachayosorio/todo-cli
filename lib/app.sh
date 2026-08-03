@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # =========================================================================== #
 # Description:	Subcommand functions for todo-cli.
