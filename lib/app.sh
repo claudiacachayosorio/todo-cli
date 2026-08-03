@@ -30,7 +30,7 @@ todo_help() {
 # =========================================================================== #
 
 todo_add() {
-	validate_arg_count "min" "1" "$#"
+	validate_min_arg_count "1" "$#" "todo.sh add"
 	local -r raw_input="$*"
 
 	local task_description
@@ -49,7 +49,7 @@ todo_add() {
 
 todo_del() {
 	echo "del: '${*}'"
-	#validate_arg_count "min" "1" "$#"
+	#validate_min_arg_count "1" "$#" "todo.sh del"
 	#local total_deleted_lines="$#"
 	#local data_path="$TODO_ACTIVE_DATA"
 	#local line_count

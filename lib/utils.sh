@@ -20,26 +20,43 @@ log_error() {
 }
 
 # Arguments:
-# 	$1 STR	Rule type: "min", "max", "strict"
-#	$2 INT	Reference count
-# 	$3 INT	Function's argument count: "$#"
-#	$4 STR	Custom error message (optional)
-validate_arg_count() {
-	local -r rule="$1"
-	local -r ref_count="$2"
-	local -r actual_count="$3"
-	local -r err_message="${4:-Invalid number of arguments.}"
-	local valid_count="false"
+#	$1 INT	Expected argument count
+#	$2 INT	Actual argument count: "$#"
+#	$3 STR	Command's name for error message (optional)
+validate_strict_arg_count() {
+	local -r expected="$1"
+	local -r actual="$2"
+	local -r command="${3-:Command}"
+	if [[ "$actual" -ne "$expected" ]]; then
+		log_error "${command} requires exactly ${expected} argument(s)."
+		return 1
+	fi
+}
 
-	case "$rule" in
-		min)	if (( actual_count >= ref_count )); then valid_count="true"; fi ;;
-		max)	if (( actual_count <= ref_count )); then valid_count="true"; fi ;;
-		strict)	if (( actual_count == ref_count )); then valid_count="true"; fi ;;
-		*)		error_exit "Invalid argument." ;;
-	esac
+# Arguments:
+#	$1 INT	Minimum argument count
+#	$2 INT	Actual argument count: "$#"
+#	$3 STR	Command's name for error message (optional)
+validate_min_arg_count() {
+	local -r min="$1"
+	local -r actual="$2"
+	local -r command="${3-:Command}"
+	if [[ "$actual" -lt "$min" ]]; then
+		log_error "${command} requires a minimum of ${min} argument(s)."
+		return 1
+	fi
+}
 
-	if [[ "$valid_count" == "false" ]]; then
-		log_error "$err_message"
+# Arguments:
+#	$1 INT	Maximum argument count
+#	$2 INT	Actual argument count: "$#"
+#	$3 STR	Command's name for error message (optional)
+validate_max_arg_count() {
+	local -r max="$1"
+	local -r actual="$2"
+	local -r command="${3-:Command}"
+	if [[ "$actual" -gt "$max" ]]; then
+		log_error "${command} allows a maximum of ${max} argument(s)."
 		return 1
 	fi
 }

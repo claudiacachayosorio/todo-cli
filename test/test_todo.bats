@@ -2,7 +2,7 @@
 
 # =========================================================================== #
 # Description:	Unit and integration testing for todo-cli.
-# Command:		bats test/ --show-output-of-passing-tests
+# Command:		bats test/
 # =========================================================================== #
 
 setup() {
@@ -41,6 +41,59 @@ setup() {
 	assert_success
 	refute_output
 	assert_stderr "Error: ${err_message}"
+}
+
+@test "validate_strict_arg_count fails mismatched counts" {
+	local -r command="todo.sh edit"
+	local -r err_message="${command} requires exactly 3 argument(s)."
+
+	run --separate-stderr validate_strict_arg_count 3 2 "$command"
+	assert_failure
+	assert_stderr "Error: $err_message"
+
+	run --separate-stderr validate_strict_arg_count 3 4 "$command"
+	assert_failure
+	assert_stderr "Error: $err_message"
+}
+
+@test "validate_strict_arg_count quietly passes matching counts" {
+	run validate_strict_arg_count 3 3
+	assert_success
+	refute_output
+}
+
+@test "validate_min_arg_count fails count lower than minimum" {
+	local -r command="todo.sh edit"
+	run --separate-stderr validate_min_arg_count 3 2 "$command"
+	assert_failure
+	assert_stderr "Error: ${command} requires a minimum of 3 argument(s)."
+}
+
+@test "validate_min_arg_count quietly passes count greater than or equal to minimum" {
+	run validate_min_arg_count 3 4
+	assert_success
+	refute_output
+
+	run validate_min_arg_count 3 3
+	assert_success
+	refute_output
+}
+
+@test "validate_max_arg_count fails count higher than maximum" {
+	local -r command="todo.sh edit"
+	run --separate-stderr validate_max_arg_count 3 4 "$command"
+	assert_failure
+	assert_stderr "Error: ${command} allows a maximum of 3 argument(s)."
+}
+
+@test "validate_max_arg_count quietly passes count lower than or equal to maximum" {
+	run validate_max_arg_count 3 2
+	assert_success
+	refute_output
+
+	run validate_max_arg_count 3 3
+	assert_success
+	refute_output
 }
 
 # =========================================================================== #
