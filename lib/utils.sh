@@ -5,7 +5,7 @@
 # =========================================================================== #
 
 # Arguments:
-#	$1 STR	Error message
+#	$1 STR	Error message (optional)
 error_exit() {
 	local -r message="${1:-An unknown error has occurred.}"
 	echo "Error: ${message}" >&2
@@ -13,7 +13,7 @@ error_exit() {
 }
 
 # Arguments:
-#	$1 STR	Error message
+#	$1 STR	Error message (optional)
 log_error() {
 	local -r message="${1:-An unknown error has occurred.}"
 	echo "Error: ${message}" >&2
@@ -119,7 +119,7 @@ assert_task_exists() {
 
 # Arguments:
 #	$1 STR	Raw input
-clean_spaces() {
+sanitize_string() {
 	local -r str="$1"
 	awk '$1=$1' <<< "$str"
 }
