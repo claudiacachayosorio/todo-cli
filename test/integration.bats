@@ -6,10 +6,10 @@
 
 setup() {
 	load test_helper
-	todo_test_setup_sandbox
-	source "$TODO_TEST_APP_SCRIPT"
+	test_todo_setup_sandbox
+	source "$TEST_TODO_APP_SCRIPT"
 }
 
 teardown() {
-	todo_test_teardown_sandbox
+	test_todo_teardown_sandbox
 }

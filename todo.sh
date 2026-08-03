@@ -8,10 +8,9 @@ set -euo pipefail
 shopt -s extglob
 
 readonly TODO_APP_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-readonly TODO_CONFIG="${TODO_APP_ROOT}/todo.conf"
-if [[ -f "$TODO_CONFIG" ]]; then
-	source "$TODO_CONFIG"
+readonly TODO_CONFIG_FILE="${TODO_APP_ROOT}/todo.conf"
+if [[ -f "$TODO_CONFIG_FILE" ]]; then
+	source "$TODO_CONFIG_FILE"
 fi
 
 readonly TODO_LIB_DIR="${TODO_APP_ROOT}/lib"
@@ -20,11 +19,10 @@ source "${TODO_LIB_DIR}/utils.sh"
 source "${TODO_LIB_DIR}/app.sh"
 
 readonly TODO_DATA_DIR="${TODO_APP_ROOT}/data"
-readonly TODO_ACTIVE_DATA="${TODO_DATA_DIR}/todo.txt"
-readonly TODO_ARCHIVE_DATA="${TODO_DATA_DIR}/done.txt"
+readonly TODO_DB_ACTIVE="${TODO_DATA_DIR}/todo.txt"
+readonly TODO_DB_ARCHIVE="${TODO_DATA_DIR}/done.txt"
 mkdir -p "$TODO_DATA_DIR"
-touch "$TODO_ACTIVE_DATA"
-touch "$TODO_ARCHIVE_DATA"
+touch "$TODO_DB_ACTIVE" "$TODO_DB_ARCHIVE"
 
 main() {
 	if [[ $# -eq 0 ]]; then
@@ -42,7 +40,7 @@ main() {
 		list)	todo_list "$@" ;;
 		help)	todo_help "$@" ;;
 		*)
-			log_error "'${command}': Invalid command."
+			todo_log_error "'${command}': Invalid command."
 			return 1 ;;
 	esac
 }
