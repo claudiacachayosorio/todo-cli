@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+readonly TODO_APP_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly TODO_DATA_DIR="${TODO_APP_ROOT}/data"
+readonly TODO_DATA_FILE="${TODO_DATA_DIR}/todo.txt"
+readonly TODO_DATA_ARCHIVE="${TODO_DATA_DIR}/done.txt"
+
+mkdir -p "$TODO_DATA_DIR"
+touch "$TODO_DATA_FILE" "$TODO_DATA_ARCHIVE"
+source "${TODO_APP_ROOT}/helpers.sh"
+
+# Synopsis: bash todo add <task>
+todo_add() {
+	if [[ $# -eq 0 ]]; then _todo_err "missing arguments"; return 1; fi
+	local task; task="$(awk '$1=$1' <<< "$*")"
+	_todo_insert_line "$task" "$TODO_DATA_FILE" "${FUNCNAME[0]}"
+}
+
+# Synopsis: bash todo del <file-stem> <line-number>...
+todo_del() {
+	if [[ $# -lt 2 ]]; then _todo_err "missing arguments"; return 1; fi
+	local src_name="${1}.txt"; shift
+	_todo_move_lines "$src_name" "$@"
+}
+
+# Synopsis: bash todo done <line-number>...
+todo_done() {
+	if [[ $# -eq 0 ]]; then _todo_err "missing arguments"; return 1; fi
+	_todo_move_lines "todo.txt" "done.txt" "$@"
+}
+
+# Synopsis: bash todo undo <line-number>...
+todo_undo() {
+	if [[ $# -eq 0 ]]; then _todo_err "missing arguments"; return 1; fi
+	_todo_move_lines "done.txt" "todo.txt" "$@"
+}
+
+main() {
+	[[ $# -gt 0 ]] || { _todo_err "missing arguments"; return 1; }
+	local cmd="${1:-}"; shift
+	case "$cmd" in
+		add)	todo_add "$@" ;;
+		del)	todo_del "$@" ;;
+		done)	todo_done "$@" ;;
+		undo)	todo_undo "$@" ;;
+		*)	 _todo_err "${cmd}: invalid command"; return 1 ;;
+	esac
+}
+
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+	main "$@"
+fi

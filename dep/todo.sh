@@ -1,18 +1,12 @@
 #!/usr/bin/env bash
 # =========================================================================== #
 # Description:	todo-cli's main script.
-# Command:			bash todo.sh
 # =========================================================================== #
 
 set -euo pipefail
 shopt -s extglob
 
 readonly TODO_APP_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-readonly TODO_CONFIG_FILE="${TODO_APP_ROOT}/todo.conf"
-if [[ -f "$TODO_CONFIG_FILE" ]]; then
-	source "$TODO_CONFIG_FILE"
-fi
-
 readonly TODO_LIB_DIR="${TODO_APP_ROOT}/lib"
 source "${TODO_LIB_DIR}/vars.sh"
 source "${TODO_LIB_DIR}/utils.sh"

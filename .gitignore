@@ -1,4 +1,1 @@
 *.txt
-*.tap
-*.log
-.bats-cache/
