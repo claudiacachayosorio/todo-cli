@@ -1,4 +1,22 @@
 #!/usr/bin/env bash
+# =========================================================================== #
+# Description:	Task manager for the command line
+# Synopsis:			./todo.sh <command> [<argument>...]
+# =========================================================================== #
+
+set -euo pipefail
+
+readonly TODO_APP_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly TODO_DATA_DIR="${TODO_APP_ROOT}/data"
+readonly TODO_DATA_FILE="${TODO_DATA_DIR}/todo.txt"
+readonly TODO_DATA_ARCHIVE="${TODO_DATA_DIR}/done.txt"
+
+mkdir -p "$TODO_DATA_DIR"
+touch "$TODO_DATA_FILE" "$TODO_DATA_ARCHIVE"
+
+# =========================================================================== #
+# Helpers & Utilities
+# =========================================================================== #
 
 # Arguments:
 # $1		STR - Error description (optional)
@@ -6,7 +24,10 @@
 _todo_err() {
 	local err_desc="${1:-unknown error}"
 	local err_loc="${2:-${FUNCNAME[1]}}"
-	echo -e "[ERROR] ${err_loc} ${err_desc}" >&2
+	cat <<-EOF >&2
+	[ERROR] ${err_desc}
+	--> ${err_loc}
+	EOF
 }
 
 # Arguments:
@@ -21,9 +42,14 @@ _todo_assert_task_exists() {
 	local line_count; line_count="$(wc -l < "$src")"
 	local err_loc="${FUNCNAME[1]} => ${FUNCNAME[0]}"
 
-	if [[ ! "$num" =~ ^[0-9]+$ ]];	then _todo_err "line number '${num}' is not an integer" "${err_loc}"; return 1; fi
-	if [[ $num -gt $line_count ]];	then _todo_err "line '${num}' was not found in ${src##*/}" "${err_loc}"; return 1; fi
-	if [[ $num -eq 0 ]];						then _todo_err "line number can't be 0" "${err_loc}"; return 1; fi
+	if [[ ! "$num" =~ ^[0-9]+$ ]]; then
+		_todo_err "line number '${num}' is not an integer" "${err_loc}"; return 1
+	elif [[ $num -gt $line_count ]]; then
+		_todo_err "line '${num}' was not found in ${src##*/}" "${err_loc}"; return 1
+	elif [[ $num -eq 0 ]]; then
+		_todo_err "line number can't be 0" "${err_loc}"; return 1;
+	else return 0;
+	fi
 }
 
 # Arguments:
@@ -86,3 +112,66 @@ _todo_move_lines() {
 		fi
 	done
 }
+
+# =========================================================================== #
+# Main execution
+# =========================================================================== #
+
+# Synopsis: bash todo.sh help
+todo_help() {
+	cat <<- EOF
+	USAGE
+	./todo.sh <command> [<argument>...]
+
+	COMMANDS
+	add   <task>
+	del   <file-stem> <line-number>...
+	done  <line-number>...
+	undo  <line-number>...
+	EOF
+	exit 0
+}
+
+# Synopsis: ./todo.sh add <task>
+todo_add() {
+	if [[ $# -eq 0 ]]; then _todo_err "missing arguments"; return 1; fi
+	local task; task="$(awk '$1=$1' <<< "$*")"
+	_todo_insert_line "$task" "$TODO_DATA_FILE" "${FUNCNAME[0]}"
+}
+
+# Synopsis: ./todo.sh del <file-stem> <line-number>...
+todo_del() {
+	if [[ $# -lt 2 ]]; then _todo_err "missing arguments"; return 1; fi
+	local src_name="${1}.txt"; shift
+	_todo_move_lines "$src_name" "$@"
+}
+
+# Synopsis: ./todo.sh done <line-number>...
+todo_done() {
+	if [[ $# -eq 0 ]]; then _todo_err "missing arguments"; return 1; fi
+	_todo_move_lines "todo.txt" "done.txt" "$@"
+}
+
+# Synopsis: ./todo.sh undo <line-number>...
+todo_undo() {
+	if [[ $# -eq 0 ]]; then _todo_err "missing arguments"; return 1; fi
+	_todo_move_lines "done.txt" "todo.txt" "$@"
+}
+
+main() {
+	if [[ $# -eq 0 ]]; then todo_help; return 1; fi
+
+	local cmd="$1"; shift
+	case "$cmd" in
+		add)	todo_add	"$@" ;;
+		del)	todo_del	"$@" ;;
+		done)	todo_done	"$@" ;;
+		undo)	todo_undo	"$@" ;;
+		help)	todo_help	"$@" ;;
+		*)		_todo_err "${cmd} is not a valid command"; return 1 ;;
+	esac
+}
+
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+	main "$@"
+fi
