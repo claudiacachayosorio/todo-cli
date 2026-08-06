@@ -2,113 +2,123 @@
 # =========================================================================== #
 # [todo] command line task manager
 # =========================================================================== #
+set -euo -E pipefail
 
-set -euo pipefail
-set -o errtrace
+# Arguments:
+#  $1 INT Exit code: 1, 2
+#  $2 STR Error description
+#     INT Line number (exit code 1)
+#     STR Subcommand usage (exit code 2)
+die() {
+	local code="${1:-1}"
+	local desc="${2:-An unknown error has occurred.}"
+	local lineno usage
 
-readonly DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/todo-cli"
+	printf "ERROR: %s\n" "$desc" >&2
+	if [[ "$code" -eq 2 ]]; then
+		usage="${3:-Usage information not found. Try 'bash todo help'.}"
+		printf "--\n" >&2
+		printf "%s\n" "$usage" >&2
+	else
+		lineno="${3:-?}"
+		printf "Function: %s\n" "${FUNCNAME[@]:1:-1}" >&2
+		printf "Line number: %d\n" "$lineno" >&2
+	fi
+	exit "$code"
+}
+
+trap 'die 1 "Command failed unexpectedly." "$LINENO"' ERR
+
+# PATHS ===================================================================== #
+
+readonly APP_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly CONFIG_FILE="${APP_ROOT}/todo.conf"
+
+if [[ -f "$CONFIG_FILE" ]]; then
+	source "$CONFIG_FILE"
+fi
+
+readonly DATA_DIR="${DATA_DIR:-$APP_ROOT}"
+if ! mkdir -p "$DATA_DIR"; then
+	die "Cannot create directory at '${DATA_DIR}'." "$LINENO"
+fi
+
 readonly TODO_FILE="${DATA_DIR}/todo.txt"
 readonly DONE_FILE="${DATA_DIR}/done.txt"
 
-# Arguments:
-# $1	INT - Line number
-# $2	STR - Error description (optional)
-# $3	STR - Subcommand usage (optional)
-die() {
-	local lineno="${1:-?}" desc="${2:-unknown error}" usage="${3:-}"
-	printf "[ERROR] %s\n" "$desc" >&2
-	printf "--> %s, line %d\n" "${FUNCNAME[@]:1:-1}" "$lineno" >&2
-	if [[ -n "$usage" ]]; then printf "[USAGE] %s\n" "$usage" >&2; fi
-	exit 1
-}
-
-trap 'die "$LINENO" "failed command (trap)"' ERR
-
-# Helper functions ========================================================== #
+# HELPERS =================================================================== #
 
 # Arguments:
-# $1	INT - Task index
-# $2	STR - Source file path: "$TODO_FILE", "$DONE_FILE"
-validate_task_index() {
-	local index="${1:-}" src="${2:-}"
-	[[ -n "$index" ]] || die "$LINENO" "arg missing: 1) line number"
-	[[ -n "$src" ]]   || die "$LINENO" "arg missing: 2) source file path"
-	[[ -f "$src" ]]   || die "$LINENO" "'${src##*/}' was not found in ${DATA_DIR}"
-
-	local line_count; line_count="$(wc -l < "$src")"
-	if [[ ! "$index" =~ ^[0-9]+$ ]]; then
-		die "$LINENO" "line number '${index}' is not an integer"
-	elif [[ $index -gt $line_count ]]; then
-		die "$LINENO" "line '${index}' was not found in ${src##*/}"
-	elif [[ $index -eq 0 ]]; then
-		die "$LINENO" "line number can't be 0"
-	else return 0; fi
-}
-
-# Arguments:
-# $1	STR - String to append
-# $2	STR - Target path: "$TODO_FILE", "$DONE_FILE"
-# $3	INT - Index number from source file (optional)
+#  $1 STR Task string to append
+#  $2 STR Target path: "$TODO_FILE", "$DONE_FILE"
+#  $3 INT Index number from source file (optional)
 insert_task() {
 	local input_line="${1:-}" dest="${2:-}" src_index="${3:-}"
-	[[ -n "$input_line" ]] || die "$LINENO" "arg missing: 1) task string"
-	[[ -n "$dest" ]]       || die "$LINENO" "arg missing: 2) dest file path"
-	[[ -f "$dest" ]]       || die "$LINENO" "'${dest##*/}' was not found in ${DATA_DIR}"
+	[[ -n "$input_line" ]] || die 1 "Missing argument: \$1 Task string." "$LINENO"
+	[[ -n "$dest" ]]       || die 1 "Missing argument: \$2 Target path." "$LINENO"
+	[[ -f "$dest" ]]       || die 1 "Target file '${dest##*/}' was not found in ${DATA_DIR}." "$LINENO"
 
-	local todo_cmd="${FUNCNAME[-2]}" task_name="task"
-	if [[ -n "$src_index" ]]; then task_name+=" ${src_index}"; fi
+	local cmd="${FUNCNAME[-2]}"
+	local task_name="task${src_index:+ $src_index}"
 	local clean_line; clean_line="$(awk '$1=$1' <<< "$input_line")"
-	local output_line="" current_date=""
+	local output_line current_date
 
-	if [[ "$todo_cmd" == "todo_add" || "$todo_cmd" == "todo_done" ]]
-		current_date="$(date +%F)";
-		output_line="${current_date} ${clean_line}"
-	elif [[ "$todo_cmd" == "todo_undo" ]]; then
-		output_line="${clean_line#[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9] }"
-	else
-		die "$LINENO" "'${todo_cmd}' is not a valid command function"
-	fi
+	case "$cmd" in
+		todo_undo)
+			output_line="${clean_line#[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9] }"
+			;;
+		todo_add|todo_done)
+			current_date="$(date +%F)"
+			output_line="${current_date} ${clean_line}"
+			;;
+		*) die 1 "'${todo_cmd}' is not a valid command function." "$LINENO" ;;
+	esac
 
 	printf "%s\n" "$output_line" >> "$dest"
 	if ! grep -qF "$output_line" "$dest"; then
-		die "$LINENO" "failed to insert ${task_name} into ${dest##*/}"
+		die 1 "Failed to insert ${task_name} into ${dest##*/}." "$LINENO"
 	fi
 }
 
 # Arguments:
-# $1	STR - Source filename: "todo.txt", "done.txt"
-# $2	STR - Target filename: "todo.txt", "done.txt" (optional)
-# ...	INT - Task index
+#  $1 STR Source filename: "todo.txt", "done.txt"
+#  $2 STR Target filename: "todo.txt", "done.txt" (optional)
+# ... INT Task indexes
 move_tasks() {
-	local src_name="${1:-}" src="${DATA_DIR}/${src_name}" arg_min="2"; shift
-	[[ -n "$src" ]] || die "$LINENO" "arg missing: 1) source filename"
-	[[ -f "$src" ]] || die "$LINENO" "'${src_name}' was not found in ${DATA_DIR}"
+	local src_name="${1:-}"; shift
+	[[ -n "$src" ]] || die 1 "Missing argument: \$1 Source filename." "$LINENO"
+	[[ -f "$src" ]] || die 1 "'${src_name}' was not found in ${DATA_DIR}." "$LINENO"
+	[[ $# -gt 0 ]]  || die 1 "Missing argument: \$2." "$LINENO"
 
-	local dest_name="" dest=""
-	if [[ "${1:-}" =~ \.txt$ ]]; then
-		dest_name="$1"; dest="${DATA_DIR}/${dest_name}"; arg_min="3"; shift
-		if [[ "$src" == "$dest" ]]; then
-			die "$LINENO" "'${dest_name}' can't be both source and dest file"
-		fi
-	fi
+	local dest_name=""
+	if [[ "${1:-}" =~ \.txt$ ]]; then dest_name="$1"; shift; fi
 
-	[[ $# -eq 0 ]] && die "arg missing: ${arg_min}) task index"
-	local line index; for index in "$@"; do
-		validate_task_index "$index" "$src"
+	local src="${DATA_DIR}/${src_name}"
+	local dest="${dest_name:+${DATA_DIR}/${dest_name}}"
+
+	[[ $# -gt 0 ]] || die 1 "Missing argument: Task indexes." "$LINENO"
+	local line_count; line_count="$(wc -l < "$src")"
+
+	# TODO: sort tasks / make sure the index stays correct as lines get removed
+
+	local line index; for index in "${indexes[@]}"; do
+		[[ "$index" =~ ^[0-9]+$ ]] || die 2 "'${index}' is not an integer."
+		(( index != 0 ))           || die 2 "Task index can't be zero."
+		(( index <= line_count ))  || die 2 "Task ${index} was not found in ${src##*/}."
+
 		line="$(sed -n "${index}p" "$src")"
-
 		if [[ -n "$dest" ]]; then
 			insert_task "$line" "$dest" "$index"
 		fi
 
 		sed -i "${index}d" "$src"
 		if grep -qF "$line" "$src"; then
-			die "$LINENO" "failed to remove task ${index} from ${src_name}"
+			die 1 "Failed to remove task ${index} from ${src_name}." "$LINENO"
 		fi
 	done
 }
 
-# Main execution ============================================================ #
+# MAIN EXECUTION ============================================================ #
 
 todo_help() {
 	cat <<-EOF
@@ -116,61 +126,55 @@ todo_help() {
 	bash todo <command> [<argument>...]
 
 	COMMANDS
-	add   <task>
-	del   [todo|done] <index>...
-	done  <index>...
-	undo  <index>...
+	add   <task-description>
+	del   [todo|done] <task-index>...
+	done  <task-index>...
+	undo  <task-index>...
 	EOF
 	exit 0
 }
 
 todo_add() {
-	local usage="bash todo add <task>"
-	[[ $# -gt 0 ]] || die "$LINENO" "missing arguments" "$usage"
-
+	local usage="USAGE: bash todo add <task-description>"
+	[[ $# -gt 0 ]] || die 2 "Task description cannot be empty." "$usage"
 	local task_input="$*"
 	insert_task "$task_input" "$TODO_FILE"
 }
 
 todo_del() {
-	local usage="bash todo del [todo|done] <index>..."
-	[[ $# -gt 0 ]] || die "$LINENO" "missing arguments" "$usage"
-
 	local src_name="todo.txt"
-	if [[ "$1" == "done" || "$1" == "todo" ]]; then
+	if [[ "${1:-}" == "done" || "${1:-}" == "todo" ]]; then
 		src_name="${1}.txt"; shift
 	fi
 
-	move_tasks "$src_name" "$@"
+	local usage="USAGE: bash todo del [todo|done] <task-index>..."
+	[[ $# -gt 0 ]] || die 2 "Task index required." "$usage"
+	move_tasks "$src_name" "$usage" "$@"
 }
 
 todo_done() {
-	local usage="bash todo done <index>..."
-	[[ $# -gt 0 ]] || die "$LINENO" "missing arguments" "$usage"
-	move_tasks "todo.txt" "done.txt" "$@"
+	local usage="USAGE: bash todo done <task-index>..."
+	[[ $# -gt 0 ]] || die 2 "Task index required." "$usage"
+	move_tasks "todo.txt" "done.txt" "$usage" "$@"
 }
 
 todo_undo() {
-	local usage="bash todo undo <index>..."
-	[[ $# -gt 0 ]] || die "$LINENO" "missing arguments" "$usage"
-	move_tasks "done.txt" "todo.txt" "$@"
+	local usage="USAGE: bash todo undo <task-index>..."
+	[[ $# -gt 0 ]] || die 2 "Task index required." "$usage"
+	move_tasks "done.txt" "todo.txt" "$usage" "$@"
 }
 
 main() {
 	local cmd="${1:-}"; shift
-	local usage="bash todo <command> [<argument>...]"
-	[[ $# -gt 0 ]] || die "$LINENO" "missing command" "$usage"
-
-	mkdir -p "$DATA_DIR"
-	touch "$TODO_FILE" "$DONE_FILE"
+	if [[ $# -eq 0 ]]; then todo_help; fi
 
 	case "$cmd" in
-		add)  todo_add "$@" ;;
-		del)  todo_del "$@" ;;
+		add)  todo_add  "$@" ;;
+		del)  todo_del  "$@" ;;
 		done) todo_done "$@" ;;
 		undo) todo_undo "$@" ;;
 		help) todo_help "$@" ;;
-		*)    die "$LINENO" "${cmd} is not a valid command" ;;
+		*)    die 2 "'${cmd}' is not a valid command." ;;
 	esac
 }
 
