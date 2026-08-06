@@ -7,12 +7,11 @@ set -euo -E pipefail
 # Arguments:
 #  $1 INT Exit code: 1, 2
 #  $2 STR Error description
-#     INT Line number (exit code 1)
-#     STR Subcommand usage (exit code 2)
+#  $3 INT Line number (optional)
 die() {
 	local code="${1:-1}"
 	local desc="${2:-An unknown error has occurred.}"
-	local lineno usage
+	local lineno="${3:-?}"
 
 	printf "ERROR: %s\n" "$desc" >&2
 	if [[ "$code" -eq 2 ]]; then
@@ -29,18 +28,15 @@ die() {
 
 trap 'die 1 "Command failed unexpectedly." "$LINENO"' ERR
 
-# PATHS ===================================================================== #
+# CONSTANTS ================================================================= #
 
 readonly APP_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly CONFIG_FILE="${APP_ROOT}/todo.conf"
-
-if [[ -f "$CONFIG_FILE" ]]; then
-	source "$CONFIG_FILE"
-fi
+if [[ -f "$CONFIG_FILE" ]]; then source "$CONFIG_FILE"; fi
 
 readonly DATA_DIR="${DATA_DIR:-$APP_ROOT}"
 if ! mkdir -p "$DATA_DIR"; then
-	die "Cannot create directory at '${DATA_DIR}'." "$LINENO"
+	die 1 "Cannot create directory at ${DATA_DIR}" "$LINENO"
 fi
 
 readonly TODO_FILE="${DATA_DIR}/todo.txt"
@@ -56,7 +52,7 @@ insert_task() {
 	local input_line="${1:-}" dest="${2:-}" src_index="${3:-}"
 	[[ -n "$input_line" ]] || die 1 "Missing argument: \$1 Task string." "$LINENO"
 	[[ -n "$dest" ]]       || die 1 "Missing argument: \$2 Target path." "$LINENO"
-	[[ -f "$dest" ]]       || die 1 "Target file '${dest##*/}' was not found in ${DATA_DIR}." "$LINENO"
+	[[ -f "$dest" ]]       || die 1 "Target file ${dest##*/} was not found in ${DATA_DIR}" "$LINENO"
 
 	local cmd="${FUNCNAME[-2]}"
 	local task_name="task${src_index:+ $src_index}"
@@ -71,12 +67,12 @@ insert_task() {
 			current_date="$(date +%F)"
 			output_line="${current_date} ${clean_line}"
 			;;
-		*) die 1 "'${todo_cmd}' is not a valid command function." "$LINENO" ;;
+		*) die 1 "${todo_cmd} is not a valid command function." "$LINENO" ;;
 	esac
 
 	printf "%s\n" "$output_line" >> "$dest"
 	if ! grep -qF "$output_line" "$dest"; then
-		die 1 "Failed to insert ${task_name} into ${dest##*/}." "$LINENO"
+		die 1 "Failed to insert ${task_name} into ${dest##*/}" "$LINENO"
 	fi
 }
 
@@ -87,8 +83,7 @@ insert_task() {
 move_tasks() {
 	local src_name="${1:-}"; shift
 	[[ -n "$src" ]] || die 1 "Missing argument: \$1 Source filename." "$LINENO"
-	[[ -f "$src" ]] || die 1 "'${src_name}' was not found in ${DATA_DIR}." "$LINENO"
-	[[ $# -gt 0 ]]  || die 1 "Missing argument: \$2." "$LINENO"
+	[[ -f "$src" ]] || die 1 "${src_name} was not found in ${DATA_DIR}" "$LINENO"
 
 	local dest_name=""
 	if [[ "${1:-}" =~ \.txt$ ]]; then dest_name="$1"; shift; fi
@@ -101,10 +96,10 @@ move_tasks() {
 
 	# TODO: sort tasks / make sure the index stays correct as lines get removed
 
-	local line index; for index in "${indexes[@]}"; do
-		[[ "$index" =~ ^[0-9]+$ ]] || die 2 "'${index}' is not an integer."
+	local line index; for index in "$@"; do
+		[[ "$index" =~ ^[0-9]+$ ]] || die 2 "${index} is not an integer."
 		(( index != 0 ))           || die 2 "Task index can't be zero."
-		(( index <= line_count ))  || die 2 "Task ${index} was not found in ${src##*/}."
+		(( index <= line_count ))  || die 2 "Task ${index} was not found in ${src_name}"
 
 		line="$(sed -n "${index}p" "$src")"
 		if [[ -n "$dest" ]]; then
@@ -113,7 +108,7 @@ move_tasks() {
 
 		sed -i "${index}d" "$src"
 		if grep -qF "$line" "$src"; then
-			die 1 "Failed to remove task ${index} from ${src_name}." "$LINENO"
+			die 1 "Failed to remove task ${index} from ${src_name}" "$LINENO"
 		fi
 	done
 }
@@ -137,8 +132,7 @@ todo_help() {
 todo_add() {
 	local usage="USAGE: bash todo add <task-description>"
 	[[ $# -gt 0 ]] || die 2 "Task description cannot be empty." "$usage"
-	local task_input="$*"
-	insert_task "$task_input" "$TODO_FILE"
+	insert_task "$*" "$TODO_FILE"
 }
 
 todo_del() {
@@ -149,19 +143,19 @@ todo_del() {
 
 	local usage="USAGE: bash todo del [todo|done] <task-index>..."
 	[[ $# -gt 0 ]] || die 2 "Task index required." "$usage"
-	move_tasks "$src_name" "$usage" "$@"
+	move_tasks "$src_name" "$@"
 }
 
 todo_done() {
 	local usage="USAGE: bash todo done <task-index>..."
 	[[ $# -gt 0 ]] || die 2 "Task index required." "$usage"
-	move_tasks "todo.txt" "done.txt" "$usage" "$@"
+	move_tasks "todo.txt" "done.txt" "$@"
 }
 
 todo_undo() {
 	local usage="USAGE: bash todo undo <task-index>..."
 	[[ $# -gt 0 ]] || die 2 "Task index required." "$usage"
-	move_tasks "done.txt" "todo.txt" "$usage" "$@"
+	move_tasks "done.txt" "todo.txt" "$@"
 }
 
 main() {
