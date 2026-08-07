@@ -45,8 +45,8 @@ readonly DISABLE_EMOJIS="${DISABLE_EMOJIS:-false}"
 
 # UTILITIES ================================================================= #
 
-MARK_ADD="✨"
-MARK_DEL="🗑️"
+MARK_ADD="➕"
+MARK_DEL="❌"
 MARK_DONE="✅"
 MARK_UNDO="↩️"
 
