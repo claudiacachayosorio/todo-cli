@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # =========================================================================== #
 # Description: Portable task manager for the command line.
-# Synopsis:    bash todo <command> [<argument>...]
+# Command:     bash todo
 
 # ERROR HANDLERS ============================================================ #
 
@@ -13,7 +13,7 @@ die() {
 	local desc="${2:-An unknown error has occurred.}"
 	local line_no="${3:+, line $3}"
 
-	printf "ERROR: %s\n" "$desc" >&2
+	printf "[ERROR] %s\n" "$desc" >&2
 	if [[ "$code" -eq 2 ]]; then
 		printf "Try 'bash todo help' for more information.\n" >&2
 	else
@@ -24,46 +24,70 @@ die() {
 
 trap 'die 1 "Command failed unexpectedly." "$LINENO"' ERR
 
-# SETTINGS ================================================================== #
+# GLOBALS =================================================================== #
 
-readonly APP_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-readonly CONFIG_FILE="${APP_ROOT}/todo.conf"
+readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly CONFIG_FILE="${CONFIG_FILE:-${SCRIPT_DIR}/todo.conf}"
 if [[ -f "$CONFIG_FILE" ]]; then source "$CONFIG_FILE"; fi
 
-readonly DATA_DIR="${DATA_DIR:-$APP_ROOT}"
-if [[ "$DATA_DIR" != "$APP_ROOT" ]]; then
-	mkdir -p "$DATA_DIR" || die 1 "Could not create directory at ${DATA_DIR}."
-fi
-
+readonly DATA_DIR="${DATA_DIR:-$SCRIPT_DIR}"
 readonly TODO_FILE="${DATA_DIR}/todo.txt"
-if [[ ! -f "$TODO_FILE" ]]; then touch "$TODO_FILE"; fi
-[[ -r "$TODO_FILE" ]] || die 1 "Permission denied: Cannot read todo.txt."
-[[ -w "$TODO_FILE" ]] || die 1 "Permission denied: Cannot write to todo.txt."
 
 readonly DISABLE_EMOJIS="${DISABLE_EMOJIS:-false}"
 
-# UTILITIES ================================================================= #
-
-MARK_ADD="➕"
-MARK_DEL="❌"
-MARK_DONE="✅"
-MARK_UNDO="↩️"
+LABEL_ADD="➕"
+LABEL_DEL="🗑️"
+LABEL_DONE="✅"
+LABEL_UNDO="↩️"
+LABEL_SKIP="⏭️"
 
 if [[ "$DISABLE_EMOJIS" == "true" ]]; then
-	MARK_ADD="[+]"
-	MARK_DEL="[-]"
-	MARK_DONE="[x]"
-	MARK_UNDO="[ ]"
+	LABEL_ADD="[+]"
+	LABEL_DEL="[-]"
+	LABEL_DONE="[x]"
+	LABEL_UNDO="[ ]"
+	LABEL_SKIP=">>|"
 fi
 
-TODO_LINE_COUNT="$(wc -l < "$TODO_FILE")"
-INDEX_WIDTH="${#TODO_LINE_COUNT}"
+readonly TASK_COUNT="$(wc -l < "$TODO_FILE")"
+readonly INDEX_WIDTH="${#TASK_COUNT}"
 
-is_index_valid() {
-	if [[ ! "$1" =~ ^[0-9]+$ || $1 -eq 0 || $1 -gt "$TODO_LINE_COUNT" ]]; then
-		printf "%s is not a valid number.\n"; return 1
+# HELPERS =================================================================== #
+
+init_storage() {
+	if [[ "$DATA_DIR" != "$SCRIPT_DIR" ]]; then
+		if ! mkdir -p "$DATA_DIR"; then
+			die 1 "Cannot create directory at ${DATA_DIR}."
+		fi
 	fi
+
+	if ! touch "$TODO_FILE"; then
+		die 1 "Cannot create todo.txt in ${DATA_DIR}."
+	fi
+}
+
+assert_todo_empty() {
+	if [[ ! -s "$TODO_FILE" ]]; then
+		printf "Your todo.txt file is empty!"; exit 0
+	else return 0; fi
+}
+
+validate_index() {
+	local index="$1"
+	[[ $# -eq 1 ]] || die 1 "Missing arguments."
+	if [[ ! "$index" =~ ^[0-9]+$ ]]; then
+		printf "%s '%s' is not a number. Skipping.\n" "$LABEL_SKIP" "$index"; return 1
+	elif [[ "$index" -eq 0 ]]; then
+		printf "%s Task index must be greater than zero. Skipping.\n" "$LABEL_SKIP"; return 1
+	elif [[ "$index" -gt "$TASK_COUNT" ]]; then
+		printf "%s Task %s does not exists. Skipping.\n" "$LABEL_SKIP" "$index"; return 1
+	else return 0; fi
+}
+
+print_success_task() {
+	[[ $# -eq 3 ]] || die 1 "Invalid arguments: $*"
+	local icon="$1" index="$2" task="$3"
+	printf "%s %-*d %s\n" "$icon" "$INDEX_WIDTH" "$index" "${task#x }"
 }
 
 # SUBCOMMANDS =============================================================== #
@@ -85,87 +109,95 @@ todo_help() {
 todo_add() {
 	[[ $# -gt 0 ]] || die 2 "Task description cannot be empty."
 	local task; task="$(awk '$1=$1' <<< "$*")"
-	local index; index="$(( ${TODO_LINE_COUNT} + 1 ))"
+	local index; index="$(( TODO_LINE_COUNT + 1 ))"
 	printf "%s\n" "$task" >> "$TODO_FILE"
-	printf "%s %-*d %s\n" "$MARK_ADD" "$INDEX_WIDTH" "$index" "$task"
+	print_success_task "$LABEL_ADD" "$index" "$task"
 }
 
 todo_del() {
+	assert_todo_empty
 	[[ $# -gt 0 ]] || die 2 "Task index required."
+	local icon="${ICON_DEL:+$ICON_DEL }"
 	local task formatted_task valid_tasks="" sed_args=()
 
 	local i; for i in "$@"; do
-		if ! is_index_valid "$i"; then continue; fi
-		task="$(sed -n "${index}p" "$TODO_FILE")"
-		printf -v formatted_task "%s %-*d %s\n" "$MARK_DEL" "$INDEX_WIDTH" "$i" "$task"
+		if ! validate_index "$i"; then continue; fi
 		sed_args+=("-e" "${i}d")
+		task="$(sed -n "${i}p" "$TODO_FILE")"
+		formatted_task="$(print_success_task "$LABEL_ADD" "$i" "$task")"
 		valid_tasks+="$formatted_task"
 	done
 
 	if [[ "${#sed_args[@]}" -gt 0 ]]; then
 		sed -i "${sed_args[@]}" "$TODO_FILE"
 		printf "%s" "$valid_tasks"
-	fi
+	else exit 2; fi
+	assert_todo_empty
 }
 
 todo_done() {
+	assert_todo_empty
 	[[ $# -gt 0 ]] || die 2 "Task index required."
 	local task formatted_task valid_tasks="" sed_args=()
 
 	local i; for i in "$@"; do
-		if ! is_index_valid "$i"; then continue; fi
+		if ! validate_index "$i"; then continue; fi
 		task="$(sed -n "${i}p" "$TODO_FILE")"
 
 		if [[ "$task" =~ ^x ]]; then
-			printf "Task %d is already marked as done.\n" "$i"; continue
+			printf "⏭️ Task %d is already marked as done. Skipping.\n" "$i"; continue
 		fi
 
-		printf -v formatted_task "%s %-*d %s\n" "$MARK_DONE" "$INDEX_WIDTH" "$i" "$task"
 		sed_args+=("-e" "${i}s/^/x /")
+		formatted_task="$(print_success_task "$LABEL_DONE" "$i" "$task")"
 		valid_tasks+="$formatted_task"
 	done
 
 	if [[ "${#sed_args[@]}" -gt 0 ]]; then
 		sed -i "${sed_args[@]}" "$TODO_FILE"
 		printf "%s" "$valid_tasks"
-	fi
+	else exit 2; fi
 }
 
 todo_undo() {
+	assert_todo_empty
 	[[ $# -gt 0 ]] || die 2 "Task index required."
 	local task formatted_task valid_tasks="" sed_args=()
 
 	local i; for i in "$@"; do
-		if ! is_index_valid "$i"; then continue; fi
+		if ! validate_index "$i"; then continue; fi
 		task="$(sed -n "${i}p" "$TODO_FILE")"
 
 		if [[ ! "$task" =~ ^x ]]; then
 			printf "Task %d is already unchecked.\n" "$i"; continue
 		fi
 
-		printf -v formatted_task "%s %-*d %s\n" "$MARK_UNDO" "$INDEX_WIDTH" "$i" "$task"
 		sed_args+=("-e" "${i}s/^x //")
+		formatted_task="$(print_success_task "$LABEL_UNDO" "$i" "$task")"
 		valid_tasks+="$formatted_task"
 	done
 
 	if [[ "${#sed_args[@]}" -gt 0 ]]; then
 		sed -i "${sed_args[@]}" "$TODO_FILE"
 		printf "%s" "$valid_tasks"
-	fi
+	else exit 2; fi
 }
 
 # MAIN ====================================================================== #
 
 main() {
+	init_storage
 	if [[ $# -eq 0 ]]; then todo_help; fi
 	local cmd="${1:-}"; shift
+
 	case "$cmd" in
-		add)  todo_add  "$@" ;;
-		del)  todo_del  "$@" ;;
+		--init-only) exit 0 ;;
+		add) todo_add "$@" ;;
+		del) todo_del "$@" ;;
 		done) todo_done "$@" ;;
 		undo) todo_undo "$@" ;;
-		help) todo_help "$@" ;;
-		*)    die 2 "${cmd} is not a valid command." ;;
+		help) todo_help ;;
+		*) die 2 "${cmd} is not a valid command." ;;
 	esac
 }
 
