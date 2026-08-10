@@ -40,8 +40,8 @@ setup() {
 	run "$APP_SCRIPT" --init-only
 	assert_success
 	refute_output
-	assert [ -d "$MOCK_DATA_DIR" ]
-	assert [ -f "$MOCK_TODO_FILE" ]
+	assert_dir_exists "$MOCK_DATA_DIR"
+	assert_file_exists "$MOCK_TODO_FILE"
 }
 
 @test "script prints usage guide when no arguments are provided" {
@@ -76,7 +76,7 @@ setup() {
 	assert_success
 	assert_output "✨ 11 ${task}"
 
-	assert [ -f "$MOCK_TODO_FILE" ]
+	assert_file_exists "$MOCK_TODO_FILE"
 	app_run_task_match 11 "$task"
 }
 
@@ -101,10 +101,7 @@ setup() {
 #	run "$APP_SCRIPT" del 6
 #	assert_success
 #	assert_output "🗑️ 6  ${MOCK_TASKS[6]}"
-
-#	unset "tasks[6]"
-#	tasks=("${tasks[@]}")
-#	app_run_diff_todo "${tasks[@]}"
+#	app_run_todo_content 6
 #}
 
 #@test "subcommand: 'del' removes multiple tasks when provided with their corresponding indexes" {
@@ -115,10 +112,7 @@ setup() {
 #	assert_success
 #	assert_output "🗑️ 1  ${MOCK_TASKS[1]#x }"
 #	assert_output "🗑️ 9  ${MOCK_TASKS[9]}"
-
-#	unset "tasks[1]" "tasks[9]"
-#	tasks=("${tasks[@]}")
-#	app_run_diff_todo "${tasks[@]}"
+#	app_run_todo_content 1 9
 #}
 
 #@test "subcommand: 'del' prints a message when the last task is deleted" {
@@ -142,7 +136,7 @@ setup() {
 #@test "subcommand: 'done' skips task already marked as done" {
 #	app_seed_todo
 #	app_run_index_error "done" "4" "Task 4 is already marked as done."
-#	app_run_diff_todo "${MOCK_TASKS[@]}"
+#	app_run_todo_content
 #}
 
 #@test "subcommand: 'done' prints a success message when todo.txt is empty" {

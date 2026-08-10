@@ -17,17 +17,31 @@ app_seed_todo() {
 app_seed_todo_partial() {
 	mkdir -p "$MOCK_DATA_DIR"
 	[[ ! -s "$MOCK_TODO_FILE" ]]
-	local i; for i in "$@"; do
+	local mock_task_indexes=("$@")
+
+	local i; for i in "${mock_task_indexes[@]}"; do
 		printf "%s\n" "${MOCK_TASKS[$i]}" >> "$MOCK_TODO_FILE"
 	done
 }
 
-app_run_diff_todo() {
-	local mock_tasks="$@"
+app_run_todo_content() {
+	local tasks_removed=("$@")
+	local mock_tasks=("${MOCK_TASKS[@]}")
+	local updated_mock_tasks expected_file_content
+
+	if [[ $# -gt 0 ]]; then
+		local i; for i in "${tasks_removed[@]}"; do
+			unset "mock_tasks[$i]"
+		done
+	else :; fi
+
+	updated_mock_tasks=("${mock_tasks[@]}")
+	printf -v expected_file_content "%s\n" "${updated_mock_tasks[@]:1}"
+
 	[[ -f "$MOCK_TODO_FILE" ]]
-	run diff "$MOCK_TODO_FILE" <(printf "%s\n" "${mock_tasks[@]:1}")
-	assert_success
-	refute_output
+	run cat "$MOCK_TODO_FILE"
+	assert_output "$expected_file_content"
+	return 0
 }
 
 app_run_command_error() {
@@ -47,31 +61,32 @@ app_run_index_error() {
 }
 
 app_run_invalid_index_numbers() {
-	local subcmd="$1"
 	app_seed_todo
+	local subcmd="$1"
 
 	app_run_index_error "$subcmd" "hey" "'hey' is not a number."
-	app_run_diff_todo "${MOCK_TASKS[@]}"
+	app_run_todo_content
 
 	app_run_index_error "$subcmd" "0" "Task index must be greater than zero."
-	app_run_diff_todo "${MOCK_TASKS[@]}"
+	app_run_todo_content
 
 	app_run_index_error "$subcmd" "99" "Task 99 does not exists."
-	app_run_diff_todo "${MOCK_TASKS[@]}"
+	app_run_todo_content
 }
 
 app_assert_empty_todo() {
-	assert [[ -f "$MOCK_TODO_FILE" ]]
-	refute [[ -s "$MOCK_TODO_FILE" ]]
+	assert_file_exists "$MOCK_TODO_FILE"
+	assert_file_empty "$MOCK_TODO_FILE"
 	assert_output "Your todo.txt file is empty!"
 }
 
 app_run_empty_todo() {
 	local subcmd="$1"
 	[[ ! -s "$MOCK_TODO_FILE" ]]
+
 	run "$APP_SCRIPT" "$subcmd" 1
-	assert_success
 	app_assert_empty_todo
+	assert_success
 }
 
 app_run_task_match() {
