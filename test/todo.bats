@@ -63,21 +63,21 @@ setup() {
 
 # SUBCOMMAND: ADD =========================================================== #
 
-#@test "subcommand: 'add' fails without arguments" {
-#	app_run_command_error "add" "Task description cannot be empty."
-#}
+@test "subcommand: 'add' fails without arguments" {
+	app_run_command_error "add" "Task description cannot be empty."
+}
 
-#@test "subcommand: 'add' appends a new line with the provided task string" {
-#	local task="feed sourdough starter"
-#	app_seed_todo
+@test "subcommand: 'add' appends a new line with the provided task string" {
+	local task="feed sourdough starter"
+	app_seed_todo
 
-#	run "$APP_SCRIPT" add "$task"
-#	assert_success
-#	assert_output "✨ 11 ${task}"
+	run "$APP_SCRIPT" add "$task"
+	assert_success
+	assert_output "✨ 11 ${task}"
 
-#	assert [[ -f "$MOCK_TODO_FILE" ]]
-#	app_run_task_match 11 "$task"
-#}
+	assert [ -f "$MOCK_TODO_FILE" ]
+	app_run_task_match 11 "$task"
+}
 
 # SUBCOMMAND: DEL =========================================================== #
 

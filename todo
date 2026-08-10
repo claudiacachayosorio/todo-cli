@@ -32,10 +32,12 @@ if [[ -f "$CONFIG_FILE" ]]; then source "$CONFIG_FILE"; fi
 
 readonly DATA_DIR="${DATA_DIR:-$SCRIPT_DIR}"
 readonly TODO_FILE="${DATA_DIR}/todo.txt"
+TASK_COUNT=0
+INDEX_WIDTH=1
 
 readonly DISABLE_EMOJIS="${DISABLE_EMOJIS:-false}"
 
-LABEL_ADD="➕"
+LABEL_ADD="✨"
 LABEL_DEL="🗑️"
 LABEL_DONE="✅"
 LABEL_UNDO="↩️"
@@ -49,10 +51,6 @@ if [[ "$DISABLE_EMOJIS" == "true" ]]; then
 	LABEL_SKIP=">>|"
 fi
 
-# TODO: get these variables as globals after init_storage
-#readonly TASK_COUNT="$(wc -l < "$TODO_FILE")"
-#readonly INDEX_WIDTH="${#TASK_COUNT}"
-
 # HELPERS =================================================================== #
 
 init_storage() {
@@ -65,6 +63,9 @@ init_storage() {
 	if ! touch "$TODO_FILE"; then
 		die 1 "Cannot create todo.txt in ${DATA_DIR}."
 	fi
+
+	TASK_COUNT="$(wc -l < "$TODO_FILE")"
+	INDEX_WIDTH="${#TASK_COUNT}"
 }
 
 assert_todo_empty() {
@@ -75,7 +76,6 @@ assert_todo_empty() {
 
 validate_index() {
 	local index="$1"
-	[[ $# -eq 1 ]] || die 1 "Missing arguments."
 	if [[ ! "$index" =~ ^[0-9]+$ ]]; then
 		printf "%s '%s' is not a number. Skipping.\n" "$LABEL_SKIP" "$index"; return 1
 	elif [[ "$index" -eq 0 ]]; then
@@ -86,7 +86,6 @@ validate_index() {
 }
 
 print_success_task() {
-	[[ $# -eq 3 ]] || die 1 "Invalid arguments: $*"
 	local icon="$1" index="$2" task="$3"
 	printf "%s %-*d %s\n" "$icon" "$INDEX_WIDTH" "$index" "${task#x }"
 }
@@ -110,7 +109,7 @@ todo_help() {
 todo_add() {
 	[[ $# -gt 0 ]] || die 2 "Task description cannot be empty."
 	local task; task="$(awk '$1=$1' <<< "$*")"
-	local index; index="$(( TODO_LINE_COUNT + 1 ))"
+	local index; index="$(( TASK_COUNT + 1 ))"
 	printf "%s\n" "$task" >> "$TODO_FILE"
 	print_success_task "$LABEL_ADD" "$index" "$task"
 }
