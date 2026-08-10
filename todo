@@ -13,7 +13,7 @@ die() {
 	local desc="${2:-An unknown error has occurred.}"
 	local line_no="${3:+, line $3}"
 
-	printf "[ERROR] %s\n" "$desc" >&2
+	printf "ERROR: %s\n" "$desc" >&2
 	if [[ "$code" -eq 2 ]]; then
 		printf "Try 'bash todo help' for more information.\n" >&2
 	else
@@ -49,8 +49,9 @@ if [[ "$DISABLE_EMOJIS" == "true" ]]; then
 	LABEL_SKIP=">>|"
 fi
 
-readonly TASK_COUNT="$(wc -l < "$TODO_FILE")"
-readonly INDEX_WIDTH="${#TASK_COUNT}"
+# TODO: get these variables as globals after init_storage
+#readonly TASK_COUNT="$(wc -l < "$TODO_FILE")"
+#readonly INDEX_WIDTH="${#TASK_COUNT}"
 
 # HELPERS =================================================================== #
 
