@@ -15,7 +15,7 @@ readonly MOCK_TASKS=(""
 	"x test out swiss meringue buttercream recipe"
 	"x use up bananas in peanut butter banana bread"
 	"x replace scale batteries"
-	"research lemon tart recipes"
+	"buy vanilla paste"
 	"make cookie dough to freeze"
 	"taste test lemon cookie recipe"
 	"clear out any expired produce"
@@ -24,6 +24,9 @@ readonly MOCK_TASKS=(""
 
 printf -v MOCK_TASKS_UNTRIMMED "%s\n" "${MOCK_TASKS[@]:1}"
 readonly MOCK_TASKS_RENDERED="${MOCK_TASKS_UNTRIMMED%$'\n'}"
+
+readonly MOCK_NEW_TASK="feed sourdough starter"
+readonly MOCK_NEW_TASK_UNQUOTED=("feed" "sourdough" "starter")
 
 setup() {
 	bats_load_library bats-support
@@ -34,10 +37,13 @@ setup() {
 	source "$APP_SCRIPT"
 }
 
+# STORAGE TESTS ============================================================= #
 # bats --filter "^storage:" test/
-# =========================================================================== #
+
 @test "storage: fresh run: creates data directory and todo.txt" {
 	[[ ! -d "$MOCK_DATA_DIR" ]]
+	[[ ! -f "$MOCK_TODO_FILE" ]]
+
 	run "$APP_SCRIPT" --init-only
 	assert_success
 	assert_dir_exists "$MOCK_DATA_DIR"
@@ -46,6 +52,7 @@ setup() {
 
 @test "storage: existing todo.txt: preserves file content" {
 	seed_todo
+
 	run "$APP_SCRIPT" --init-only
 	assert_success
 	assert_file_exists "$MOCK_TODO_FILE"
@@ -54,8 +61,9 @@ setup() {
 	assert_output "$MOCK_TASKS_RENDERED"
 }
 
+# GLOBAL TESTS ============================================================== #
 # bats --filter "^global:" test/
-# =========================================================================== #
+
 @test "global: no arguments: prints help and exits 0" {
 	run "$APP_SCRIPT"
 	assert_success
@@ -66,37 +74,61 @@ setup() {
 	run_and_assert_command_error "hey" "hey is not a valid command."
 }
 
+# SUBCOMMAND: HELP ========================================================== #
 # bats --filter "^help:" test/
-# =========================================================================== #
+
 @test "help: prints help and exits 0" {
 	run "$APP_SCRIPT" help
 	assert_success
 	assert_line --index 0 "USAGE"
 }
 
+# SUBCOMMAND: ADD =========================================================== #
 # bats --filter "^add:" test/
-# =========================================================================== #
+
 @test "add: no arguments: prints error and exits 2" {
 	run_and_assert_command_error "add" "Task description cannot be empty."
 }
 
-#@test "add: missing todo.txt: intializes storage and saves new task" {}
+@test "add: missing todo.txt: intializes storage and inserts new task" {
+	[[ ! -d "$MOCK_DATA_DIR" ]]
+	[[ ! -f "$MOCK_TODO_FILE" ]]
 
-@test "add: existing tod.txt with data: appends new task" {
-	local task="feed sourdough starter"
-	seed_todo
+	run "$APP_SCRIPT" add "$MOCK_NEW_TASK"
+	assert_new_task_success 1
 
-	run "$APP_SCRIPT" add "$task"
-	assert_success
-	assert_output "✨ 11 ${task}"
-
+	assert_dir_exists "$MOCK_DATA_DIR"
 	assert_file_exists "$MOCK_TODO_FILE"
+
 	run cat "$MOCK_TODO_FILE"
-	assert_line --index 10 "$task"
+	assert_output "$MOCK_NEW_TASK"
 }
 
+@test "add: existing todo.txt with data: appends new task" {
+	seed_todo
+
+	run "$APP_SCRIPT" add "$MOCK_NEW_TASK"
+	assert_new_task_success 11
+
+	[[ -f "$MOCK_TODO_FILE" ]]
+	run cat "$MOCK_TODO_FILE"
+	assert_line --index 10 "$MOCK_NEW_TASK"
+}
+
+@test "add: unquoted task: inserts arguments to todo.txt as one task" {
+	seed_todo
+
+	run "$APP_SCRIPT" add "${MOCK_NEW_TASK_UNQUOTED[@]}"
+	assert_new_task_success 11
+
+	[[ -f "$MOCK_TODO_FILE" ]]
+	run cat "$MOCK_TODO_FILE"
+	assert_line --index 10 "$MOCK_NEW_TASK"
+}
+
+# SUBCOMMAND: DEL =========================================================== #
 # bats --filter "^del:" test/
-# =========================================================================== #
+
 #@test "del: no arguments: prints error and exits 2" {
 #	run_and_assert_command_error "del" "Task index required."
 #}
@@ -140,8 +172,9 @@ setup() {
 
 #@test "del: valid and invalid indexes: skips invalid indexes and only removes lines corresponding to valid indexes" {}
 
+# SUBCOMMAND: DONE ========================================================== #
 # bats --filter "^done:" test/
-# =========================================================================== #
+
 #@test "done: no arguments: prints error and exits 2" {
 #	run_and_assert_command_error "done" "Task index required."
 #}
