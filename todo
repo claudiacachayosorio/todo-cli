@@ -68,9 +68,9 @@ init_storage() {
 	INDEX_WIDTH="${#TASK_COUNT}"
 }
 
-assert_todo_empty() {
+is_todo_empty() {
 	if [[ ! -s "$TODO_FILE" ]]; then
-		printf "Your todo.txt file is empty!"; exit 0
+		printf "Your todo.txt file is empty!\n"; exit 0
 	else return 0; fi
 }
 
@@ -115,11 +115,12 @@ todo_add() {
 }
 
 todo_del() {
-	assert_todo_empty
 	[[ $# -gt 0 ]] || die 2 "Task index required."
 	local icon="${ICON_DEL:+$ICON_DEL }"
-	local task formatted_task valid_tasks="" sed_args=()
+	local task formatted_task
+	local valid_tasks="" sed_args=()
 
+	is_todo_empty
 	local i; for i in "$@"; do
 		if ! validate_index "$i"; then continue; fi
 		sed_args+=("-e" "${i}d")
@@ -132,11 +133,11 @@ todo_del() {
 		sed -i "${sed_args[@]}" "$TODO_FILE"
 		printf "%s" "$valid_tasks"
 	else exit 2; fi
-	assert_todo_empty
+	is_todo_empty
 }
 
 todo_done() {
-	assert_todo_empty
+	is_todo_empty
 	[[ $# -gt 0 ]] || die 2 "Task index required."
 	local task formatted_task valid_tasks="" sed_args=()
 
@@ -160,7 +161,7 @@ todo_done() {
 }
 
 todo_undo() {
-	assert_todo_empty
+	is_todo_empty
 	[[ $# -gt 0 ]] || die 2 "Task index required."
 	local task formatted_task valid_tasks="" sed_args=()
 

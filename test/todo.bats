@@ -32,9 +32,9 @@ setup() {
 	bats_load_library bats-support
 	bats_load_library bats-assert
 	bats_load_library bats-file
-	load "test_helper"
+	load "${BATS_TEST_DIRNAME}/test_helper.bash"
 
-	setup_tmpdir
+	todo_setup_tmpdir
 	source "$APP_SCRIPT"
 }
 
@@ -52,13 +52,13 @@ setup() {
 }
 
 @test "storage: existing todo.txt: preserves file content" {
-	seed_todo
+	todo_seed_all
 
 	run "$APP_SCRIPT" --init-only
 	assert_success
 	assert_file_exists "$MOCK_TODO_FILE"
 
-	run cat "$MOCK_TODO_FILE"
+	todo_inspect_storage
 	assert_output "$MOCK_TASKS_RENDERED"
 }
 
@@ -72,7 +72,8 @@ setup() {
 }
 
 @test "global: invalid subcommand: prints error and exits 2" {
-	run_and_assert_command_error "hey" "hey is not a valid command."
+	run --separate-stderr "$APP_SCRIPT" hey
+	todo_assert_cmd_fails "hey is not a valid command."
 }
 
 # SUBCOMMAND: HELP ========================================================== #
@@ -88,7 +89,8 @@ setup() {
 # bats --filter "^add:" test/
 
 @test "add: no arguments: prints error and exits 2" {
-	run_and_assert_command_error "add" "Task description cannot be empty."
+	run --separate-stderr "$APP_SCRIPT" add
+	todo_assert_cmd_fails "Task description cannot be empty."
 }
 
 @test "add: missing todo.txt: intializes storage and inserts new task" {
@@ -96,51 +98,70 @@ setup() {
 	[[ ! -f "$MOCK_TODO_FILE" ]]
 
 	run "$APP_SCRIPT" add "$MOCK_NEW_TASK"
-	assert_new_task_success 1
+	assert_success
+	assert_output "✨ 1 ${MOCK_NEW_TASK}"
 
 	assert_dir_exists "$MOCK_DATA_DIR"
 	assert_file_exists "$MOCK_TODO_FILE"
 
-	run cat "$MOCK_TODO_FILE"
+	todo_inspect_storage
 	assert_output "$MOCK_NEW_TASK"
 }
 
 @test "add: existing todo.txt with data: appends new task" {
-	seed_todo
+	todo_seed_all
 
 	run "$APP_SCRIPT" add "$MOCK_NEW_TASK"
-	assert_new_task_success 11
+	assert_success
+	assert_output "✨ 11 ${MOCK_NEW_TASK}"
 
-	[[ -f "$MOCK_TODO_FILE" ]]
-	run cat "$MOCK_TODO_FILE"
+	todo_inspect_storage
 	assert_line --index 10 "$MOCK_NEW_TASK"
 }
 
 @test "add: unquoted task: inserts arguments to todo.txt as one task" {
-	seed_todo
+	todo_seed_all
 
 	run "$APP_SCRIPT" add "${MOCK_NEW_TASK_UNQUOTED[@]}"
-	assert_new_task_success 11
+	assert_success
+	assert_output "✨ 11 ${MOCK_NEW_TASK}"
 
-	[[ -f "$MOCK_TODO_FILE" ]]
-	run cat "$MOCK_TODO_FILE"
+	todo_inspect_storage
 	assert_line --index 10 "$MOCK_NEW_TASK"
 }
 
 # SUBCOMMAND: DEL =========================================================== #
 # bats --filter "^del:" test/
 
-#@test "del: no arguments: prints error and exits 2" {
-#	run_and_assert_command_error "del" "Task index required."
-#}
+@test "del: no arguments: prints error and exits 2" {
+	run --separate-stderr "$APP_SCRIPT" del
+	todo_assert_cmd_fails "Task index required."
+}
 
-#@test "del: invalid index numbers: prints error and leaves data intact" {
-#	run_and_assert_invalid_indexes "del"
-#}
+@test "del: invalid indexes: prints error and leaves data intact" {
+	todo_seed_all
 
-#@test "del: empty todo.txt: prints 'empty todo' message and exits 0" {
-#	run_and_assert_todo_empty "del"
-#}
+	run "$APP_SCRIPT" del hey
+	todo_assert_invalid_index "'hey' is not a number."
+	todo_inspect_storage
+	assert_output "$MOCK_TASKS_RENDERED"
+
+	run "$APP_SCRIPT" del 0
+	todo_assert_invalid_index "Task index must be greater than zero."
+	todo_inspect_storage
+	assert_output "$MOCK_TASKS_RENDERED"
+
+	run "$APP_SCRIPT" del 11
+	todo_assert_invalid_index "Task 11 does not exists."
+	todo_inspect_storage
+	assert_output "$MOCK_TASKS_RENDERED"
+}
+
+@test "del: empty todo.txt: prints 'empty todo' message and exits 0" {
+	[[ ! -s "$MOCK_TODO_FILE" ]]
+	run "$APP_SCRIPT" del 1
+	todo_assert_storage_empty
+}
 
 #@test "del: valid index: removes line corresponding to index" {
 #	local tasks=("${MOCK_TASKS[@]}")
@@ -149,7 +170,7 @@ setup() {
 #	run "$APP_SCRIPT" del 6
 #	assert_success
 #	assert_output "🗑️ 6  ${MOCK_TASKS[6]}"
-#	run_and_assert_tasks_removed 6
+#	assert_tasks_removed 6
 #}
 
 #@test "del: multiple indexes: removes lines corresponding to indexes provided" {
@@ -160,7 +181,7 @@ setup() {
 #	assert_success
 #	assert_output "🗑️ 1  ${MOCK_TASKS[1]#x }"
 #	assert_output "🗑️ 9  ${MOCK_TASKS[9]}"
-#	run_and_assert_tasks_removed 1 9
+#	assert_tasks_removed 1 9
 #}
 
 #@test "del: one task exists: removes line and prints 'empty todo' message" {
@@ -168,7 +189,7 @@ setup() {
 #	run "$APP_SCRIPT" del 1
 #	assert_success
 #	assert_output "🗑️ 1 ${MOCK_TASKS[1]#x }"
-#	run_and_assert_todo_content "$MOCK_TASKS_RENDERED"
+#	assert_todo_content "$MOCK_TASKS_RENDERED"
 #}
 
 #@test "del: valid and invalid indexes: skips invalid indexes and only removes lines corresponding to valid indexes" {}
@@ -177,21 +198,22 @@ setup() {
 # bats --filter "^done:" test/
 
 #@test "done: no arguments: prints error and exits 2" {
-#	run_and_assert_command_error "done" "Task index required."
+#	run --separate-stderr "$APP_SCRIPT" done
+#	assert_command_error "Task index required."
 #}
 
 #@test "done: invalid task numbers: prints error and leave data intact" {
-#	run_and_assert_invalid_indexes "done"
+#	assert_invalid_indexes "done"
 #}
 
 #@test "done: task already done: print error and leaves data intact" {
 #	seed_todo
-#	app_run_index_error "done" "4" "Task 4 is already marked as done."
-#	app_run_todo_content
+#	run_and_assert_index_error "done" "4" "Task 4 is already marked as done."
+#	assert_todo_content "$MOCK_TASKS_RENDERED"
 #}
 
 #@test "done: empty todo.txt: prints 'empty todo' message and exits 0" {
-#	run_and_assert_todo_empty "done"
+#	assert_todo_empty "done"
 #}
 
 #@test "done: valid index: inserts 'done' mark into line corresponding to index" {
@@ -199,7 +221,6 @@ setup() {
 #	run "$APP_SCRIPT" done 6
 #	assert_success
 #	assert_output "✅ 6  ${MOCK_TASKS[6]}"
-#	app_run_task_match 6 "x ${MOCK_TASKS[6]}"
 #}
 
 #@test "done: multiple indexes: inserts 'done' mark into lines corresponding to indexes provided" {
@@ -208,9 +229,6 @@ setup() {
 #	assert_success
 #	assert_output "✅ 8  ${MOCK_TASKS[8]}"
 #	assert_output "✅ 9  ${MOCK_TASKS[9]}"
-
-#	app_run_task_match 8 "x ${MOCK_TASKS[8]}"
-#	app_run_task_match 9 "x ${MOCK_TASKS[9]}"
 #}
 
 #@test "done: valid and invalid indexes: skips invalid indexes and inserts 'done' mark into lines corresponding to valid indexes" {}
