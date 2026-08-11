@@ -32,7 +32,7 @@ setup() {
 	bats_load_library bats-support
 	bats_load_library bats-assert
 	bats_load_library bats-file
-	load "${BATS_TEST_DIRNAME}/test_helper.bash"
+	load test_helper.bash
 
 	todo_setup_tmpdir
 	source "$APP_SCRIPT"
