@@ -15,13 +15,12 @@ jobs:
           submodules: true
 
       - name: Make script executable
-        shell: bash
         run: chmod +x ./todo
 
       - name: Install Bats
-        run: npm install -g bats
+        run: npm install bats
 
       - name: Run Bats tests
         env:
           BATS_LIB_PATH: ${{ github.workspace }}/test/test_helper
-        run: bats test/
+        run: ./node_modules/.bin/bats test/
