@@ -21,10 +21,12 @@ jobs:
       - name: Make script executable
         run: chmod +x ./todo
 
-      - name: Install Bats and libraries
+      - name: Setup Bats
         uses: bats-core/bats-action@4.0.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Run tests
+      - name: Run Bats tests
+        env:
+          BATS_LIB_PATH: ${{ github.workspace }}/test/test_helper
         run: bats test/
