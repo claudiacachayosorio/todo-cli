@@ -33,6 +33,7 @@ setup() {
 	bats_load_library bats-assert
 	bats_load_library bats-file
 	load "test_helper"
+
 	setup_tmpdir
 	source "$APP_SCRIPT"
 }
