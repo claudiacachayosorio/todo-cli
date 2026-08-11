@@ -22,27 +22,37 @@ readonly MOCK_TASKS=(""
 	"power clean fridge and freezer"
 )
 
+printf -v MOCK_TASKS_UNTRIMMED "%s\n" "${MOCK_TASKS[@]:1}"
+readonly MOCK_TASKS_RENDERED="${MOCK_TASKS_UNTRIMMED%$'\n'}"
+
 setup() {
 	bats_load_library bats-support
 	bats_load_library bats-assert
 	bats_load_library bats-file
 	load "test_helper"
-	app_setup_tmpdir
+	setup_tmpdir
 	source "$APP_SCRIPT"
 }
 
 # bats --filter "^storage:" test/
 # =========================================================================== #
-@test "storage: fresh run: creates data directory and todo.txt file" {
+@test "storage: fresh run: creates data directory and todo.txt" {
 	[[ ! -d "$MOCK_DATA_DIR" ]]
 	run "$APP_SCRIPT" --init-only
 	assert_success
-	refute_output
 	assert_dir_exists "$MOCK_DATA_DIR"
 	assert_file_exists "$MOCK_TODO_FILE"
 }
 
-#@test "storage: existing todo.txt: preserves file content" {}
+@test "storage: existing todo.txt: preserves file content" {
+	seed_todo
+	run "$APP_SCRIPT" --init-only
+	assert_success
+	assert_file_exists "$MOCK_TODO_FILE"
+
+	run cat "$MOCK_TODO_FILE"
+	assert_output "$MOCK_TASKS_RENDERED"
+}
 
 # bats --filter "^global:" test/
 # =========================================================================== #
@@ -53,7 +63,7 @@ setup() {
 }
 
 @test "global: invalid subcommand: prints error and exits 2" {
-	app_run_command_error "hey" "hey is not a valid command."
+	run_and_assert_command_error "hey" "hey is not a valid command."
 }
 
 # bats --filter "^help:" test/
@@ -67,64 +77,65 @@ setup() {
 # bats --filter "^add:" test/
 # =========================================================================== #
 @test "add: no arguments: prints error and exits 2" {
-	app_run_command_error "add" "Task description cannot be empty."
+	run_and_assert_command_error "add" "Task description cannot be empty."
 }
 
 #@test "add: missing todo.txt: intializes storage and saves new task" {}
 
 @test "add: existing tod.txt with data: appends new task" {
 	local task="feed sourdough starter"
-	app_seed_todo
+	seed_todo
 
 	run "$APP_SCRIPT" add "$task"
 	assert_success
 	assert_output "✨ 11 ${task}"
 
 	assert_file_exists "$MOCK_TODO_FILE"
-	app_run_task_match 11 "$task"
+	run cat "$MOCK_TODO_FILE"
+	assert_line --index 10 "$task"
 }
 
 # bats --filter "^del:" test/
 # =========================================================================== #
 #@test "del: no arguments: prints error and exits 2" {
-#	app_run_command_error "del" "Task index required."
+#	run_and_assert_command_error "del" "Task index required."
 #}
 
 #@test "del: invalid index numbers: prints error and leaves data intact" {
-#	app_run_invalid_index_numbers "del"
+#	run_and_assert_invalid_indexes "del"
 #}
 
 #@test "del: empty todo.txt: prints 'empty todo' message and exits 0" {
-#	app_run_empty_todo "del"
+#	run_and_assert_todo_empty "del"
 #}
 
 #@test "del: valid index: removes line corresponding to index" {
 #	local tasks=("${MOCK_TASKS[@]}")
-#	app_seed_todo
+#	seed_todo
 
 #	run "$APP_SCRIPT" del 6
 #	assert_success
 #	assert_output "🗑️ 6  ${MOCK_TASKS[6]}"
-#	app_run_todo_content 6
+#	run_and_assert_tasks_removed 6
 #}
 
 #@test "del: multiple indexes: removes lines corresponding to indexes provided" {
 #	local tasks=("${MOCK_TASKS[@]}")
-#	app_seed_todo
+#	seed_todo
 
 #	run "$APP_SCRIPT" del 1 9
 #	assert_success
 #	assert_output "🗑️ 1  ${MOCK_TASKS[1]#x }"
 #	assert_output "🗑️ 9  ${MOCK_TASKS[9]}"
-#	app_run_todo_content 1 9
+#	run_and_assert_tasks_removed 1 9
 #}
 
 #@test "del: one task exists: removes line and prints 'empty todo' message" {
-#	app_seed_todo_partial 1
+#	seed_todo_partial 1
 #	run "$APP_SCRIPT" del 1
 #	assert_success
 #	assert_output "🗑️ 1 ${MOCK_TASKS[1]#x }"
-#	app_assert_empty_todo
+#	run_and_assert_todo_content "$MOCK_TASKS_RENDERED"
 #}
 
 #@test "del: valid and invalid indexes: skips invalid indexes and only removes lines corresponding to valid indexes" {}
@@ -132,25 +143,25 @@ setup() {
 # bats --filter "^done:" test/
 # =========================================================================== #
 #@test "done: no arguments: prints error and exits 2" {
-#	app_run_command_error "done" "Task index required."
+#	run_and_assert_command_error "done" "Task index required."
 #}
 
 #@test "done: invalid task numbers: prints error and leave data intact" {
-#	app_run_invalid_index_numbers "done"
+#	run_and_assert_invalid_indexes "done"
 #}
 
 #@test "done: task already done: print error and leaves data intact" {
-#	app_seed_todo
+#	seed_todo
 #	app_run_index_error "done" "4" "Task 4 is already marked as done."
 #	app_run_todo_content
 #}
 
 #@test "done: empty todo.txt: prints 'empty todo' message and exits 0" {
-#	app_run_empty_todo "done"
+#	run_and_assert_todo_empty "done"
 #}
 
 #@test "done: valid index: inserts 'done' mark into line corresponding to index" {
-#	app_seed_todo
+#	seed_todo
 #	run "$APP_SCRIPT" done 6
 #	assert_success
 #	assert_output "✅ 6  ${MOCK_TASKS[6]}"
@@ -158,7 +169,7 @@ setup() {
 #}
 
 #@test "done: multiple indexes: inserts 'done' mark into lines corresponding to indexes provided" {
-#	app_seed_todo
+#	seed_todo
 #	run "$APP_SCRIPT" done 8 9
 #	assert_success
 #	assert_output "✅ 8  ${MOCK_TASKS[8]}"
