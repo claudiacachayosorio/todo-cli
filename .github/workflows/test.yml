@@ -8,10 +8,6 @@ jobs:
   testing:
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        shell: bash
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -19,6 +15,7 @@ jobs:
           submodules: true
 
       - name: Make script executable
+        shell: bash
         run: chmod +x ./todo
 
       - name: Install Bats

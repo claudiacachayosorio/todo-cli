@@ -5,7 +5,7 @@
 
 bats_require_minimum_version 1.5.0
 
-readonly BATS_LIB_PATH="${BATS_TEST_DIRNAME}/test_helper"
+readonly BATS_LIB_PATH="${BATS_LIB_PATH:-${BATS_TEST_DIRNAME}/test_helper}"
 readonly APP_DIR="$(cd "$BATS_TEST_DIRNAME/.." >/dev/null 2>&1 && pwd)"
 readonly APP_SCRIPT="${APP_DIR}/todo"
 
