@@ -87,7 +87,6 @@ todo_help() {
 }
 
 todo_add() {
-	[[ $# -gt 0 ]] || die 2 "Task description cannot be empty."
 	local task; task="$(awk '$1=$1' <<< "$*")"
 	local index; index="$(( TASK_COUNT + 1 ))"
 	printf "%s\n" "$task" >> "$TODO_FILE"
@@ -95,7 +94,6 @@ todo_add() {
 }
 
 todo_del() {
-	[[ $# -gt 0 ]] || die 2 "Task index required."
 	local icon="${ICON_DEL:+$ICON_DEL }"
 	local task formatted_task
 	local valid_tasks="" sed_args=()
@@ -118,7 +116,6 @@ todo_del() {
 
 todo_done() {
 	is_todo_empty
-	[[ $# -gt 0 ]] || die 2 "Task index required."
 	local task formatted_task valid_tasks="" sed_args=()
 
 	local i; for i in "$@"; do
@@ -142,7 +139,6 @@ todo_done() {
 
 todo_undo() {
 	is_todo_empty
-	[[ $# -gt 0 ]] || die 2 "Task index required."
 	local task formatted_task valid_tasks="" sed_args=()
 
 	local i; for i in "$@"; do
@@ -168,24 +164,34 @@ todo_undo() {
 
 main() {
 	init_storage
-	if [[ $# -eq 0 ]]; then todo_help; fi
 	local cmd="${1:-}"; shift
 
 	case "$cmd" in
 		--init-only)
-			exit 0 ;;
+			exit 0
+			;;
 		""|help|--help)
-			todo_help ;;
+			todo_help
+			;;
 		add)
-			todo_add "$@" ;;
+			[[ -n "${1:-}" ]] || die 2 "Task description cannot be empty."
+			todo_add "$@"
+			;;
 		del)
-			todo_del "$@" ;;
+			[[ -n "${1:-}" ]] || die 2 "Task index required."
+			todo_del "$@"
+			;;
 		done)
-			todo_done "$@" ;;
+			[[ -n "${1:-}" ]] || die 2 "Task index required."
+			todo_done "$@"
+			;;
 		undo)
-			todo_undo "$@" ;;
+			[[ -n "${1:-}" ]] || die 2 "Task index required."
+			todo_undo "$@"
+			;;
 		*)
-			die 2 "${cmd} is not a valid command." ;;
+			die 2 "${cmd} is not a valid command."
+			;;
 	esac
 }
 
