@@ -6,8 +6,8 @@
 bats_require_minimum_version 1.5.0
 
 readonly BATS_LIB_PATH="${BATS_TEST_DIRNAME}/test_helper"
-readonly APP_DIR="$(cd "$BATS_TEST_DIRNAME/.." >/dev/null 2>&1 && pwd)"
-readonly APP_SCRIPT="${APP_DIR}/todo"
+readonly TODO_DIR="$(cd "$BATS_TEST_DIRNAME/.." >/dev/null 2>&1 && pwd)"
+readonly TODO_SCRIPT="${TODO_DIR}/todo"
 
 readonly MOCK_TASKS=(""
 	"refill flour containers"
@@ -25,27 +25,26 @@ setup() {
 	bats_load_library bats-support
 	bats_load_library bats-assert
 	bats_load_library bats-file
-
 	load test_helper
-	todo_setup_tmpdir
-	source "$APP_SCRIPT"
+	export DATA_DIR="$BATS_TEST_TMPDIR"
+	source "$TODO_SCRIPT"
 }
 
 # STORAGE TESTS ============================================================= #
 # bats --filter "^storage:" test/
 
 @test "storage: fresh run: creates todo.txt" {
-	[[ ! -f "$MOCK_TODO_FILE" ]]
-	run "$APP_SCRIPT" --init-only
+	[[ ! -f "$TODO_FILE" ]]
+	run "$TODO_SCRIPT" --init-only
 	assert_success
-	assert_file_exists "$MOCK_TODO_FILE"
+	assert_file_exists "$TODO_FILE"
 }
 
 @test "storage: existing todo.txt: preserves file content" {
 	todo_seed_storage
-	run "$APP_SCRIPT" --init-only
+	run "$TODO_SCRIPT" --init-only
 	assert_success
-	assert_file_exists "$MOCK_TODO_FILE"
+	assert_file_exists "$TODO_FILE"
 	todo_assert_storage_persists
 }
 
@@ -53,7 +52,7 @@ setup() {
 # bats --filter "^global:" test/
 
 @test "global: no arguments: prints help and exits 0" {
-	run "$APP_SCRIPT"
+	run "$TODO_SCRIPT"
 	assert_success
 	assert_line --index 0 "USAGE"
 }
@@ -67,7 +66,7 @@ setup() {
 # bats --filter "^help:" test/
 
 @test "help: prints help and exits 0" {
-	run "$APP_SCRIPT" help
+	run "$TODO_SCRIPT" help
 	assert_success
 	assert_line --index 0 "USAGE"
 }
@@ -81,9 +80,9 @@ setup() {
 }
 
 @test "add: missing todo.txt: intializes storage and inserts new task" {
-	[[ ! -f "$MOCK_TODO_FILE" ]]
+	[[ ! -f "$TODO_FILE" ]]
 	todo_execute_add_cmd 1 "${MOCK_TASKS[1]}"
-	assert_file_exists "$MOCK_TODO_FILE"
+	assert_file_exists "$TODO_FILE"
 	todo_assert_new_task 1
 }
 
@@ -94,7 +93,7 @@ setup() {
 }
 
 @test "add: unquoted task: inserts arguments to todo.txt as one task" {
-	touch "$MOCK_TODO_FILE"
+	touch "$TODO_FILE"
 	todo_execute_add_cmd 1 "${MOCK_TASK_1_UNQUOTED[@]}"
 	todo_assert_new_task 1
 }
@@ -118,10 +117,10 @@ setup() {
 }
 
 @test "del: empty todo.txt: prints 'empty todo' message and exits 0" {
-	[[ ! -s "$MOCK_TODO_FILE" ]]
-	run "$APP_SCRIPT" del 1
-	assert_file_exists "$MOCK_TODO_FILE"
-	assert_file_empty "$MOCK_TODO_FILE"
+	[[ ! -s "$TODO_FILE" ]]
+	run "$TODO_SCRIPT" del 1
+	assert_file_exists "$TODO_FILE"
+	assert_file_empty "$TODO_FILE"
 	assert_output "Your todo.txt file is empty!"
 	assert_success
 }
@@ -130,7 +129,7 @@ setup() {
 #	local tasks=("${MOCK_TASKS[@]}")
 #	seed_todo
 
-#	run "$APP_SCRIPT" del 6
+#	run "$TODO_SCRIPT" del 6
 #	assert_success
 #	assert_output "🗑️ 6  ${MOCK_TASKS[6]}"
 #	assert_tasks_removed 6
@@ -140,7 +139,7 @@ setup() {
 #	local tasks=("${MOCK_TASKS[@]}")
 #	seed_todo
 
-#	run "$APP_SCRIPT" del 1 9
+#	run "$TODO_SCRIPT" del 1 9
 #	assert_success
 #	assert_output "🗑️ 1  ${MOCK_TASKS[1]#x }"
 #	assert_output "🗑️ 9  ${MOCK_TASKS[9]}"
@@ -149,7 +148,7 @@ setup() {
 
 #@test "del: one task exists: removes line and prints 'empty todo' message" {
 #	seed_todo_partial 1
-#	run "$APP_SCRIPT" del 1
+#	run "$TODO_SCRIPT" del 1
 #	assert_success
 #	assert_output "🗑️ 1 ${MOCK_TASKS[1]#x }"
 #	assert_todo_content "$MOCK_TASKS_RENDERED"
@@ -161,7 +160,7 @@ setup() {
 # bats --filter "^done:" test/
 
 #@test "done: no arguments: prints error and exits 2" {
-#	run --separate-stderr "$APP_SCRIPT" done
+#	run --separate-stderr "$TODO_SCRIPT" done
 #	assert_command_error "Task index required."
 #}
 
@@ -181,14 +180,14 @@ setup() {
 
 #@test "done: valid index: inserts 'done' mark into line corresponding to index" {
 #	seed_todo
-#	run "$APP_SCRIPT" done 6
+#	run "$TODO_SCRIPT" done 6
 #	assert_success
 #	assert_output "✅ 6  ${MOCK_TASKS[6]}"
 #}
 
 #@test "done: multiple indexes: inserts 'done' mark into lines corresponding to indexes provided" {
 #	seed_todo
-#	run "$APP_SCRIPT" done 8 9
+#	run "$TODO_SCRIPT" done 8 9
 #	assert_success
 #	assert_output "✅ 8  ${MOCK_TASKS[8]}"
 #	assert_output "✅ 9  ${MOCK_TASKS[9]}"

@@ -2,29 +2,22 @@
 # =========================================================================== #
 # Description: Helper functions for todo testing suite.
 
-todo_setup_tmpdir() {
-	export MOCK_DATA_DIR="${BATS_TEST_TMPDIR}/data"
-	export MOCK_TODO_FILE="${MOCK_DATA_DIR}/todo.txt"
-	export DATA_DIR="$MOCK_DATA_DIR"
-	mkdir -p "$MOCK_DATA_DIR"
-}
-
 todo_seed_storage() {
 	local task_count="${1:-${#MOCK_TASKS[@]}}"
-	[[ -d "$MOCK_DATA_DIR" ]]
-	printf "%s\n" "${MOCK_TASKS[@]:1:task_count}" > "$MOCK_TODO_FILE"
+	[[ -d "$DATA_DIR" ]]
+	printf "%s\n" "${MOCK_TASKS[@]:1:task_count}" > "$TODO_FILE"
 }
 
 todo_assert_storage_persists() {
-	[[ -f "$MOCK_TODO_FILE" ]]
-	run cat "$MOCK_TODO_FILE"
+	[[ -f "$TODO_FILE" ]]
+	run cat "$TODO_FILE"
 	assert_output "$MOCK_TASKS_RENDERED"
 }
 
 todo_assert_new_task() {
 	local index="$1"
-	[[ -f "$MOCK_TODO_FILE" ]]
-	run cat "$MOCK_TODO_FILE"
+	[[ -f "$TODO_FILE" ]]
+	run cat "$TODO_FILE"
 	assert_line --index -1 "${MOCK_TASKS[$index]}"
 }
 
@@ -32,7 +25,7 @@ todo_execute_usage_failure() {
 	local err_desc="$1"; shift
 	local cli_args=("$@")
 
-	run --separate-stderr "$APP_SCRIPT" "${cli_args[@]}"
+	run --separate-stderr "$TODO_SCRIPT" "${cli_args[@]}"
 	assert_failure 2
 	refute_output
 	assert_stderr_line --index 0 "ERROR: ${err_desc}"
@@ -41,7 +34,7 @@ todo_execute_usage_failure() {
 
 todo_execute_invalid_index() {
 	local subcmd="$1" index="$2" err_desc="$3"
-	run "$APP_SCRIPT" "$subcmd" "$index"
+	run "$TODO_SCRIPT" "$subcmd" "$index"
 	assert_output "⏭️ ${err_desc} Skipping."
 	assert_failure 2
 }
@@ -50,7 +43,7 @@ todo_execute_index_cmd() {
 	local subcmd="$1" label="$2"; shift 2
 	local indexes=("$@")
 
-	run "$APP_SCRIPT" "$subcmd" "${indexes[@]}"
+	run "$TODO_SCRIPT" "$subcmd" "${indexes[@]}"
 	assert_success
 
 	local i; for i in "${indexes[@]}"; do
@@ -62,7 +55,7 @@ todo_execute_add_cmd() {
 	local new_index="$1"; shift
 	local task_words=("$@")
 
-	run "$APP_SCRIPT" add "${task_words[@]}"
+	run "$TODO_SCRIPT" add "${task_words[@]}"
 	assert_success
 	assert_output "✨ ${new_index} ${task_words[*]}"
 }
