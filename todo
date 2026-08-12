@@ -172,13 +172,20 @@ main() {
 	local cmd="${1:-}"; shift
 
 	case "$cmd" in
-		--init-only) exit 0 ;;
-		add) todo_add "$@" ;;
-		del) todo_del "$@" ;;
-		done) todo_done "$@" ;;
-		undo) todo_undo "$@" ;;
-		help) todo_help ;;
-		*) die 2 "${cmd} is not a valid command." ;;
+		--init-only)
+			exit 0 ;;
+		""|help|--help)
+			todo_help ;;
+		add)
+			todo_add "$@" ;;
+		del)
+			todo_del "$@" ;;
+		done)
+			todo_done "$@" ;;
+		undo)
+			todo_undo "$@" ;;
+		*)
+			die 2 "${cmd} is not a valid command." ;;
 	esac
 }
 

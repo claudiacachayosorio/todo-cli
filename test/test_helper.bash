@@ -4,7 +4,6 @@
 
 todo_seed_storage() {
 	local task_count="${1:-${#MOCK_TASKS[@]}}"
-	[[ -d "$DATA_DIR" ]]
 	printf "%s\n" "${MOCK_TASKS[@]:1:task_count}" > "$TODO_FILE"
 }
 
@@ -49,6 +48,13 @@ todo_execute_index_cmd() {
 	local i; for i in "${indexes[@]}"; do
 		assert_output --partial "${label} ${i} ${MOCK_TASKS[$i]}"
 	done
+}
+
+todo_execute_help() {
+	local subcmd="${1:-}"
+	run "$TODO_SCRIPT" "$subcmd"
+	assert_success
+	assert_line --index 0 "USAGE"
 }
 
 todo_execute_add_cmd() {

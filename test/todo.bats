@@ -30,45 +30,34 @@ setup() {
 	source "$TODO_SCRIPT"
 }
 
-# STORAGE TESTS ============================================================= #
-# bats --filter "^storage:" test/
+# bats --filter "^interface:" test/
+@test "interface: handles routing and usage" {
+	# no arguments: prints help and exits 0
+	todo_execute_help
 
-@test "storage: fresh run: creates todo.txt" {
-	[[ ! -f "$TODO_FILE" ]]
-	run "$TODO_SCRIPT" --init-only
-	assert_success
-	assert_file_exists "$TODO_FILE"
-}
+	# help option : prints help and exits 0
+	todo_execute_help "help"
+	todo_execute_help "--help"
 
-@test "storage: existing todo.txt: preserves file content" {
-	todo_seed_storage
-	run "$TODO_SCRIPT" --init-only
-	assert_success
-	assert_file_exists "$TODO_FILE"
-	todo_assert_storage_persists
-}
-
-# GLOBAL TESTS ============================================================== #
-# bats --filter "^global:" test/
-
-@test "global: no arguments: prints help and exits 0" {
-	run "$TODO_SCRIPT"
-	assert_success
-	assert_line --index 0 "USAGE"
-}
-
-@test "global: invalid subcommand: prints error and exits 2" {
+	# invalid subcommand: prints error and exits 2
 	local err_desc="hey is not a valid command."
 	todo_execute_usage_failure "$err_desc" "hey"
 }
 
-# SUBCOMMAND: HELP ========================================================== #
-# bats --filter "^help:" test/
+# bats --filter "^storage:" test/
+@test "storage: initializes and manages files" {
+	[[ ! -f "$TODO_FILE" ]]
 
-@test "help: prints help and exits 0" {
-	run "$TODO_SCRIPT" help
+	# fresh run: creates todo.txt
+	run "$TODO_SCRIPT" --init-only
 	assert_success
-	assert_line --index 0 "USAGE"
+	assert_file_exists "$TODO_FILE"
+
+	# existing todo.txt: preserves file content
+	todo_seed_storage
+	run "$TODO_SCRIPT" --init-only
+	assert_success
+	todo_assert_storage_persists
 }
 
 # SUBCOMMAND: ADD =========================================================== #
