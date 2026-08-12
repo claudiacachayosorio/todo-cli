@@ -33,7 +33,7 @@ if [[ -f "$CONFIG_FILE" ]]; then source "$CONFIG_FILE"; fi
 readonly DATA_DIR="${DATA_DIR:-$SCRIPT_DIR}"
 readonly TODO_FILE="${DATA_DIR}/todo.txt"
 TASK_COUNT=0
-INDEX_WIDTH=1
+INDEX_WIDTH=2
 
 readonly DISABLE_EMOJIS="${DISABLE_EMOJIS:-false}"
 

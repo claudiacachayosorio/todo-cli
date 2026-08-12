@@ -9,53 +9,75 @@ todo_setup_tmpdir() {
 	printf "DATA_DIR=\"%s\"\n" "$MOCK_DATA_DIR" > "$CONFIG_FILE"
 }
 
-todo_seed_all() {
+todo_touch_storage() {
 	mkdir -p "$MOCK_DATA_DIR"
-	printf "%s\n" "${MOCK_TASKS[@]:1}" > "$MOCK_TODO_FILE"
+	touch "$MOCK_TODO_FILE"
 }
 
-todo_inspect_storage() {
-	[[ -f "$MOCK_TODO_FILE" ]]
-	run cat "$MOCK_TODO_FILE"
-}
-
-todo_assert_cmd_fails() {
-	local err_desc="$1"
-	assert_failure 2
-	refute_output
-	assert_stderr_line --index 0 "ERROR: ${err_desc}"
-	assert_stderr_line --index 1 "Try 'bash todo help' for more information."
-}
-
-todo_assert_invalid_index() {
-	local err_desc="$1"
-	assert_output "⏭️ ${err_desc} Skipping."
-	assert_failure 2
-}
-
-todo_assert_storage_empty() {
-	assert_file_exists "$MOCK_TODO_FILE"
-	assert_file_empty "$MOCK_TODO_FILE"
-	assert_output "Your todo.txt file is empty!"
-	assert_success
-}
-
-###
-
-todo_seed_partial() {
-	local mock_task_indexes=("$@")
-	mkdir -p "$MOCK_DATA_DIR"
-	[[ ! -s "$MOCK_TODO_FILE" ]]
-
-	local i; for i in "${mock_task_indexes[@]}"; do
-		printf "%s\n" "${MOCK_TASKS[$i]}" >> "$MOCK_TODO_FILE"
-	done
+todo_seed_storage() {
+	local task_count="${1:-${#MOCK_TASKS[@]}}"
+	todo_touch_storage
+	printf "%s\n" "${MOCK_TASKS[@]:1:task_count}" > "$MOCK_TODO_FILE"
 }
 
 todo_assert_storage_exists() {
 	assert_dir_exists "$MOCK_DATA_DIR"
 	assert_file_exists "$MOCK_TODO_FILE"
 }
+
+todo_assert_storage_persists() {
+	[[ -f "$MOCK_TODO_FILE" ]]
+	run cat "$MOCK_TODO_FILE"
+	assert_output "$MOCK_TASKS_RENDERED"
+}
+
+todo_assert_new_task() {
+	local index="$1"
+	[[ -f "$MOCK_TODO_FILE" ]]
+	run cat "$MOCK_TODO_FILE"
+	assert_line --index -1 "${MOCK_TASKS[$index]}"
+}
+
+todo_execute_usage_failure() {
+	local err_desc="$1"; shift
+	local cli_args=("$@")
+
+	run --separate-stderr "$APP_SCRIPT" "${cli_args[@]}"
+	assert_failure 2
+	refute_output
+	assert_stderr_line --index 0 "ERROR: ${err_desc}"
+	assert_stderr_line --index 1 "Try 'bash todo help' for more information."
+}
+
+todo_execute_invalid_index() {
+	local subcmd="$1" index="$2" err_desc="$3"
+	run "$APP_SCRIPT" "$subcmd" "$index"
+	assert_output "⏭️ ${err_desc} Skipping."
+	assert_failure 2
+}
+
+todo_execute_index_cmd() {
+	local subcmd="$1" label="$2"; shift 2
+	local indexes=("$@")
+
+	run "$APP_SCRIPT" "$subcmd" "${indexes[@]}"
+	assert_success
+
+	local i; for i in "${indexes[@]}"; do
+		assert_output --partial "${label} ${i} ${MOCK_TASKS[$i]}"
+	done
+}
+
+todo_execute_add_cmd() {
+	local new_index="$1"; shift
+	local task_words=("$@")
+
+	run "$APP_SCRIPT" add "${task_words[@]}"
+	assert_success
+	assert_output "✨ ${new_index} ${task_words[*]}"
+}
+
+###
 
 todo_assert_tasks_removed() {
 	local removed_tasks_indexes=("$@")
@@ -69,19 +91,4 @@ todo_assert_tasks_removed() {
 	mock_tasks_updated=("${mock_tasks[@]}")
 	printf -v expected_content "%s\n" "${mock_tasks_updated[@]:1}"
 	assert_todo_content "$expected_content"
-}
-
-todo_assert_cmd_success() {
-	local subcmd="$1" label="$2"; shift 2
-	local indexes=("$@")
-	local task_output
-
-	seed_todo
-	run "$APP_SCRIPT" "$subcmd" "${indexes[@]}"
-	assert_success
-
-	local i; for i in "${indexes[@]}"; do
-		printf -v task_output "%s %-2s %s\n" "$label" "$i" "${MOCK_TASKS[$i]#x }"
-		assert_output --partial "$task_output"
-	done
 }
