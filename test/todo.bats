@@ -34,19 +34,18 @@ setup() {
 # STORAGE TESTS ============================================================= #
 # bats --filter "^storage:" test/
 
-@test "storage: fresh run: creates data directory and todo.txt" {
-	[[ ! -d "$MOCK_DATA_DIR" ]]
+@test "storage: fresh run: creates todo.txt" {
 	[[ ! -f "$MOCK_TODO_FILE" ]]
 	run "$APP_SCRIPT" --init-only
 	assert_success
-	todo_assert_storage_exists
+	assert_file_exists "$MOCK_TODO_FILE"
 }
 
 @test "storage: existing todo.txt: preserves file content" {
 	todo_seed_storage
 	run "$APP_SCRIPT" --init-only
 	assert_success
-	todo_assert_storage_exists
+	assert_file_exists "$MOCK_TODO_FILE"
 	todo_assert_storage_persists
 }
 
@@ -82,10 +81,9 @@ setup() {
 }
 
 @test "add: missing todo.txt: intializes storage and inserts new task" {
-	[[ ! -d "$MOCK_DATA_DIR" ]]
 	[[ ! -f "$MOCK_TODO_FILE" ]]
 	todo_execute_add_cmd 1 "${MOCK_TASKS[1]}"
-	todo_assert_storage_exists
+	assert_file_exists "$MOCK_TODO_FILE"
 	todo_assert_new_task 1
 }
 
@@ -96,7 +94,7 @@ setup() {
 }
 
 @test "add: unquoted task: inserts arguments to todo.txt as one task" {
-	todo_touch_storage
+	touch "$MOCK_TODO_FILE"
 	todo_execute_add_cmd 1 "${MOCK_TASK_1_UNQUOTED[@]}"
 	todo_assert_new_task 1
 }
@@ -122,7 +120,7 @@ setup() {
 @test "del: empty todo.txt: prints 'empty todo' message and exits 0" {
 	[[ ! -s "$MOCK_TODO_FILE" ]]
 	run "$APP_SCRIPT" del 1
-	todo_assert_storage_exists
+	assert_file_exists "$MOCK_TODO_FILE"
 	assert_file_empty "$MOCK_TODO_FILE"
 	assert_output "Your todo.txt file is empty!"
 	assert_success

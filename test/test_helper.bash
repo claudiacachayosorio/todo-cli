@@ -3,26 +3,16 @@
 # Description: Helper functions for todo testing suite.
 
 todo_setup_tmpdir() {
-	export CONFIG_FILE="${BATS_TEST_TMPDIR}/todo.conf"
 	export MOCK_DATA_DIR="${BATS_TEST_TMPDIR}/data"
 	export MOCK_TODO_FILE="${MOCK_DATA_DIR}/todo.txt"
-	printf "DATA_DIR=\"%s\"\n" "$MOCK_DATA_DIR" > "$CONFIG_FILE"
-}
-
-todo_touch_storage() {
+	export DATA_DIR="$MOCK_DATA_DIR"
 	mkdir -p "$MOCK_DATA_DIR"
-	touch "$MOCK_TODO_FILE"
 }
 
 todo_seed_storage() {
 	local task_count="${1:-${#MOCK_TASKS[@]}}"
-	todo_touch_storage
+	[[ -d "$MOCK_DATA_DIR" ]]
 	printf "%s\n" "${MOCK_TASKS[@]:1:task_count}" > "$MOCK_TODO_FILE"
-}
-
-todo_assert_storage_exists() {
-	assert_dir_exists "$MOCK_DATA_DIR"
-	assert_file_exists "$MOCK_TODO_FILE"
 }
 
 todo_assert_storage_persists() {

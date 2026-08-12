@@ -27,43 +27,23 @@ trap 'die 1 "Command failed unexpectedly." "$LINENO"' ERR
 # GLOBALS =================================================================== #
 
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-readonly CONFIG_FILE="${CONFIG_FILE:-${SCRIPT_DIR}/todo.conf}"
-if [[ -f "$CONFIG_FILE" ]]; then source "$CONFIG_FILE"; fi
-
 readonly DATA_DIR="${DATA_DIR:-$SCRIPT_DIR}"
 readonly TODO_FILE="${DATA_DIR}/todo.txt"
+
 TASK_COUNT=0
 INDEX_WIDTH=2
 
-readonly DISABLE_EMOJIS="${DISABLE_EMOJIS:-false}"
-
-LABEL_ADD="✨"
-LABEL_DEL="🗑️"
-LABEL_DONE="✅"
-LABEL_UNDO="↩️"
-LABEL_SKIP="⏭️"
-
-if [[ "$DISABLE_EMOJIS" == "true" ]]; then
-	LABEL_ADD="[+]"
-	LABEL_DEL="[-]"
-	LABEL_DONE="[x]"
-	LABEL_UNDO="[ ]"
-	LABEL_SKIP=">>|"
-fi
+readonly LABEL_ADD="✨"
+readonly LABEL_DEL="🗑️"
+readonly LABEL_DONE="✅"
+readonly LABEL_UNDO="↩️"
+readonly LABEL_SKIP="⏭️"
 
 # HELPERS =================================================================== #
 
 init_storage() {
-	if [[ "$DATA_DIR" != "$SCRIPT_DIR" ]]; then
-		if ! mkdir -p "$DATA_DIR"; then
-			die 1 "Cannot create directory at ${DATA_DIR}."
-		fi
-	fi
-
-	if ! touch "$TODO_FILE"; then
-		die 1 "Cannot create todo.txt in ${DATA_DIR}."
-	fi
-
+	[[ -d "$DATA_DIR" ]] || die 1 "No directory found at ${DATA_DIR}."
+	touch "$TODO_FILE"   || die 1 "Cannot create todo.txt inside ${DATA_DIR}."
 	TASK_COUNT="$(wc -l < "$TODO_FILE")"
 	INDEX_WIDTH="${#TASK_COUNT}"
 }
