@@ -98,7 +98,6 @@ todo_del() {
 	local task formatted_task
 	local valid_tasks="" sed_args=()
 
-	is_todo_empty
 	local i; for i in "$@"; do
 		if ! validate_index "$i"; then continue; fi
 		sed_args+=("-e" "${i}d")
@@ -115,7 +114,6 @@ todo_del() {
 }
 
 todo_done() {
-	is_todo_empty
 	local task formatted_task valid_tasks="" sed_args=()
 
 	local i; for i in "$@"; do
@@ -138,7 +136,6 @@ todo_done() {
 }
 
 todo_undo() {
-	is_todo_empty
 	local task formatted_task valid_tasks="" sed_args=()
 
 	local i; for i in "$@"; do
@@ -179,14 +176,17 @@ main() {
 			;;
 		del)
 			[[ -n "${1:-}" ]] || die 2 "Task index required."
+			is_todo_empty
 			todo_del "$@"
 			;;
 		done)
 			[[ -n "${1:-}" ]] || die 2 "Task index required."
+			is_todo_empty
 			todo_done "$@"
 			;;
 		undo)
 			[[ -n "${1:-}" ]] || die 2 "Task index required."
+			is_todo_empty
 			todo_undo "$@"
 			;;
 		*)

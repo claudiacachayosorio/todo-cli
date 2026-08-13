@@ -28,18 +28,20 @@ setup() {
 }
 
 # bats --filter "^interface:" test/
+
 @test "interface: handles routing and usage" {
 	# no arguments: prints help and exits 0
 	todo_execute_help
 	# help option : prints help and exits 0
-	todo_execute_help "help"
-	todo_execute_help "--help"
+	todo_execute_help help
+	todo_execute_help --help
 	# invalid subcommand: prints error and exits 2
 	local error_desc="hey is not a valid command."
-	todo_execute_usage_failure "$error_desc" "hey"
+	todo_execute_usage_failure "$error_desc" hey
 }
 
 # bats --filter "^storage:" test/
+
 @test "storage: initializes and manages files" {
 	# fresh run: creates todo.txt
 	run "$TODO_SCRIPT" --init-only
@@ -53,26 +55,41 @@ setup() {
 }
 
 # bats --filter "^validation:" test/
+
 @test "validation: rejects missing arguments for subcommands" {
 	local missing_task_error="Task description cannot be empty."
 	local missing_index_error="Task index required."
 	# missing task description: prints error and exits 2
-	todo_execute_usage_failure "$missing_task_error" "add"
+	todo_execute_usage_failure "$missing_task_error" add
 	# missing task index: prints error and exits 2
-	todo_execute_usage_failure "$missing_index_error" "del"
-	todo_execute_usage_failure "$missing_index_error" "done"
-	todo_execute_usage_failure "$missing_index_error" "undo"
+	todo_execute_usage_failure "$missing_index_error" del
+	todo_execute_usage_failure "$missing_index_error" done
+	todo_execute_usage_failure "$missing_index_error" undo
+}
+
+@test "validation: handles empty storage precondition" {
+	run "$TODO_SCRIPT" --init-only
+	[[ -f "$TODO_FILE" ]]
+	[[ ! -s "$TODO_FILE" ]]
+
+	run "$TODO_SCRIPT" del 1
+	todo_assert_storage_empty del
+	run "$TODO_SCRIPT" done 1
+	todo_assert_storage_empty done
+	run "$TODO_SCRIPT" undo 1
+	todo_assert_storage_empty undo
 }
 
 # bats --filter "^add:" test/
+
 @test "add: creates storage and appends tasks" {
 	# missing todo.txt: initializes storage and inserts task
 	todo_execute_add_cmd 1 "${MOCK_TASKS[1]}"
 	# existing todo.txt: appends new task
 	todo_execute_add_cmd 2 "${MOCK_TASKS[2]}"
 	# unquoted task: appends arguments as one task
-	local mock_task_3_unquoted=("refill" "flour" "containers")
-	todo_execute_add_cmd 3 "${mock_task_3_unquoted[@]}"
+	local mock_task_unquoted=(${MOCK_TASKS[3]})
+	todo_execute_add_cmd 3 "${mock_task_unquoted[@]}"
 }
 
 # bats --filter "^del:" test/
@@ -80,57 +97,33 @@ setup() {
 @test "del: handles and skips invalid indexes" {
 	todo_seed_storage
 	# non-numeric index: prints error and exits 2
-	todo_execute_invalid_index "del" "text"
+	todo_execute_invalid_index del text
 	todo_assert_storage_persists
 	# index zero: prints error and exits 2
-	todo_execute_invalid_index "del" 0
+	todo_execute_invalid_index del 0
 	todo_assert_storage_persists
 	# out of bounds index: prints error and exits 2
-	todo_execute_invalid_index "del" 6
+	todo_execute_invalid_index del 6
 	todo_assert_storage_persists
 	# valid and invalid indexes: only targets valid indexes
-	run "$TODO_SCRIPT" "del" 1 0 2
-	todo_assert_valid_index "🗑️" 1 2
+	run "$TODO_SCRIPT" del 0 1
+	todo_assert_valid_index "$LABEL_DEL" 1
 	todo_assert_invalid_index 0
-	todo_assert_tasks_removed 1 2
+	todo_assert_tasks_removed 1
 }
 
-#@test "del: empty todo.txt: prints 'empty todo' message and exits 0" {
-#	run "$TODO_SCRIPT" del 1
-#	assert_file_exists "$TODO_FILE"
-#	assert_file_empty "$TODO_FILE"
-#	assert_output "Your todo.txt file is empty!"
-#	assert_success
-#}
-
-#@test "del: valid index: removes line corresponding to index" {
-#	local tasks=("${MOCK_TASKS[@]}")
-#	seed_todo
-
-#	run "$TODO_SCRIPT" del 6
-#	assert_success
-#	assert_output "🗑️ 6  ${MOCK_TASKS[6]}"
-#	assert_tasks_removed 6
-#}
-
-#@test "del: multiple indexes: removes lines corresponding to indexes provided" {
-#	local tasks=("${MOCK_TASKS[@]}")
-#	seed_todo
-
-#	run "$TODO_SCRIPT" del 1 9
-#	assert_success
-#	assert_output "🗑️ 1  ${MOCK_TASKS[1]#x }"
-#	assert_output "🗑️ 9  ${MOCK_TASKS[9]}"
-#	assert_tasks_removed 1 9
-#}
-
-#@test "del: one task exists: removes line and prints 'empty todo' message" {
-#	seed_todo_partial 1
-#	run "$TODO_SCRIPT" del 1
-#	assert_success
-#	assert_output "🗑️ 1 ${MOCK_TASKS[1]#x }"
-#	assert_todo_content "$MOCK_TASKS_RENDERED"
-#}
+@test "del: removes tasks corresponding to valid indexes" {
+	todo_seed_storage
+	# valid index: removes task corresponding to index
+	todo_execute_valid_index del "$LABEL_DEL" 1
+	todo_assert_tasks_removed 1
+	# multiple indexes: removes tasks targeted by index
+	todo_execute_valid_index del "$LABEL_DEL" ":2" 1 2 3
+	todo_assert_tasks_removed 1 2 3 4
+	# one task exists: removes task and prints success message
+	todo_execute_valid_index del "$LABEL_DEL" ":5" 1
+	todo_assert_storage_empty
+}
 
 # bats --filter "^done:" test/
 
