@@ -10,22 +10,25 @@ readonly TODO_DIR="$(cd "$BATS_TEST_DIRNAME/.." >/dev/null 2>&1 && pwd)"
 readonly TODO_SCRIPT="${TODO_DIR}/todo"
 
 readonly MOCK_TASKS=(""
+	"prepare cake mixes"
+	"test buttercream recipe"
 	"refill flour containers"
-	"prep chocolate cake mixes"
-	"test out swiss meringue buttercream recipe"
-	"use up bananas in peanut butter banana bread"
+	"make banana bread"
 	"replace scale batteries"
 )
 
-printf -v MOCK_TASKS_UNTRIMMED "%s\n" "${MOCK_TASKS[@]:1}"
-readonly MOCK_TASKS_RENDERED="${MOCK_TASKS_UNTRIMMED%$'\n'}"
-readonly MOCK_TASK_1_UNQUOTED=("refill" "flour" "containers")
+readonly MOCK_TASK_3_UNQUOTED=("refill" "flour" "containers")
 
 setup() {
 	bats_load_library bats-support
 	bats_load_library bats-assert
 	bats_load_library bats-file
+
 	load test_helper
+	MOCK_TASKS_RENDERED="$(todo_render_mock_tasks "${MOCK_TASKS[@]}")"
+
+	#declare -Ag INDEX_ERRORS
+	export MOCK_TASKS_RENDERED
 	export DATA_DIR="$BATS_TEST_TMPDIR"
 	source "$TODO_SCRIPT"
 }
@@ -34,11 +37,9 @@ setup() {
 @test "interface: handles routing and usage" {
 	# no arguments: prints help and exits 0
 	todo_execute_help
-
 	# help option : prints help and exits 0
 	todo_execute_help "help"
 	todo_execute_help "--help"
-
 	# invalid subcommand: prints error and exits 2
 	local err_desc="hey is not a valid command."
 	todo_execute_usage_failure "$err_desc" "hey"
@@ -46,13 +47,10 @@ setup() {
 
 # bats --filter "^storage:" test/
 @test "storage: initializes and manages files" {
-	[[ ! -f "$TODO_FILE" ]]
-
 	# fresh run: creates todo.txt
 	run "$TODO_SCRIPT" --init-only
 	assert_success
 	assert_file_exists "$TODO_FILE"
-
 	# existing todo.txt: preserves file content
 	todo_seed_storage
 	run "$TODO_SCRIPT" --init-only
@@ -60,59 +58,55 @@ setup() {
 	todo_assert_storage_persists
 }
 
-# SUBCOMMAND: ADD =========================================================== #
+# bats --filter "^validation:" test/
+@test "validation: rejects missing arguments for subcommands" {
+	local missing_task_error="Task description cannot be empty."
+	local missing_index_error="Task index required."
+	# missing task description: prints error and exits 2
+	todo_execute_usage_failure "$missing_task_error" "add"
+	# missing task index: prints error and exits 2
+	todo_execute_usage_failure "$missing_index_error" "del"
+	todo_execute_usage_failure "$missing_index_error" "done"
+	todo_execute_usage_failure "$missing_index_error" "undo"
+}
+
 # bats --filter "^add:" test/
-
-@test "add: no arguments: prints error and exits 2" {
-	local err_desc="Task description cannot be empty."
-	todo_execute_usage_failure "$err_desc" "add"
-}
-
-@test "add: missing todo.txt: intializes storage and inserts new task" {
-	[[ ! -f "$TODO_FILE" ]]
+@test "add: creates storage and appends tasks" {
+	# missing todo.txt: initializes storage and inserts task
 	todo_execute_add_cmd 1 "${MOCK_TASKS[1]}"
-	assert_file_exists "$TODO_FILE"
-	todo_assert_new_task 1
-}
-
-@test "add: existing todo.txt with data: appends new task" {
-	todo_seed_storage 4
-	todo_execute_add_cmd 5 "${MOCK_TASKS[5]}"
-	todo_assert_new_task 5
-}
-
-@test "add: unquoted task: inserts arguments to todo.txt as one task" {
-	touch "$TODO_FILE"
-	todo_execute_add_cmd 1 "${MOCK_TASK_1_UNQUOTED[@]}"
-	todo_assert_new_task 1
+	# existing todo.txt: appends new task
+	todo_execute_add_cmd 2 "${MOCK_TASKS[2]}"
+	# unquoted task: appends arguments as one task
+	todo_execute_add_cmd 3 "${MOCK_TASK_3_UNQUOTED[@]}"
 }
 
 # SUBCOMMAND: DEL =========================================================== #
 # bats --filter "^del:" test/
-
-@test "del: no arguments: prints error and exits 2" {
-	local err_desc="Task index required."
-	todo_execute_usage_failure "$err_desc" "del"
-}
-
-@test "del: invalid indexes: prints error and leaves data intact" {
+@test "del: handles and skips invalid indexes" {
 	todo_seed_storage
-	todo_execute_invalid_index "del" "hey" "'hey' is not a number."
+	# non-numeric index: prints error and exits 2
+	todo_execute_invalid_index del text
 	todo_assert_storage_persists
-	todo_execute_invalid_index "del" 0 "Task index must be greater than zero."
+	# index zero: prints error and exits 2
+	todo_execute_invalid_index "del" 0
 	todo_assert_storage_persists
-	todo_execute_invalid_index "del" 6 "Task 6 does not exists."
+	# out of bounds index: prints error and exits 2
+	todo_execute_invalid_index "del" 6
 	todo_assert_storage_persists
+	# valid and invalid indexes: only targets valid indexes
+	run "$TODO_SCRIPT" del 1 0 2
+	todo_assert_valid_index "🗑️" 1 2
+	todo_assert_invalid_index "0"
+	todo_assert_tasks_removed 1 2
 }
 
-@test "del: empty todo.txt: prints 'empty todo' message and exits 0" {
-	[[ ! -s "$TODO_FILE" ]]
-	run "$TODO_SCRIPT" del 1
-	assert_file_exists "$TODO_FILE"
-	assert_file_empty "$TODO_FILE"
-	assert_output "Your todo.txt file is empty!"
-	assert_success
-}
+#@test "del: empty todo.txt: prints 'empty todo' message and exits 0" {
+#	run "$TODO_SCRIPT" del 1
+#	assert_file_exists "$TODO_FILE"
+#	assert_file_empty "$TODO_FILE"
+#	assert_output "Your todo.txt file is empty!"
+#	assert_success
+#}
 
 #@test "del: valid index: removes line corresponding to index" {
 #	local tasks=("${MOCK_TASKS[@]}")

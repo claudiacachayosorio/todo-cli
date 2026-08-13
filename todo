@@ -61,7 +61,7 @@ validate_index() {
 	elif [[ "$index" -eq 0 ]]; then
 		printf "%s Task index must be greater than zero. Skipping.\n" "$LABEL_SKIP"; return 1
 	elif [[ "$index" -gt "$TASK_COUNT" ]]; then
-		printf "%s Task %s does not exists. Skipping.\n" "$LABEL_SKIP" "$index"; return 1
+		printf "%s Task %s does not exist. Skipping.\n" "$LABEL_SKIP" "$index"; return 1
 	else return 0; fi
 }
 
@@ -103,7 +103,7 @@ todo_del() {
 		if ! validate_index "$i"; then continue; fi
 		sed_args+=("-e" "${i}d")
 		task="$(sed -n "${i}p" "$TODO_FILE")"
-		formatted_task="$(print_success_task "$LABEL_ADD" "$i" "$task")"
+		formatted_task="$(print_success_task "$LABEL_DEL" "$i" "$task")"
 		valid_tasks+="$formatted_task"
 	done
 
