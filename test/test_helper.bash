@@ -16,9 +16,12 @@ todo_seed_storage() {
 }
 
 todo_assert_storage_persists() {
+	local mock_tasks_rendered
+	mock_tasks_rendered="$(todo_render_mock_tasks "${MOCK_TASKS[@]}")"
+
 	[[ -f "$TODO_FILE" ]]
 	run cat "$TODO_FILE"
-	assert_output "$MOCK_TASKS_RENDERED"
+	assert_output "$mock_tasks_rendered"
 }
 
 todo_execute_help() {

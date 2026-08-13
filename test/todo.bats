@@ -9,15 +9,13 @@ readonly BATS_LIB_PATH="${BATS_TEST_DIRNAME}/test_helper"
 readonly TODO_DIR="$(cd "$BATS_TEST_DIRNAME/.." >/dev/null 2>&1 && pwd)"
 readonly TODO_SCRIPT="${TODO_DIR}/todo"
 
-readonly MOCK_TASKS=(""
-	"prepare cake mixes"
-	"test buttercream recipe"
-	"refill flour containers"
-	"make banana bread"
-	"replace scale batteries"
-)
-
-readonly MOCK_TASK_3_UNQUOTED=("refill" "flour" "containers")
+MOCK_TASKS=("")
+MOCK_TASKS[1]="prepare cake mixes"
+MOCK_TASKS[2]="test buttercream recipe"
+MOCK_TASKS[3]="refill flour containers"
+MOCK_TASKS[4]="make banana bread"
+MOCK_TASKS[5]="replace scale batteries"
+readonly MOCK_TASKS
 
 setup() {
 	bats_load_library bats-support
@@ -25,10 +23,6 @@ setup() {
 	bats_load_library bats-file
 
 	load test_helper
-	MOCK_TASKS_RENDERED="$(todo_render_mock_tasks "${MOCK_TASKS[@]}")"
-
-	#declare -Ag INDEX_ERRORS
-	export MOCK_TASKS_RENDERED
 	export DATA_DIR="$BATS_TEST_TMPDIR"
 	source "$TODO_SCRIPT"
 }
@@ -41,8 +35,8 @@ setup() {
 	todo_execute_help "help"
 	todo_execute_help "--help"
 	# invalid subcommand: prints error and exits 2
-	local err_desc="hey is not a valid command."
-	todo_execute_usage_failure "$err_desc" "hey"
+	local error_desc="hey is not a valid command."
+	todo_execute_usage_failure "$error_desc" "hey"
 }
 
 # bats --filter "^storage:" test/
@@ -77,15 +71,16 @@ setup() {
 	# existing todo.txt: appends new task
 	todo_execute_add_cmd 2 "${MOCK_TASKS[2]}"
 	# unquoted task: appends arguments as one task
-	todo_execute_add_cmd 3 "${MOCK_TASK_3_UNQUOTED[@]}"
+	local mock_task_3_unquoted=("refill" "flour" "containers")
+	todo_execute_add_cmd 3 "${mock_task_3_unquoted[@]}"
 }
 
-# SUBCOMMAND: DEL =========================================================== #
 # bats --filter "^del:" test/
+
 @test "del: handles and skips invalid indexes" {
 	todo_seed_storage
 	# non-numeric index: prints error and exits 2
-	todo_execute_invalid_index del text
+	todo_execute_invalid_index "del" "text"
 	todo_assert_storage_persists
 	# index zero: prints error and exits 2
 	todo_execute_invalid_index "del" 0
@@ -94,9 +89,9 @@ setup() {
 	todo_execute_invalid_index "del" 6
 	todo_assert_storage_persists
 	# valid and invalid indexes: only targets valid indexes
-	run "$TODO_SCRIPT" del 1 0 2
+	run "$TODO_SCRIPT" "del" 1 0 2
 	todo_assert_valid_index "🗑️" 1 2
-	todo_assert_invalid_index "0"
+	todo_assert_invalid_index 0
 	todo_assert_tasks_removed 1 2
 }
 
@@ -137,9 +132,6 @@ setup() {
 #	assert_todo_content "$MOCK_TASKS_RENDERED"
 #}
 
-#@test "del: valid and invalid indexes: skips invalid indexes and only removes lines corresponding to valid indexes" {}
-
-# SUBCOMMAND: DONE ========================================================== #
 # bats --filter "^done:" test/
 
 #@test "done: no arguments: prints error and exits 2" {
