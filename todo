@@ -29,15 +29,23 @@ trap 'die 1 "Command failed unexpectedly." "$LINENO"' ERR
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly DATA_DIR="${DATA_DIR:-$SCRIPT_DIR}"
 readonly TODO_FILE="${DATA_DIR}/todo.txt"
-
 TASK_COUNT=0
-INDEX_WIDTH=2
+INDEX_WIDTH=1
 
-readonly LABEL_ADD="✨"
-readonly LABEL_DEL="🗑️"
-readonly LABEL_DONE="✅"
-readonly LABEL_UNDO="↩️"
-readonly LABEL_SKIP="⏭️"
+declare -gA UI
+if [[ -n "${NO_COLOR:-}" ]]; then
+	UI[ADD]="[+]"
+	UI[DEL]="[-]"
+	UI[DONE]="[x]"
+	UI[UNDO]="[ ]"
+	UI[SKIP]=">>"
+else
+	UI[ADD]="\U00002795"  # ➕
+	UI[DEL]="\U0001F5D1"  # 🗑️
+	UI[DONE]="\U00002705" # ✅
+	UI[UNDO]="\U000021A9" # ↩️
+	UI[SKIP]="\U000023ED" # ⏭️
+fi
 
 # HELPERS =================================================================== #
 
@@ -57,11 +65,11 @@ is_todo_empty() {
 validate_index() {
 	local index="$1"
 	if [[ ! "$index" =~ ^[0-9]+$ ]]; then
-		printf "%s '%s' is not a number. Skipping.\n" "$LABEL_SKIP" "$index"; return 1
+		printf "%s '%s' is not a number. Skipping.\n" "${UI[SKIP]}" "$index"; return 1
 	elif [[ "$index" -eq 0 ]]; then
-		printf "%s Task index must be greater than zero. Skipping.\n" "$LABEL_SKIP"; return 1
+		printf "%s Task index must be greater than zero. Skipping.\n" "${UI[SKIP]}"; return 1
 	elif [[ "$index" -gt "$TASK_COUNT" ]]; then
-		printf "%s Task %s does not exist. Skipping.\n" "$LABEL_SKIP" "$index"; return 1
+		printf "%s Task %s does not exist. Skipping.\n" "${UI[SKIP]}" "$index"; return 1
 	else return 0; fi
 }
 
@@ -90,7 +98,7 @@ todo_add() {
 	local task; task="$(awk '$1=$1' <<< "$*")"
 	local index; index="$(( TASK_COUNT + 1 ))"
 	printf "%s\n" "$task" >> "$TODO_FILE"
-	print_success_task "$LABEL_ADD" "$index" "$task"
+	print_success_task "${UI[ADD]}" "$index" "$task"
 }
 
 todo_del() {
@@ -102,7 +110,7 @@ todo_del() {
 		if ! validate_index "$i"; then continue; fi
 		sed_args+=("-e" "${i}d")
 		task="$(sed -n "${i}p" "$TODO_FILE")"
-		formatted_task="$(print_success_task "$LABEL_DEL" "$i" "$task")"
+		formatted_task="$(print_success_task "${UI[DEL]}" "$i" "$task")"
 		valid_tasks+="$formatted_task"
 	done
 
@@ -125,7 +133,7 @@ todo_done() {
 		fi
 
 		sed_args+=("-e" "${i}s/^/x /")
-		formatted_task="$(print_success_task "$LABEL_DONE" "$i" "$task")"
+		formatted_task="$(print_success_task "${UI[DONE]}" "$i" "$task")"
 		valid_tasks+="$formatted_task"
 	done
 
@@ -147,7 +155,7 @@ todo_undo() {
 		fi
 
 		sed_args+=("-e" "${i}s/^x //")
-		formatted_task="$(print_success_task "$LABEL_UNDO" "$i" "$task")"
+		formatted_task="$(print_success_task "${UI[UNDO]}" "$i" "$task")"
 		valid_tasks+="$formatted_task"
 	done
 

@@ -97,13 +97,13 @@ setup() {
 @test "del: removes tasks corresponding to valid indexes" {
 	todo_seed_storage
 	# valid index: removes task corresponding to index
-	todo_execute_valid_index del "$LABEL_DEL" 1
+	todo_execute_valid_index del "${UI[DEL]}" 1
 	todo_assert_tasks_removed 1
 	# multiple indexes: removes tasks targeted by index
-	todo_execute_valid_index del "$LABEL_DEL" ":2" 1 2 3
+	todo_execute_valid_index del "${UI[DEL]}" ":2" 1 2 3
 	todo_assert_tasks_removed 1 2 3 4
 	# one task exists: removes task and prints success message
-	todo_execute_valid_index del "$LABEL_DEL" ":5" 1
+	todo_execute_valid_index del "${UI[DEL]}" ":5" 1
 	todo_assert_storage_empty
 }
 
@@ -120,7 +120,7 @@ setup() {
 	todo_assert_storage_persists
 	# valid and invalid indexes: only targets valid indexes
 	run "$TODO_SCRIPT" del 0 1
-	todo_assert_valid_index "$LABEL_DEL" 1
+	todo_assert_valid_index "${UI[DEL]}" 1
 	todo_assert_invalid_index 0
 	todo_assert_tasks_removed 1
 }

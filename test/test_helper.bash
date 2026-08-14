@@ -50,9 +50,24 @@ todo_execute_usage_failure() {
 }
 
 todo_format_cmd_success() {
-	local label="$1" index="$2" start="${3:-1}"
+	local icon="$1" index="$2" start="${3:-1}"
 	local mock_tasks=("" "${MOCK_TASKS[@]:$start}")
-	printf "%s %s %s\n" "$label" "$index" "${mock_tasks[$index]}"
+	printf "%s %s %s\n" "$icon" "$index" "${mock_tasks[$index]}"
+}
+
+todo_execute_add_cmd() {
+	local index="$1"; shift
+	local task_words=("$@")
+	local expected_output
+	expected_output="$(todo_format_cmd_success "${UI[ADD]}" "$index")"
+
+	run "$TODO_SCRIPT" add "${task_words[@]}"
+	assert_success
+	assert_output "$expected_output"
+
+	assert_file_exists "$TODO_FILE"
+	run cat "$TODO_FILE"
+	assert_line --index -1 "${MOCK_TASKS[$index]}"
 }
 
 todo_assert_valid_index() {
@@ -63,7 +78,7 @@ todo_assert_valid_index() {
 }
 
 todo_execute_valid_index() {
-	local subcmd="$1" label="$2"; shift 2
+	local subcmd="$1" icon="$2"; shift 2
 	local start=""
 	if [[ "$1" =~ ^: ]]; then start="${1#:}"; shift; else :; fi
 
@@ -73,7 +88,7 @@ todo_execute_valid_index() {
 	assert_success
 
 	local i; for i in "${indexes[@]}"; do
-		expected_output="$(todo_format_cmd_success "$label" "$i" "$start")"
+		expected_output="$(todo_format_cmd_success "$icon" "$i" "$start")"
 		assert_output --partial "$expected_output"
 	done
 }
@@ -85,7 +100,7 @@ todo_format_index_error() {
 	index_errors[6]="Task 6 does not exist."
 
 	local invalid_index="$1"
-	printf "%s %s Skipping.\n" "$LABEL_SKIP" "${index_errors["$invalid_index"]}"
+	printf "%s %s Skipping.\n" "${UI[SKIP]}" "${index_errors["$invalid_index"]}"
 }
 
 todo_assert_invalid_index() {
@@ -102,21 +117,6 @@ todo_execute_invalid_index() {
 	run "$TODO_SCRIPT" "$subcmd" "$invalid_index"
 	assert_output "$expected_output"
 	assert_failure 2
-}
-
-todo_execute_add_cmd() {
-	local index="$1"; shift
-	local task_words=("$@")
-	local expected_output
-	expected_output="$(todo_format_cmd_success "$LABEL_ADD" "$index")"
-
-	run "$TODO_SCRIPT" add "${task_words[@]}"
-	assert_success
-	assert_output "$expected_output"
-
-	assert_file_exists "$TODO_FILE"
-	run cat "$TODO_FILE"
-	assert_line --index -1 "${MOCK_TASKS[$index]}"
 }
 
 todo_assert_tasks_removed() {
