@@ -41,19 +41,12 @@ setup() {
 }
 
 @test "interface: toggles NO_COLOR mode" {
-	declare -A no_color_ui
-	no_color_ui[add]="[+]"
-	no_color_ui[del]="[-]"
-	no_color_ui[done]="[x]"
-	no_color_ui[undo]="[ ]"
-	no_color_ui[skip]=">>"
-
 	todo_seed_storage 3
-	todo_execute_ui_toggle 0 "${no_color_ui[add]}" add "${MOCK_TASKS[4]}" "${MOCK_TASKS[5]}"
-	todo_execute_ui_toggle 0 "${no_color_ui[del]}" del 5 4
-	todo_execute_ui_toggle 0 "${no_color_ui[done]}" done 1 2
-	todo_execute_ui_toggle 0 "${no_color_ui[undo]}" undo 1 2
-	todo_execute_ui_toggle 2 "${no_color_ui[skip]}" del 0 0
+	todo_execute_ui_toggle add "${MOCK_TASKS[4]}" "${MOCK_TASKS[5]}"
+	todo_execute_ui_toggle del 5 4
+	todo_execute_ui_toggle done 1 2
+	todo_execute_ui_toggle undo 1 2
+	todo_execute_ui_toggle del 0 0 "skip" 2
 }
 
 # bats --filter "^storage:" test/
@@ -113,13 +106,13 @@ setup() {
 @test "del: removes tasks corresponding to valid indexes" {
 	todo_seed_storage
 	# valid index: removes task corresponding to index
-	todo_execute_valid_index del "${UI[DEL]}" 1
+	todo_execute_valid_index "${UI[DEL]}" del 1
 	todo_assert_tasks_removed 1
 	# multiple indexes: removes tasks targeted by index
-	todo_execute_valid_index del "${UI[DEL]}" ":2" 1 2 3
+	todo_execute_valid_index "${UI[DEL]}" del ":2" 1 2 3
 	todo_assert_tasks_removed 1 2 3 4
 	# one task exists: removes task and prints success message
-	todo_execute_valid_index del "${UI[DEL]}" ":5" 1
+	todo_execute_valid_index "${UI[DEL]}" del ":5" 1
 	todo_assert_storage_empty
 }
 
@@ -136,7 +129,8 @@ setup() {
 	todo_assert_storage_persists
 	# valid and invalid indexes: only targets valid indexes
 	run "$TODO_SCRIPT" del 0 1
-	todo_assert_valid_index "${UI[DEL]}" 1
+	assert_success
+	todo_assert_cmd_output "${UI[DEL]}" 1
 	todo_assert_invalid_index 0
 	todo_assert_tasks_removed 1
 }

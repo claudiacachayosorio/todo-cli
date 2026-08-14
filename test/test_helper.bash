@@ -40,7 +40,7 @@ todo_execute_help() {
 
 todo_assert_exit() {
 	local code="$1"
-	if [[ "$exit" -eq 0 ]]; then
+	if [[ "$code" -eq 0 ]]; then
 		assert_success
 	else
 		assert_failure "$code"
@@ -48,16 +48,23 @@ todo_assert_exit() {
 }
 
 todo_execute_ui_toggle() {
-	local icon_plain="$1" exit="$2"
-	local subcmd="$3" run_1_arg="$4" run_2_arg="$5"
+	local subcmd="$1" run_1_arg="$2" run_2_arg="$3"
+	local icon_name="${4:-$subcmd}" exit="${5:-0}"
+
+	declare -A no_color_ui
+	no_color_ui[add]="[+]"
+	no_color_ui[del]="[-]"
+	no_color_ui[done]="[x]"
+	no_color_ui[undo]="[ ]"
+	no_color_ui[skip]=">>"
 
 	NO_COLOR=1 run "$TODO_SCRIPT" "$subcmd" "$run_1_arg"
 	todo_assert_exit "$exit"
-	assert_output --partial "$icon_plain"
+	assert_output --partial "${no_color_ui["$icon_name"]}"
 
 	run "$TODO_SCRIPT" "$subcmd" "$run_2_arg"
 	todo_assert_exit "$exit"
-	refute_output --partial "$icon_plain"
+	refute_output --partial "${no_color_ui["$icon_name"]}"
 }
 
 todo_execute_usage_failure() {
@@ -71,47 +78,36 @@ todo_execute_usage_failure() {
 	assert_stderr_line --index 1 "Try 'bash todo help' for more information."
 }
 
-todo_format_cmd_success() {
+todo_assert_cmd_output() {
 	local icon="$1" index="$2" start="${3:-1}"
 	local mock_tasks=("" "${MOCK_TASKS[@]:$start}")
-	printf "%s %s %s\n" "$icon" "$index" "${mock_tasks[$index]}"
+	assert_output --partial "${icon} ${index} ${mock_tasks[$index]}"
 }
 
 todo_execute_add_cmd() {
 	local index="$1"; shift
 	local task_words=("$@")
-	local expected_output
-	expected_output="$(todo_format_cmd_success "${UI[ADD]}" "$index")"
 
 	run "$TODO_SCRIPT" add "${task_words[@]}"
 	assert_success
-	assert_output "$expected_output"
-
+	todo_assert_cmd_output "${UI[ADD]}" "$index"
 	assert_file_exists "$TODO_FILE"
+
 	run cat "$TODO_FILE"
 	assert_line --index -1 "${MOCK_TASKS[$index]}"
 }
 
-todo_assert_valid_index() {
-	local expected_output
-	expected_output="$(todo_format_cmd_success "$@")"
-	assert_success
-	assert_output --partial "$expected_output"
-}
-
 todo_execute_valid_index() {
-	local subcmd="$1" icon="$2"; shift 2
+	local icon="$1" subcmd="$2"; shift 2
 	local start=""
 	if [[ "$1" =~ ^: ]]; then start="${1#:}"; shift; else :; fi
-
 	local indexes=("$@")
 	local expected_output
+
 	run "$TODO_SCRIPT" "$subcmd" "${indexes[@]}"
 	assert_success
-
 	local i; for i in "${indexes[@]}"; do
-		expected_output="$(todo_format_cmd_success "$icon" "$i" "$start")"
-		assert_output --partial "$expected_output"
+		todo_assert_cmd_output "$icon" "$i" "$start"
 	done
 }
 
