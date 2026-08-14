@@ -9,20 +9,13 @@ readonly BATS_LIB_PATH="${BATS_TEST_DIRNAME}/test_helper"
 readonly TODO_DIR="$(cd "$BATS_TEST_DIRNAME/.." >/dev/null 2>&1 && pwd)"
 readonly TODO_SCRIPT="${TODO_DIR}/todo"
 
-MOCK_TASKS=("")
-MOCK_TASKS[1]="prepare cake mixes"
-MOCK_TASKS[2]="test buttercream recipe"
-MOCK_TASKS[3]="refill flour containers"
-MOCK_TASKS[4]="make banana bread"
-MOCK_TASKS[5]="replace scale batteries"
-readonly MOCK_TASKS
-
 setup() {
 	bats_load_library bats-support
 	bats_load_library bats-assert
 	bats_load_library bats-file
 
 	load test_helper
+	todo_setup_ui_data
 	export DATA_DIR="$BATS_TEST_TMPDIR"
 	source "$TODO_SCRIPT"
 }
@@ -33,20 +26,20 @@ setup() {
 	# no arguments: prints help and exits 0
 	todo_execute_help
 	# help option : prints help and exits 0
-	todo_execute_help help
-	todo_execute_help --help
+	todo_execute_help "help"
+	todo_execute_help "--help"
 	# invalid subcommand: prints error and exits 2
 	local error_desc="hey is not a valid command."
-	todo_execute_usage_failure "$error_desc" hey
+	todo_execute_usage_failure "$error_desc" "hey"
 }
 
 @test "interface: toggles NO_COLOR mode" {
 	todo_seed_storage 3
-	todo_execute_ui_toggle add "${MOCK_TASKS[4]}" "${MOCK_TASKS[5]}"
-	todo_execute_ui_toggle del 5 4
-	todo_execute_ui_toggle done 1 2
-	todo_execute_ui_toggle undo 1 2
-	todo_execute_ui_toggle del 0 0 "skip" 2
+	todo_execute_ui_toggle "add" "${MOCK_TASKS[4]}" "${MOCK_TASKS[5]}"
+	todo_execute_ui_toggle "del" 5 4
+	todo_execute_ui_toggle "done" 1 2
+	todo_execute_ui_toggle "undo" 1 2
+	todo_execute_ui_toggle "del" 0 0 "skip" 2
 }
 
 # bats --filter "^storage:" test/
@@ -69,11 +62,11 @@ setup() {
 	local missing_task_error="Task description cannot be empty."
 	local missing_index_error="Task index required."
 	# missing task description: prints error and exits 2
-	todo_execute_usage_failure "$missing_task_error" add
+	todo_execute_usage_failure "$missing_task_error" "add"
 	# missing task index: prints error and exits 2
-	todo_execute_usage_failure "$missing_index_error" del
-	todo_execute_usage_failure "$missing_index_error" done
-	todo_execute_usage_failure "$missing_index_error" undo
+	todo_execute_usage_failure "$missing_index_error" "del"
+	todo_execute_usage_failure "$missing_index_error" "done"
+	todo_execute_usage_failure "$missing_index_error" "undo"
 }
 
 @test "validation: handles empty storage precondition" {
@@ -81,12 +74,12 @@ setup() {
 	[[ -f "$TODO_FILE" ]]
 	[[ ! -s "$TODO_FILE" ]]
 
-	run "$TODO_SCRIPT" del 1
-	todo_assert_storage_empty del
-	run "$TODO_SCRIPT" done 1
-	todo_assert_storage_empty done
-	run "$TODO_SCRIPT" undo 1
-	todo_assert_storage_empty undo
+	run "$TODO_SCRIPT" "del" 1
+	todo_assert_storage_empty "del"
+	run "$TODO_SCRIPT" "done" 1
+	todo_assert_storage_empty "done"
+	run "$TODO_SCRIPT" "undo" 1
+	todo_assert_storage_empty "undo"
 }
 
 # bats --filter "^add:" test/
@@ -106,31 +99,31 @@ setup() {
 @test "del: removes tasks corresponding to valid indexes" {
 	todo_seed_storage
 	# valid index: removes task corresponding to index
-	todo_execute_valid_index "${UI[DEL]}" del 1
+	todo_execute_valid_index "del" 1
 	todo_assert_tasks_removed 1
 	# multiple indexes: removes tasks targeted by index
-	todo_execute_valid_index "${UI[DEL]}" del ":2" 1 2 3
+	todo_execute_valid_index "del" ":2" 1 2 3
 	todo_assert_tasks_removed 1 2 3 4
 	# one task exists: removes task and prints success message
-	todo_execute_valid_index "${UI[DEL]}" del ":5" 1
+	todo_execute_valid_index "del" ":5" 1
 	todo_assert_storage_empty
 }
 
 @test "del: handles and skips invalid indexes" {
 	todo_seed_storage
 	# non-numeric index: prints error and exits 2
-	todo_execute_invalid_index del text
+	todo_execute_invalid_index "del" "text"
 	todo_assert_storage_persists
 	# index zero: prints error and exits 2
-	todo_execute_invalid_index del 0
+	todo_execute_invalid_index "del" 0
 	todo_assert_storage_persists
 	# out of bounds index: prints error and exits 2
-	todo_execute_invalid_index del 6
+	todo_execute_invalid_index "del" 6
 	todo_assert_storage_persists
 	# valid and invalid indexes: only targets valid indexes
-	run "$TODO_SCRIPT" del 0 1
+	run "$TODO_SCRIPT" "del" 0 1
 	assert_success
-	todo_assert_cmd_output "${UI[DEL]}" 1
+	todo_assert_cmd_output "del" 1
 	todo_assert_invalid_index 0
 	todo_assert_tasks_removed 1
 }

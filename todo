@@ -13,7 +13,7 @@ die() {
 	local desc="${2:-An unknown error has occurred.}"
 	local line_no="${3:+, line $3}"
 
-	printf "ERROR: %s\n" "$desc" >&2
+	printf "%s %s\n" "${UI[SYS_ERROR]:-[ERROR]}" "$desc" >&2
 	if [[ "$code" -eq 2 ]]; then
 		printf "Try 'bash todo help' for more information.\n" >&2
 	else
@@ -31,21 +31,7 @@ readonly DATA_DIR="${DATA_DIR:-$SCRIPT_DIR}"
 readonly TODO_FILE="${DATA_DIR}/todo.txt"
 TASK_COUNT=0
 INDEX_WIDTH=1
-
 declare -gA UI
-if [[ -n "${NO_COLOR:-}" ]]; then
-	UI[ADD]="[+]"
-	UI[DEL]="[-]"
-	UI[DONE]="[x]"
-	UI[UNDO]="[ ]"
-	UI[SKIP]=">>"
-else
-	UI[ADD]="\U00002795"  # ➕
-	UI[DEL]="\U0001F5D1"  # 🗑️
-	UI[DONE]="\U00002705" # ✅
-	UI[UNDO]="\U000021A9" # ↩️
-	UI[SKIP]="\U000023ED" # ⏭️
-fi
 
 # HELPERS =================================================================== #
 
@@ -56,26 +42,58 @@ init_storage() {
 	INDEX_WIDTH="${#TASK_COUNT}"
 }
 
+init_ui() {
+	local color_modifier=$'\uFE0F'
+	local hex_sequence
+
+	if [[ -n "${NO_COLOR:-}" ]]; then
+		UI[SYS_ERROR]="[ERROR]"
+		UI[SYS_EMPTY]="[EMPTY]"
+		UI[SYS_DONE]="[DONE]"
+		UI[SYS_SKIP]=">>"
+		UI[CMD_ADD]="[+]"
+		UI[CMD_DEL]="[-]"
+		UI[CMD_DONE]="[x]"
+		UI[CMD_UNDO]="[ ]"
+	else
+		UI[SYS_ERROR]="274C"  # ❌
+		UI[SYS_EMPTY]="1F3DC" # 🏜️
+		UI[SYS_DONE]="1F389"  # 🎉
+		UI[SYS_SKIP]="23ED"   # ⏭️
+		UI[CMD_ADD]="2795"    # ➕
+		UI[CMD_DEL]="1F5D1"   # 🗑️
+		UI[CMD_DONE]="2705"   # ✅
+		UI[CMD_UNDO]="21A9"   # ↩️
+
+		local id; for id in "${!UI[@]}"; do
+			printf -v hex_sequence "\\U%08X" "0x${UI[$id]}" 2>/dev/null
+			printf -v "UI["$id"]" "%b" "$hex_sequence"
+			UI[$id]="${UI[$id]}${color_modifier}"
+		done
+	fi
+}
+
 is_todo_empty() {
 	if [[ ! -s "$TODO_FILE" ]]; then
-		printf "Your todo.txt file is empty!\n"; exit 0
+		printf "%s Your todo.txt file is empty!\n" "${UI[SYS_EMPTY]}"; exit 0
 	else return 0; fi
 }
 
 validate_index() {
 	local index="$1"
+	local marker="${UI[SYS_SKIP]}"
 	if [[ ! "$index" =~ ^[0-9]+$ ]]; then
-		printf "%s '%s' is not a number. Skipping.\n" "${UI[SKIP]}" "$index"; return 1
+		printf "%s '%s' is not a number. Skipping.\n" "$marker" "$index"; return 1
 	elif [[ "$index" -eq 0 ]]; then
-		printf "%s Task index must be greater than zero. Skipping.\n" "${UI[SKIP]}"; return 1
+		printf "%s Task index must be greater than zero. Skipping.\n" "$marker"; return 1
 	elif [[ "$index" -gt "$TASK_COUNT" ]]; then
-		printf "%s Task %s does not exist. Skipping.\n" "${UI[SKIP]}" "$index"; return 1
+		printf "%s Task %s does not exist. Skipping.\n" "$marker" "$index"; return 1
 	else return 0; fi
 }
 
 print_success_task() {
-	local icon="$1" index="$2" task="$3"
-	printf "%s %-*d %s\n" "$icon" "$INDEX_WIDTH" "$index" "${task#x }"
+	local marker="$1" index="$2" task="$3"
+	printf "%b %-*d %s\n" "$marker" "$INDEX_WIDTH" "$index" "${task#x }"
 }
 
 # SUBCOMMANDS =============================================================== #
@@ -98,11 +116,10 @@ todo_add() {
 	local task; task="$(awk '$1=$1' <<< "$*")"
 	local index; index="$(( TASK_COUNT + 1 ))"
 	printf "%s\n" "$task" >> "$TODO_FILE"
-	print_success_task "${UI[ADD]}" "$index" "$task"
+	print_success_task "${UI[CMD_ADD]}" "$index" "$task"
 }
 
 todo_del() {
-	local icon="${ICON_DEL:+$ICON_DEL }"
 	local task formatted_task
 	local valid_tasks="" sed_args=()
 
@@ -110,7 +127,7 @@ todo_del() {
 		if ! validate_index "$i"; then continue; fi
 		sed_args+=("-e" "${i}d")
 		task="$(sed -n "${i}p" "$TODO_FILE")"
-		formatted_task="$(print_success_task "${UI[DEL]}" "$i" "$task")"
+		formatted_task="$(print_success_task "${UI[CMD_DEL]}" "$i" "$task")"
 		valid_tasks+="$formatted_task"
 	done
 
@@ -129,11 +146,11 @@ todo_done() {
 		task="$(sed -n "${i}p" "$TODO_FILE")"
 
 		if [[ "$task" =~ ^x ]]; then
-			printf "⏭️ Task %d is already marked as done. Skipping.\n" "$i"; continue
+			printf "%s Task %d is already marked as done. Skipping.\n" "${UI[SYS_SKIP]}" "$i"; continue
 		fi
 
 		sed_args+=("-e" "${i}s/^/x /")
-		formatted_task="$(print_success_task "${UI[DONE]}" "$i" "$task")"
+		formatted_task="$(print_success_task "${UI[CMD_DONE]}" "$i" "$task")"
 		valid_tasks+="$formatted_task"
 	done
 
@@ -151,11 +168,11 @@ todo_undo() {
 		task="$(sed -n "${i}p" "$TODO_FILE")"
 
 		if [[ ! "$task" =~ ^x ]]; then
-			printf "Task %d is already unchecked.\n" "$i"; continue
+			printf "%s Task %d is already unchecked.\n" "${UI[SYS_SKIP]}" "$i"; continue
 		fi
 
 		sed_args+=("-e" "${i}s/^x //")
-		formatted_task="$(print_success_task "${UI[UNDO]}" "$i" "$task")"
+		formatted_task="$(print_success_task "${UI[CMD_UNDO]}" "$i" "$task")"
 		valid_tasks+="$formatted_task"
 	done
 
@@ -169,6 +186,9 @@ todo_undo() {
 
 main() {
 	init_storage
+	init_ui
+	readonly UI
+
 	local cmd="${1:-}"; shift
 
 	case "$cmd" in
