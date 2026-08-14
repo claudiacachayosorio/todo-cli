@@ -38,6 +38,28 @@ todo_execute_help() {
 	assert_line --index 0 "USAGE"
 }
 
+todo_assert_exit() {
+	local code="$1"
+	if [[ "$exit" -eq 0 ]]; then
+		assert_success
+	else
+		assert_failure "$code"
+	fi
+}
+
+todo_execute_ui_toggle() {
+	local icon_plain="$1" exit="$2"
+	local subcmd="$3" run_1_arg="$4" run_2_arg="$5"
+
+	NO_COLOR=1 run "$TODO_SCRIPT" "$subcmd" "$run_1_arg"
+	todo_assert_exit "$exit"
+	assert_output --partial "$icon_plain"
+
+	run "$TODO_SCRIPT" "$subcmd" "$run_2_arg"
+	todo_assert_exit "$exit"
+	refute_output --partial "$icon_plain"
+}
+
 todo_execute_usage_failure() {
 	local error_desc="$1"; shift
 	local cli_args=("$@")

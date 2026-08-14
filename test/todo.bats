@@ -40,6 +40,22 @@ setup() {
 	todo_execute_usage_failure "$error_desc" hey
 }
 
+@test "interface: toggles NO_COLOR mode" {
+	declare -A no_color_ui
+	no_color_ui[add]="[+]"
+	no_color_ui[del]="[-]"
+	no_color_ui[done]="[x]"
+	no_color_ui[undo]="[ ]"
+	no_color_ui[skip]=">>"
+
+	todo_seed_storage 3
+	todo_execute_ui_toggle 0 "${no_color_ui[add]}" add "${MOCK_TASKS[4]}" "${MOCK_TASKS[5]}"
+	todo_execute_ui_toggle 0 "${no_color_ui[del]}" del 5 4
+	todo_execute_ui_toggle 0 "${no_color_ui[done]}" done 1 2
+	todo_execute_ui_toggle 0 "${no_color_ui[undo]}" undo 1 2
+	todo_execute_ui_toggle 2 "${no_color_ui[skip]}" del 0 0
+}
+
 # bats --filter "^storage:" test/
 
 @test "storage: initializes and manages files" {
