@@ -14,14 +14,14 @@ readonly MOCK_TASKS
 
 todo_setup_ui_data() {
 	declare -gA UI_OUTPUT
-	UI_OUTPUT[SYS_ERROR]="❌: [ERROR]"
-	UI_OUTPUT[SYS_EMPTY]="🏜️: [EMPTY]"
-	UI_OUTPUT[SYS_DONE]="🎉: [DONE]"
-	UI_OUTPUT[SYS_SKIP]="⏭️: >>"
-	UI_OUTPUT[CMD_ADD]="➕: [+]"
-	UI_OUTPUT[CMD_DEL]="🗑️: [-]"
-	UI_OUTPUT[CMD_DONE]="✅: [x]"
-	UI_OUTPUT[CMD_UNDO]="↩️: [ ]"
+	UI_OUTPUT[SYS_ERROR]="❌ [!]"
+	UI_OUTPUT[SYS_EMPTY]="🏜️ [~]"
+	UI_OUTPUT[SYS_DONE]="🎉 [~]"
+	UI_OUTPUT[SYS_SKIP]="⏭️ [>]"
+	UI_OUTPUT[CMD_ADD]="➕ [+]"
+	UI_OUTPUT[CMD_DEL]="🗑️ [-]"
+	UI_OUTPUT[CMD_DONE]="✅ [x]"
+	UI_OUTPUT[CMD_UNDO]="↩️ [<]"
 	readonly UI_OUTPUT
 }
 

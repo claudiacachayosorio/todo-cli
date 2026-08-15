@@ -55,14 +55,14 @@ init_ui() {
 	fi
 
 	if [[ "$USE_EMOJI" == "false" ]]; then
-		UI[SYS_ERROR]="[ERROR]"
-		UI[SYS_EMPTY]="[EMPTY]"
-		UI[SYS_DONE]="[DONE]"
-		UI[SYS_SKIP]=">>"
+		UI[SYS_ERROR]="[!]"
+		UI[SYS_EMPTY]="[~]"
+		UI[SYS_DONE]="[~]"
+		UI[SYS_SKIP]="[>]"
 		UI[CMD_ADD]="[+]"
 		UI[CMD_DEL]="[-]"
 		UI[CMD_DONE]="[x]"
-		UI[CMD_UNDO]="[ ]"
+		UI[CMD_UNDO]="[<]"
 	else
 		UI[SYS_ERROR]="274C"  # ❌
 		UI[SYS_EMPTY]="1F3DC" # 🏜️
