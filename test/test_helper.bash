@@ -13,31 +13,25 @@ MOCK_TASKS[5]="replace scale batteries"
 readonly MOCK_TASKS
 
 todo_setup_ui_data() {
-	local -r vs16_hex=$'\xEF\xB8\x8F'
-	local ui_hardcoded ui_normalized
 	declare -gA UI_OUTPUT
-	declare -gA UI_EMOJIS
-
-	UI_OUTPUT["SYS_ERROR"]="❌|[ERROR]"
-	UI_OUTPUT["SYS_EMPTY"]="🏜️|[EMPTY]"
-	UI_OUTPUT["SYS_DONE"]="🎉|[DONE]"
-	UI_OUTPUT["SYS_SKIP"]="⏭️|>>"
-	UI_OUTPUT["CMD_ADD"]="➕|[+]"
-	UI_OUTPUT["CMD_DEL"]="🗑️|[-]"
-	UI_OUTPUT["CMD_DONE"]="✅|[x]"
-	UI_OUTPUT["CMD_UNDO"]="↩️|[ ]"
-
-	declare -gr UI_OUTPUT
-	declare -gr UI_EMOJIS
+	UI_OUTPUT[SYS_ERROR]="❌: [ERROR]"
+	UI_OUTPUT[SYS_EMPTY]="🏜️: [EMPTY]"
+	UI_OUTPUT[SYS_DONE]="🎉: [DONE]"
+	UI_OUTPUT[SYS_SKIP]="⏭️: >>"
+	UI_OUTPUT[CMD_ADD]="➕: [+]"
+	UI_OUTPUT[CMD_DEL]="🗑️: [-]"
+	UI_OUTPUT[CMD_DONE]="✅: [x]"
+	UI_OUTPUT[CMD_UNDO]="↩️: [ ]"
+	readonly UI_OUTPUT
 }
 
 # FUNCTIONS ================================================================= #
 
-todo_get_ui_emoji() {
+todo_get_emoji() {
 	local -r vs16_hex=$'\xEF\xB8\x8F'
-	local id="$1"
+	local id="${1^^}"
 	local hardcoded normalized
-	hardcoded="${UI_OUTPUT["$id"]%%|*}"
+	hardcoded="${UI_OUTPUT[$id]%%: *}"
 
 	if [[ "$hardcoded" != *"$vs16_hex" ]]; then
 		normalized="${hardcoded}${vs16_hex}"
@@ -70,7 +64,7 @@ todo_assert_storage_persists() {
 }
 
 todo_assert_storage_empty() {
-	local emoji; emoji="$(todo_get_ui_emoji "SYS_EMPTY")"
+	local emoji; emoji="$(todo_get_emoji "SYS_EMPTY")"
 	assert_success
 	assert_file_exists "$TODO_FILE"
 	assert_file_empty "$TODO_FILE"
@@ -103,34 +97,32 @@ todo_execute_ui_toggle() {
 	else
 		marker_id="SYS_${status^^}"
 	fi
-	emoji="$(todo_get_ui_emoji "$marker_id")"
+	emoji="$(todo_get_emoji "$marker_id")"
 
 	NO_COLOR=1 run "$TODO_SCRIPT" "$subcmd" "$run_1_arg"
 	todo_assert_exit "$exit"
-	assert_output --partial "${UI_OUTPUT["$marker_id"]##*|}"
+	assert_output --partial "${UI_OUTPUT["$marker_id"]##*: }"
 
 	run "$TODO_SCRIPT" "$subcmd" "$run_2_arg"
 	todo_assert_exit "$exit"
 	assert_output --partial "$emoji"
-	#assert_output --partial "${UI_EMOJIS["$marker_id"]}"
 }
 
 todo_execute_usage_failure() {
 	local error_desc="$1"; shift
 	local cli_args=("$@")
-	local emoji; emoji="$(todo_get_ui_emoji "SYS_ERROR")"
+	local emoji; emoji="$(todo_get_emoji "SYS_ERROR")"
 
 	run --separate-stderr "$TODO_SCRIPT" "${cli_args[@]}"
 	assert_failure 2
 	refute_output
-	assert_stderr_line --index 0 "$emoji ${error_desc}"
+	assert_stderr_line --index 0 "${emoji} ${error_desc}"
 	assert_stderr_line --index 1 "Try 'bash todo help' for more information."
 }
 
 todo_assert_cmd_output() {
 	local subcmd="$1" index="$2" start="${3:-1}"
-	#local marker="${UI_EMOJIS["CMD_${subcmd^^}"]}"
-	local emoji; emoji="$(todo_get_ui_emoji "CMD_${subcmd^^}")"
+	local emoji; emoji="$(todo_get_emoji "CMD_${subcmd^^}")"
 	local mock_tasks=("" "${MOCK_TASKS[@]:$start}")
 	assert_output --partial "${emoji} ${index} ${mock_tasks[$index]}"
 }
@@ -169,9 +161,9 @@ todo_format_index_error() {
 	index_errors[6]="Task 6 does not exist."
 
 	local invalid_index="$1"
-	local emoji; emoji="$(todo_get_ui_emoji "SYS_SKIP")"
+	local emoji; emoji="$(todo_get_emoji "SYS_SKIP")"
 
-	printf "%s %s Skipping.\n" "$emoji" "${index_errors["$invalid_index"]}"
+	printf "%s %s Skipping.\n" "$emoji" "${index_errors[$invalid_index]}"
 }
 
 todo_assert_invalid_index() {

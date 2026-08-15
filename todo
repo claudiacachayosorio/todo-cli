@@ -67,7 +67,7 @@ init_ui() {
 
 		local id; for id in "${!UI[@]}"; do
 			printf -v hex_sequence "\\U%08X" "0x${UI[$id]}" 2>/dev/null
-			printf -v "UI["$id"]" "%b" "$hex_sequence"
+			printf -v "UI[$id]" "%b" "$hex_sequence"
 			UI[$id]="${UI[$id]}${color_modifier}"
 		done
 	fi
