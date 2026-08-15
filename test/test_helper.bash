@@ -31,7 +31,7 @@ todo_get_emoji() {
 	local -r vs16_hex=$'\xEF\xB8\x8F'
 	local id="${1^^}"
 	local hardcoded normalized
-	hardcoded="${UI_OUTPUT[$id]%%: *}"
+	hardcoded="${UI_OUTPUT[$id]%% *}"
 
 	if [[ "$hardcoded" != *"$vs16_hex" ]]; then
 		normalized="${hardcoded}${vs16_hex}"
@@ -101,7 +101,7 @@ todo_execute_ui_toggle() {
 
 	FORCE_EMOJI="" run "$TODO_SCRIPT" "$subcmd" "$run_1_arg"
 	todo_assert_exit "$exit"
-	assert_output --partial "${UI_OUTPUT["$marker_id"]##*: }"
+	assert_output --partial "${UI_OUTPUT["$marker_id"]##* }"
 
 	run "$TODO_SCRIPT" "$subcmd" "$run_2_arg"
 	todo_assert_exit "$exit"
