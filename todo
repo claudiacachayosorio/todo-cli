@@ -31,6 +31,7 @@ readonly DATA_DIR="${DATA_DIR:-$SCRIPT_DIR}"
 readonly TODO_FILE="${DATA_DIR}/todo.txt"
 TASK_COUNT=0
 INDEX_WIDTH=1
+USE_EMOJI=true
 declare -gA UI
 
 # HELPERS =================================================================== #
@@ -46,7 +47,14 @@ init_ui() {
 	local color_modifier=$'\uFE0F'
 	local hex_sequence
 
-	if [[ -n "${NO_COLOR:-}" ]]; then
+	if [[ -n "${NO_COLOR:-}" || "$TERM" == "dumb" || ! -t 1 ]]; then
+		USE_EMOJI="false"
+	fi
+	if [[ "${FORCE_EMOJI:-}" == "true" || "${FORCE_EMOJI}" == "1" ]]; then
+		USE_EMOJI="true"
+	fi
+
+	if [[ "$USE_EMOJI" == "false" ]]; then
 		UI[SYS_ERROR]="[ERROR]"
 		UI[SYS_EMPTY]="[EMPTY]"
 		UI[SYS_DONE]="[DONE]"

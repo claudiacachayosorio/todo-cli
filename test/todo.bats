@@ -17,6 +17,7 @@ setup() {
 	load test_helper
 	todo_setup_ui_data
 	export DATA_DIR="$BATS_TEST_TMPDIR"
+	export FORCE_EMOJI="true"
 	source "$TODO_SCRIPT"
 }
 

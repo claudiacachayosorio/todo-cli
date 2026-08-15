@@ -99,7 +99,7 @@ todo_execute_ui_toggle() {
 	fi
 	emoji="$(todo_get_emoji "$marker_id")"
 
-	NO_COLOR=1 run "$TODO_SCRIPT" "$subcmd" "$run_1_arg"
+	FORCE_EMOJI="" run "$TODO_SCRIPT" "$subcmd" "$run_1_arg"
 	todo_assert_exit "$exit"
 	assert_output --partial "${UI_OUTPUT["$marker_id"]##*: }"
 
