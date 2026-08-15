@@ -12,34 +12,7 @@ MOCK_TASKS[4]="make banana bread"
 MOCK_TASKS[5]="replace scale batteries"
 readonly MOCK_TASKS
 
-todo_setup_ui_data() {
-	declare -gA UI_OUTPUT
-	UI_OUTPUT[SYS_ERROR]="❌ [!]"
-	UI_OUTPUT[SYS_EMPTY]="🏜️ [~]"
-	UI_OUTPUT[SYS_DONE]="🎉 [~]"
-	UI_OUTPUT[SYS_SKIP]="⏭️ [>]"
-	UI_OUTPUT[CMD_ADD]="➕ [+]"
-	UI_OUTPUT[CMD_DEL]="🗑️ [-]"
-	UI_OUTPUT[CMD_DONE]="✅ [x]"
-	UI_OUTPUT[CMD_UNDO]="↩️ [<]"
-	readonly UI_OUTPUT
-}
-
 # FUNCTIONS ================================================================= #
-
-todo_get_emoji() {
-	local -r vs16_hex=$'\xEF\xB8\x8F'
-	local id="${1^^}"
-	local hardcoded normalized
-	hardcoded="${UI_OUTPUT[$id]%% *}"
-
-	if [[ "$hardcoded" != *"$vs16_hex" ]]; then
-		normalized="${hardcoded}${vs16_hex}"
-	else
-		normalized="$hardcoded"
-	fi
-	printf "%b" "$normalized"
-}
 
 todo_render_mock_tasks() {
 	local mock_tasks=("$@")
@@ -64,11 +37,10 @@ todo_assert_storage_persists() {
 }
 
 todo_assert_storage_empty() {
-	local emoji; emoji="$(todo_get_emoji "SYS_EMPTY")"
 	assert_success
 	assert_file_exists "$TODO_FILE"
 	assert_file_empty "$TODO_FILE"
-	assert_output --partial "${emoji} Your todo.txt file is empty!"
+	assert_output --partial "Your todo.txt file is empty!"
 }
 
 todo_execute_help() {
@@ -78,53 +50,20 @@ todo_execute_help() {
 	assert_line --index 0 "USAGE"
 }
 
-todo_assert_exit() {
-	local code="$1"
-	if [[ "$code" -eq 0 ]]; then
-		assert_success
-	else
-		assert_failure "$code"
-	fi
-}
-
-todo_execute_ui_toggle() {
-	local subcmd="$1" run_1_arg="$2" run_2_arg="$3"
-	local status="${4:-}" exit="${5:-0}"
-	local marker_id emoji
-
-	if [[ -z "$status" ]]; then
-		marker_id="CMD_${subcmd^^}"
-	else
-		marker_id="SYS_${status^^}"
-	fi
-	emoji="$(todo_get_emoji "$marker_id")"
-
-	FORCE_EMOJI="" run "$TODO_SCRIPT" "$subcmd" "$run_1_arg"
-	todo_assert_exit "$exit"
-	assert_output --partial "${UI_OUTPUT["$marker_id"]##* }"
-
-	run "$TODO_SCRIPT" "$subcmd" "$run_2_arg"
-	todo_assert_exit "$exit"
-	assert_output --partial "$emoji"
-}
-
 todo_execute_usage_failure() {
 	local error_desc="$1"; shift
 	local cli_args=("$@")
-	local emoji; emoji="$(todo_get_emoji "SYS_ERROR")"
-
 	run --separate-stderr "$TODO_SCRIPT" "${cli_args[@]}"
 	assert_failure 2
 	refute_output
-	assert_stderr_line --index 0 "${emoji} ${error_desc}"
+	assert_stderr_line --index 0 "ERROR: $error_desc"
 	assert_stderr_line --index 1 "Try 'bash todo help' for more information."
 }
 
 todo_assert_cmd_output() {
-	local subcmd="$1" index="$2" start="${3:-1}"
-	local emoji; emoji="$(todo_get_emoji "CMD_${subcmd^^}")"
+	local index="$1" start="${2:-1}"
 	local mock_tasks=("" "${MOCK_TASKS[@]:$start}")
-	assert_output --partial "${emoji} ${index} ${mock_tasks[$index]}"
+	assert_output --partial "${index} ${mock_tasks[$index]}"
 }
 
 todo_execute_add_cmd() {
@@ -133,7 +72,7 @@ todo_execute_add_cmd() {
 
 	run "$TODO_SCRIPT" add "${task_words[@]}"
 	assert_success
-	todo_assert_cmd_output "add" "$index"
+	todo_assert_cmd_output "$index"
 	assert_file_exists "$TODO_FILE"
 
 	run cat "$TODO_FILE"
@@ -143,14 +82,16 @@ todo_execute_add_cmd() {
 todo_execute_valid_index() {
 	local subcmd="$1"; shift
 	local start=""
-	if [[ "$1" =~ ^: ]]; then start="${1#:}"; shift; else :; fi
+	if [[ "$1" =~ ^: ]]; then
+		start="${1#:}"; shift
+	else :; fi
 	local indexes=("$@")
 	local expected_output
 
 	run "$TODO_SCRIPT" "$subcmd" "${indexes[@]}"
 	assert_success
 	local i; for i in "${indexes[@]}"; do
-		todo_assert_cmd_output "$subcmd" "$i" "$start"
+		todo_assert_cmd_output "$i" "$start"
 	done
 }
 
@@ -159,11 +100,8 @@ todo_format_index_error() {
 	index_errors[text]="'text' is not a number."
 	index_errors[0]="Task index must be greater than zero."
 	index_errors[6]="Task 6 does not exist."
-
 	local invalid_index="$1"
-	local emoji; emoji="$(todo_get_emoji "SYS_SKIP")"
-
-	printf "%s %s Skipping.\n" "$emoji" "${index_errors[$invalid_index]}"
+	printf "%s Skipping.\n" "${index_errors[$invalid_index]}"
 }
 
 todo_assert_invalid_index() {

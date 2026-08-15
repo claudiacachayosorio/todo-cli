@@ -15,9 +15,7 @@ setup() {
 	bats_load_library bats-file
 
 	load test_helper
-	todo_setup_ui_data
 	export DATA_DIR="$BATS_TEST_TMPDIR"
-	export FORCE_EMOJI="true"
 	source "$TODO_SCRIPT"
 }
 
@@ -32,15 +30,6 @@ setup() {
 	# invalid subcommand: prints error and exits 2
 	local error_desc="hey is not a valid command."
 	todo_execute_usage_failure "$error_desc" "hey"
-}
-
-@test "interface: toggles NO_COLOR mode" {
-	todo_seed_storage 3
-	todo_execute_ui_toggle "add" "${MOCK_TASKS[4]}" "${MOCK_TASKS[5]}"
-	todo_execute_ui_toggle "del" 5 4
-	todo_execute_ui_toggle "done" 1 2
-	todo_execute_ui_toggle "undo" 1 2
-	todo_execute_ui_toggle "del" 0 0 "skip" 2
 }
 
 # bats --filter "^storage:" test/
@@ -124,7 +113,7 @@ setup() {
 	# valid and invalid indexes: only targets valid indexes
 	run "$TODO_SCRIPT" "del" 0 1
 	assert_success
-	todo_assert_cmd_output "del" 1
+	todo_assert_cmd_output 1
 	todo_assert_invalid_index 0
 	todo_assert_tasks_removed 1
 }
