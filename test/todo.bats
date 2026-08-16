@@ -75,14 +75,17 @@ setup() {
 	read -ra unquoted_task <<< "${TASKS[3]}"
 
 	todo_execute_add_cmd 1 "${TASKS[1]}"
+	todo_assert_summary 1
 	expected="${TASKS[1]}"$'\n'
 	todo_assert_storage_content "$expected"
 
 	todo_execute_add_cmd 2 "${TASKS[2]}"
+	todo_assert_summary 2
 	expected+="${TASKS[2]}"$'\n'
 	todo_assert_storage_content "$expected"
 
 	todo_execute_add_cmd 3 "${unquoted_task[@]}"
+	todo_assert_summary 3
 	expected+="${TASKS[3]}"$'\n'
 	todo_assert_storage_content "$expected"
 }
@@ -95,16 +98,19 @@ setup() {
 	todo_seed_storage
 
 	todo_execute_valid_index "del" "$label" 1
+	todo_assert_summary 3
 	printf -v expected "\n%s" "${TASKS[@]:2}"
 	todo_assert_storage_content "$expected"$'\n'
 
 	todo_execute_valid_index "del" "$label" 2 3
+	todo_assert_summary 1
 	printf -v expected "\n\n\n%s\n" "${TASKS[4]}"
 	todo_assert_storage_content "$expected"
 
 	todo_execute_valid_index "del" "$label" 4
+	todo_assert_summary 0
 	run grep -c "^$" "$TODO_FILE"
-	assert_output "4"
+	assert_output 4
 }
 
 @test "del: handles and skips invalid indexes" {
@@ -122,8 +128,9 @@ setup() {
 
 	run "$TODO_SCRIPT" "del" 0 4
 	assert_success
-	todo_assert_confirmation "[-] Deleted" 4
 	todo_assert_invalid_index 0
+	todo_assert_task_success "[-] Deleted" 4
+	todo_assert_summary 3
 	printf -v expected "%s\n" "${TASKS[@]:1:3}"
 	todo_assert_storage_content "$expected"$'\n'
 }

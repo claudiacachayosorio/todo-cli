@@ -43,39 +43,31 @@ init_storage() {
 }
 
 is_todo_empty() {
-	if [[ ! -s "$TODO_FILE" ]]; then
-		printf "Your todo.txt file is empty!\n"; exit 0
-	else return 0; fi
+	if ! grep -q '[^[:space:]]' "$TODO_FILE"; then
+		printf "todo.txt is empty!\n"
+		exit 0
+	fi
 }
 
 print_summary() {
-	local task_count todo_count done_count breakdonwn
-	task_count="$(grep -c "[^[:space:]]" "$TODO_FILE")" || true
-	done_count="$(grep -c "^x " "$TODO_FILE")" || true
-	todo_count="$(( task_count - done_count ))"
-	breakdown="${todo_count} to do, ${done_count} done"
-
-	case "$task_count" in
-		0) printf "0 tasks remaining\n" ;;
-		1) printf "1 task remaining (${breakdown})\n" ;;
-		*) printf "${task_count} tasks remaining (${breakdown})\n" ;;
-	esac
+	local todo done total breakdonwn
+	total="$(grep -c '[^[:space:]]' "$TODO_FILE")" || true
+	done="$(grep -c "^x " "$TODO_FILE")" || true
+	todo="$(( total - done ))"
+	printf "%d todo | %d done | %d total" "$todo" "$done" "$total"
 }
 
 print_task_success() {
 	local index="$1" task_output="$2"
 	local subcmd="${FUNCNAME[1]#todo_}"
-	printf "%s line %*d: \"%s\"\n" "${LABELS[$subcmd]}" "$INDEX_WIDTH" "$index" "$task_output"
+	printf "%s line %*d: \"%s\"" "${LABELS[$subcmd]}" "$INDEX_WIDTH" "$index" "$task_output"
 }
 
 print_confirmation() {
 	local tasks="$1"
 	local summary; summary="$(print_summary)"
-	cat <<-EOF
-	$tasks
-	--
-	$summary
-	EOF
+	printf "%s\n" "$tasks"
+	printf "%s\n" "$summary"
 }
 
 validate_index() {
@@ -115,7 +107,7 @@ todo_add() {
 
 	printf "%s\n" "$task" >> "$TODO_FILE"
 	formatted_task="$(print_task_success "$index" "$task")"
-	print_confirmation "$formatted_task"
+	print_confirmation "$formatted_task"$'\n'
 }
 
 todo_del() {
@@ -128,7 +120,7 @@ todo_del() {
 		task="$(sed -n "${i}p" "$TODO_FILE")"
 
 		formatted_task="$(print_task_success "$i" "$task")"
-		deleted_tasks+="$formatted_task"
+		deleted_tasks+="$formatted_task"$'\n'
 		sed_args+=("-e" "${i}s/.*//")
 	done
 
@@ -153,7 +145,7 @@ todo_do() {
 		fi
 
 		formatted_task="$(print_task_success "$i" "$task")"
-		done_tasks+="$formatted_task"
+		done_tasks+="$formatted_task"$'\n'
 		sed_args+=("-e" "${i}s/^/x /")
 	done
 
@@ -178,7 +170,7 @@ todo_undo() {
 		fi
 
 		formatted_task="$(print_task_success "$i" "$task")"
-		undone_tasks+="$formatted_task"
+		undone_tasks+="$formatted_task"$'\n'
 		sed_args+=("-e" "${i}s/^x //")
 	done
 
@@ -207,17 +199,17 @@ main() {
 			;;
 		del)
 			[[ -n "${1:-}" ]] || die 2 "Task index required."
-			is_todo_empty
+			is_todo_empty --exit
 			todo_del "$@"
 			;;
 		do)
 			[[ -n "${1:-}" ]] || die 2 "Task index required."
-			is_todo_empty
+			is_todo_empty --exit
 			todo_do "$@"
 			;;
 		undo)
 			[[ -n "${1:-}" ]] || die 2 "Task index required."
-			is_todo_empty
+			is_todo_empty --exit
 			todo_undo "$@"
 			;;
 		*)

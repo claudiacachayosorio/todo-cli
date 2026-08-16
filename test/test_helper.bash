@@ -22,7 +22,7 @@ todo_assert_storage_empty() {
 	assert_success
 	assert_file_exists "$TODO_FILE"
 	assert_file_empty "$TODO_FILE"
-	assert_output "Your todo.txt file is empty!"
+	assert_output "todo.txt is empty!"
 }
 
 todo_assert_storage_content() {
@@ -47,12 +47,18 @@ todo_execute_usage_failure() {
 	run --separate-stderr "$TODO_SCRIPT" "${cli_args[@]}"
 	assert_failure 2
 	refute_output
-	assert_stderr_line --index 0 "ERROR: $error_desc"
+	assert_stderr "ERROR: $error_desc"
 }
 
-todo_assert_confirmation() {
+todo_assert_task_success() {
 	local label="$1" index="$2"
-	assert_output --partial "${label} line ${index}: \"${TASKS[$index]}\""
+	assert_line "${label} line ${index}: \"${TASKS[$index]}\""
+}
+
+todo_assert_summary() {
+	local todo="${1:-4}" done="${2:-0}"
+	local total; total="$(( todo + done ))"
+	assert_line --index -1 "${todo} todo | ${done} done | ${total} total"
 }
 
 todo_execute_add_cmd() {
@@ -61,7 +67,7 @@ todo_execute_add_cmd() {
 
 	run "$TODO_SCRIPT" "add" "${task_words[@]}"
 	assert_success
-	todo_assert_confirmation "[+] Added" "$index"
+	todo_assert_task_success "[+] Added" "$index"
 }
 
 todo_execute_valid_index() {
@@ -72,7 +78,7 @@ todo_execute_valid_index() {
 	run "$TODO_SCRIPT" "$subcmd" "${indexes[@]}"
 	assert_success
 	local i; for i in "${indexes[@]}"; do
-		todo_assert_confirmation "$label" "$i"
+		todo_assert_task_success "$label" "$i"
 	done
 }
 
@@ -83,7 +89,7 @@ todo_assert_invalid_index() {
 	index_errors[5]="Task does not exist."
 
 	local index="$1"
-	assert_output --partial "Skipping ${index}: ${index_errors[$index]}"
+	assert_line "Skipping ${index}: ${index_errors[$index]}"
 }
 
 todo_execute_invalid_index() {
