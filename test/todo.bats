@@ -22,28 +22,25 @@ setup() {
 # bats --filter "^interface:" test/
 
 @test "interface: handles routing and usage" {
-	# no arguments: prints help and exits 0
 	todo_execute_help
-	# help option : prints help and exits 0
 	todo_execute_help "help"
 	todo_execute_help "--help"
-	# invalid subcommand: prints error and exits 2
-	local error_desc="hey is not a valid command."
-	todo_execute_usage_failure "$error_desc" "hey"
+
+	local error_desc="'fixt' is not a valid command."
+	todo_execute_usage_failure "$error_desc" "fixt"
 }
 
 # bats --filter "^storage:" test/
 
 @test "storage: initializes and manages files" {
-	# fresh run: creates todo.txt
 	run "$TODO_SCRIPT" --init-only
 	assert_success
 	assert_file_exists "$TODO_FILE"
-	# existing todo.txt: preserves file content
+
 	todo_seed_storage
 	run "$TODO_SCRIPT" --init-only
 	assert_success
-	todo_assert_storage_persists
+	todo_assert_storage_content
 }
 
 # bats --filter "^validation:" test/
@@ -51,11 +48,10 @@ setup() {
 @test "validation: rejects missing arguments for subcommands" {
 	local missing_task_error="Task description cannot be empty."
 	local missing_index_error="Task index required."
-	# missing task description: prints error and exits 2
+
 	todo_execute_usage_failure "$missing_task_error" "add"
-	# missing task index: prints error and exits 2
 	todo_execute_usage_failure "$missing_index_error" "del"
-	todo_execute_usage_failure "$missing_index_error" "done"
+	todo_execute_usage_failure "$missing_index_error" "do"
 	todo_execute_usage_failure "$missing_index_error" "undo"
 }
 
@@ -66,8 +62,8 @@ setup() {
 
 	run "$TODO_SCRIPT" "del" 1
 	todo_assert_storage_empty "del"
-	run "$TODO_SCRIPT" "done" 1
-	todo_assert_storage_empty "done"
+	run "$TODO_SCRIPT" "do" 1
+	todo_assert_storage_empty "do"
 	run "$TODO_SCRIPT" "undo" 1
 	todo_assert_storage_empty "undo"
 }
@@ -75,47 +71,61 @@ setup() {
 # bats --filter "^add:" test/
 
 @test "add: creates storage and appends tasks" {
-	# missing todo.txt: initializes storage and inserts task
-	todo_execute_add_cmd 1 "${MOCK_TASKS[1]}"
-	# existing todo.txt: appends new task
-	todo_execute_add_cmd 2 "${MOCK_TASKS[2]}"
-	# unquoted task: appends arguments as one task
-	local mock_task_unquoted=(${MOCK_TASKS[3]})
-	todo_execute_add_cmd 3 "${mock_task_unquoted[@]}"
+	local expected unquoted_task
+	read -ra unquoted_task <<< "${TASKS[3]}"
+
+	todo_execute_add_cmd 1 "${TASKS[1]}"
+	expected="${TASKS[1]}"$'\n'
+	todo_assert_storage_content "$expected"
+
+	todo_execute_add_cmd 2 "${TASKS[2]}"
+	expected+="${TASKS[2]}"$'\n'
+	todo_assert_storage_content "$expected"
+
+	todo_execute_add_cmd 3 "${unquoted_task[@]}"
+	expected+="${TASKS[3]}"$'\n'
+	todo_assert_storage_content "$expected"
 }
 
 # bats --filter "^del:" test/
 
 @test "del: removes tasks corresponding to valid indexes" {
+	local label="[-] Deleted"
+	local expected
 	todo_seed_storage
-	# valid index: removes task corresponding to index
-	todo_execute_valid_index "del" 1
-	todo_assert_tasks_removed 1
-	# multiple indexes: removes tasks targeted by index
-	todo_execute_valid_index "del" ":2" 1 2 3
-	todo_assert_tasks_removed 1 2 3 4
-	# one task exists: removes task and prints success message
-	todo_execute_valid_index "del" ":5" 1
-	todo_assert_storage_empty
+
+	todo_execute_valid_index "del" "$label" 1
+	printf -v expected "\n%s" "${TASKS[@]:2}"
+	todo_assert_storage_content "$expected"$'\n'
+
+	todo_execute_valid_index "del" "$label" 2 3
+	printf -v expected "\n\n\n%s\n" "${TASKS[4]}"
+	todo_assert_storage_content "$expected"
+
+	todo_execute_valid_index "del" "$label" 4
+	run grep -c "^$" "$TODO_FILE"
+	assert_output "4"
 }
 
 @test "del: handles and skips invalid indexes" {
+	local expected
 	todo_seed_storage
-	# non-numeric index: prints error and exits 2
+
 	todo_execute_invalid_index "del" "text"
-	todo_assert_storage_persists
-	# index zero: prints error and exits 2
+	todo_assert_storage_content
+
 	todo_execute_invalid_index "del" 0
-	todo_assert_storage_persists
-	# out of bounds index: prints error and exits 2
-	todo_execute_invalid_index "del" 6
-	todo_assert_storage_persists
-	# valid and invalid indexes: only targets valid indexes
-	run "$TODO_SCRIPT" "del" 0 1
+	todo_assert_storage_content
+
+	todo_execute_invalid_index "del" 5
+	todo_assert_storage_content
+
+	run "$TODO_SCRIPT" "del" 0 4
 	assert_success
-	todo_assert_cmd_output 1
+	todo_assert_confirmation "[-] Deleted" 4
 	todo_assert_invalid_index 0
-	todo_assert_tasks_removed 1
+	printf -v expected "%s\n" "${TASKS[@]:1:3}"
+	todo_assert_storage_content "$expected"$'\n'
 }
 
 # bats --filter "^done:" test/
@@ -132,7 +142,7 @@ setup() {
 #@test "done: task already done: print error and leaves data intact" {
 #	seed_todo
 #	run_and_assert_index_error "done" "4" "Task 4 is already marked as done."
-#	assert_todo_content "$MOCK_TASKS_RENDERED"
+#	assert_todo_content "$TASKS_RENDERED"
 #}
 
 #@test "done: empty todo.txt: prints 'empty todo' message and exits 0" {
@@ -143,15 +153,15 @@ setup() {
 #	seed_todo
 #	run "$TODO_SCRIPT" done 6
 #	assert_success
-#	assert_output "✅ 6  ${MOCK_TASKS[6]}"
+#	assert_output "✅ 6  ${TASKS[6]}"
 #}
 
 #@test "done: multiple indexes: inserts 'done' mark into lines corresponding to indexes provided" {
 #	seed_todo
 #	run "$TODO_SCRIPT" done 8 9
 #	assert_success
-#	assert_output "✅ 8  ${MOCK_TASKS[8]}"
-#	assert_output "✅ 9  ${MOCK_TASKS[9]}"
+#	assert_output "✅ 8  ${TASKS[8]}"
+#	assert_output "✅ 9  ${TASKS[9]}"
 #}
 
 #@test "done: valid and invalid indexes: skips invalid indexes and inserts 'done' mark into lines corresponding to valid indexes" {}

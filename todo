@@ -11,25 +11,26 @@ set -o errtrace
 die() {
 	local code="${1:-1}"
 	local desc="${2:-An unknown error has occurred.}"
-	local line_no="${3:+, line $3}"
-
 	printf "ERROR: %s\n" "$desc" >&2
-	if [[ "$code" -eq 2 ]]; then
-		printf "Try 'bash todo help' for more information.\n" >&2
-	else
-		printf "--> %s%s\n" "${FUNCNAME[@]:1:-1}" "$line_no" >&2
-	fi
 	exit "$code"
 }
 
-trap 'die 1 "Command failed unexpectedly." "$LINENO"' ERR
+trap 'die 1 "Command failed unexpectedly."' ERR
 
 # GLOBALS =================================================================== #
 
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly DATA_DIR="${DATA_DIR:-$SCRIPT_DIR}"
 readonly TODO_FILE="${DATA_DIR}/todo.txt"
-TASK_COUNT=0
+
+declare -gA LABELS
+LABELS[add]="[+] Added"
+LABELS[del]="[-] Deleted"
+LABELS[do]="[x] Done"
+LABELS[undo]="[ ] Undone"
+readonly LABELS
+
+LINE_COUNT=0
 INDEX_WIDTH=1
 
 # HELPERS =================================================================== #
@@ -37,8 +38,8 @@ INDEX_WIDTH=1
 init_storage() {
 	[[ -d "$DATA_DIR" ]] || die 1 "No directory found at ${DATA_DIR}."
 	touch "$TODO_FILE"   || die 1 "Cannot create todo.txt inside ${DATA_DIR}."
-	TASK_COUNT="$(wc -l < "$TODO_FILE")"
-	INDEX_WIDTH="${#TASK_COUNT}"
+	LINE_COUNT="$(wc -l < "$TODO_FILE")"
+	INDEX_WIDTH="${#LINE_COUNT}"
 }
 
 is_todo_empty() {
@@ -47,20 +48,48 @@ is_todo_empty() {
 	else return 0; fi
 }
 
+print_summary() {
+	local task_count todo_count done_count breakdonwn
+	task_count="$(grep -c "[^[:space:]]" "$TODO_FILE")" || true
+	done_count="$(grep -c "^x " "$TODO_FILE")" || true
+	todo_count="$(( task_count - done_count ))"
+	breakdown="${todo_count} to do, ${done_count} done"
+
+	case "$task_count" in
+		0) printf "0 tasks remaining\n" ;;
+		1) printf "1 task remaining (${breakdown})\n" ;;
+		*) printf "${task_count} tasks remaining (${breakdown})\n" ;;
+	esac
+}
+
+print_task_success() {
+	local index="$1" task_output="$2"
+	local subcmd="${FUNCNAME[1]#todo_}"
+	printf "%s line %*d: \"%s\"\n" "${LABELS[$subcmd]}" "$INDEX_WIDTH" "$index" "$task_output"
+}
+
+print_confirmation() {
+	local tasks="$1"
+	local summary; summary="$(print_summary)"
+	cat <<-EOF
+	$tasks
+	--
+	$summary
+	EOF
+}
+
 validate_index() {
 	local index="$1"
 	if [[ ! "$index" =~ ^[0-9]+$ ]]; then
-		printf "'%s' is not a number. Skipping.\n" "$index"; return 1
+		printf "Skipping %s: Task index must be number.\n" "$index" >&2
+		return 1
 	elif [[ "$index" -eq 0 ]]; then
-		printf "Task index must be greater than zero. Skipping.\n"; return 1
-	elif [[ "$index" -gt "$TASK_COUNT" ]]; then
-		printf "Task %s does not exist. Skipping.\n" "$index"; return 1
+		printf "Skipping 0: Task index must be greater than zero.\n" >&2
+		return 1
+	elif [[ "$index" -gt "$LINE_COUNT" ]]; then
+		printf "Skipping %d: Task does not exist.\n" "$index" >&2
+		return 1
 	else return 0; fi
-}
-
-print_success_task() {
-	local index="$1" task="$2"
-	printf "%-*d %s\n" "$INDEX_WIDTH" "$index" "${task#x }"
 }
 
 # SUBCOMMANDS =============================================================== #
@@ -73,80 +102,89 @@ todo_help() {
 	COMMANDS
 	  add   <description>
 	  del   <index>...
-	  done  <index>...
+	  do 		<index>...
 	  undo  <index>...
 	EOF
 	exit 0
 }
 
 todo_add() {
-	local task; task="$(awk '$1=$1' <<< "$*")"
-	local index; index="$(( TASK_COUNT + 1 ))"
+	local task="$*"
+	local index; index="$(( LINE_COUNT + 1 ))"
+	local formatted_task
+
 	printf "%s\n" "$task" >> "$TODO_FILE"
-	print_success_task "$index" "$task"
+	formatted_task="$(print_task_success "$index" "$task")"
+	print_confirmation "$formatted_task"
 }
 
 todo_del() {
+	local sed_args=()
+	local deleted_tasks=""
 	local task formatted_task
-	local valid_tasks="" sed_args=()
 
 	local i; for i in "$@"; do
 		if ! validate_index "$i"; then continue; fi
-		sed_args+=("-e" "${i}d")
 		task="$(sed -n "${i}p" "$TODO_FILE")"
-		formatted_task="$(print_success_task "$i" "$task")"
-		valid_tasks+="$formatted_task"
+
+		formatted_task="$(print_task_success "$i" "$task")"
+		deleted_tasks+="$formatted_task"
+		sed_args+=("-e" "${i}s/.*//")
 	done
 
 	if [[ "${#sed_args[@]}" -gt 0 ]]; then
 		sed -i "${sed_args[@]}" "$TODO_FILE"
-		printf "%s" "$valid_tasks"
+		print_confirmation "$deleted_tasks"
 	else exit 2; fi
-	is_todo_empty
 }
 
-todo_done() {
+todo_do() {
+	local done_mark="x "
+	local sed_args=()
+	local done_tasks=""
 	local task formatted_task
-	local valid_tasks="" sed_args=()
 
 	local i; for i in "$@"; do
 		if ! validate_index "$i"; then continue; fi
 		task="$(sed -n "${i}p" "$TODO_FILE")"
 
-		if [[ "$task" =~ ^x ]]; then
-			printf "Task %d is already marked as done. Skipping.\n" "$i"; continue
+		if [[ "$task" =~ $done_mark ]]; then
+			printf "Skipping %d: Task is already marked as done.\n" "$i"; continue
 		fi
 
+		formatted_task="$(print_task_success "$i" "$task")"
+		done_tasks+="$formatted_task"
 		sed_args+=("-e" "${i}s/^/x /")
-		formatted_task="$(print_success_task "$i" "$task")"
-		valid_tasks+="$formatted_task"
 	done
 
 	if [[ "${#sed_args[@]}" -gt 0 ]]; then
 		sed -i "${sed_args[@]}" "$TODO_FILE"
-		printf "%s" "$valid_tasks"
+		print_confirmation "$done_tasks"
 	else exit 2; fi
 }
 
 todo_undo() {
-	local task formatted_task valid_tasks="" sed_args=()
+	local done_mark="x "
+	local sed_args=()
+	local undone_tasks=""
+	local task formatted_task
 
 	local i; for i in "$@"; do
 		if ! validate_index "$i"; then continue; fi
 		task="$(sed -n "${i}p" "$TODO_FILE")"
 
-		if [[ ! "$task" =~ ^x ]]; then
-			printf "Task %d is already unchecked.\n" "$i"; continue
+		if [[ ! "$task" =~ $done_mark ]]; then
+			printf "Skipping %d: Task is still marked as to do.\n" "$i"; continue
 		fi
 
+		formatted_task="$(print_task_success "$i" "$task")"
+		undone_tasks+="$formatted_task"
 		sed_args+=("-e" "${i}s/^x //")
-		formatted_task="$(print_success_task "$i" "$task")"
-		valid_tasks+="$formatted_task"
 	done
 
 	if [[ "${#sed_args[@]}" -gt 0 ]]; then
 		sed -i "${sed_args[@]}" "$TODO_FILE"
-		printf "%s" "$valid_tasks"
+		print_confirmation "$undone_tasks"
 	else exit 2; fi
 }
 
@@ -172,10 +210,10 @@ main() {
 			is_todo_empty
 			todo_del "$@"
 			;;
-		done)
+		do)
 			[[ -n "${1:-}" ]] || die 2 "Task index required."
 			is_todo_empty
-			todo_done "$@"
+			todo_do "$@"
 			;;
 		undo)
 			[[ -n "${1:-}" ]] || die 2 "Task index required."
@@ -183,7 +221,7 @@ main() {
 			todo_undo "$@"
 			;;
 		*)
-			die 2 "${cmd} is not a valid command."
+			die 2 "'${cmd}' is not a valid command."
 			;;
 	esac
 }
