@@ -44,13 +44,14 @@ init_storage() {
 
 is_todo_empty() {
 	if ! grep -q '[^[:space:]]' "$TODO_FILE"; then
-		printf "todo.txt is empty!\n"
+		if [[ -s "$TODO_FILE" ]]; then > "$TODO_FILE"; fi
+		printf "Your todo.txt is empty!\n"
 		exit 0
-	fi
+	else :;	fi
 }
 
 print_summary() {
-	local todo done total breakdonwn
+	local todo done total
 	total="$(grep -c '[^[:space:]]' "$TODO_FILE")" || true
 	done="$(grep -c "^x " "$TODO_FILE")" || true
 	todo="$(( total - done ))"
@@ -126,7 +127,6 @@ todo_del() {
 	local i; for i in "$@"; do
 		if ! validate_index "$i"; then continue; fi
 		task="$(sed -n "${i}p" "$TODO_FILE")"
-
 		formatted_task="$(print_task_success "$i" "$task")"
 		deleted_tasks+="$formatted_task"$'\n'
 		sed_args+=("-e" "${i}s/.*//")
@@ -135,6 +135,8 @@ todo_del() {
 	if [[ "${#sed_args[@]}" -gt 0 ]]; then
 		sed -i "${sed_args[@]}" "$TODO_FILE"
 		print_confirmation "$deleted_tasks"
+		sed -i -e :a -e '/\S/!{$d;N;ba;}' "$TODO_FILE"
+		is_todo_empty
 	else exit 2; fi
 }
 

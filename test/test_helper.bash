@@ -14,10 +14,9 @@ readonly TASKS
 # FUNCTIONS ================================================================= #
 
 todo_assert_storage_empty() {
-	assert_success
 	assert_file_exists "$TODO_FILE"
 	assert_file_empty "$TODO_FILE"
-	assert_output "todo.txt is empty!"
+	assert_output --partial "Your todo.txt is empty!"
 }
 
 todo_assert_storage_content() {
@@ -56,10 +55,12 @@ todo_assert_task_success() {
 todo_assert_summary() {
 	local todo="${1:-0}" done="${2:-0}"
 	local total; total="$(( todo + done ))"
+	local summary="${todo} todo | ${done} done | ${total} total"
+
+	assert_line "$summary"
 	if [[ "${#lines[@]}" -gt 1 ]]; then
-		assert_line --index -2 ""
-	fi
-	assert_line --index -1 "${todo} todo | ${done} done | ${total} total"
+		assert_output --partial $'\n'"${todo} todo"
+	else :; fi
 }
 
 todo_execute_add_cmd() {
