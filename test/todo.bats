@@ -37,7 +37,7 @@ setup() {
 	assert_success
 	assert_file_exists "$TODO_FILE"
 
-	todo_seed_storage
+	printf "%s\n" "${TASKS[@]:1}" > "$TODO_FILE"
 	run "$TODO_SCRIPT" --init-only
 	assert_success
 	todo_assert_storage_content
@@ -71,6 +71,7 @@ setup() {
 # bats --filter "^add:" test/
 
 @test "add: creates storage and appends tasks" {
+	local task_1_alt="here's a different 1st row"
 	local expected unquoted_task
 	read -ra unquoted_task <<< "${TASKS[3]}"
 
@@ -84,6 +85,12 @@ setup() {
 	expected+="${TASKS[2]}"$'\n'
 	todo_assert_storage_content "$expected"
 
+	printf "\n%s\n" "${TASKS[2]}" > "$TODO_FILE"
+	todo_execute_add_cmd 1 "$task_1_alt"
+	todo_assert_summary 2
+	printf -v expected "%s\n%s\n" "$task_1_alt" "${TASKS[2]}"
+	todo_assert_storage_content "$expected"
+
 	todo_execute_add_cmd 3 "${unquoted_task[@]}"
 	todo_assert_summary 3
 	expected+="${TASKS[3]}"$'\n'
@@ -95,7 +102,7 @@ setup() {
 @test "del: removes tasks corresponding to valid indexes" {
 	local label="[-] Deleted"
 	local expected
-	todo_seed_storage
+	printf "%s\n" "${TASKS[@]:1}" > "$TODO_FILE"
 
 	todo_execute_valid_index "del" "$label" 1
 	todo_assert_summary 3
@@ -115,7 +122,7 @@ setup() {
 
 @test "del: handles and skips invalid indexes" {
 	local expected
-	todo_seed_storage
+	printf "%s\n" "${TASKS[@]:1}" > "$TODO_FILE"
 
 	todo_execute_invalid_index "del" "text"
 	todo_assert_storage_content

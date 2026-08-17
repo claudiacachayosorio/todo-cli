@@ -5,18 +5,13 @@
 # VARIABLES ================================================================= #
 
 declare -g TASKS=("")
-TASKS[1]="prepare cake mixes"
-TASKS[2]="test buttercream recipe"
-TASKS[3]="refill flour containers"
-TASKS[4]="make banana bread"
+TASKS[1]="this is the first task"
+TASKS[2]="this is the second task"
+TASKS[3]="this is the third task"
+TASKS[4]="this is the fourth task"
 readonly TASKS
 
 # FUNCTIONS ================================================================= #
-
-todo_seed_storage() {
-	local task_count="${1:-${#TASKS[@]}}"
-	printf "%s\n" "${TASKS[@]:1:task_count}" > "$TODO_FILE"
-}
 
 todo_assert_storage_empty() {
 	assert_success
@@ -52,7 +47,8 @@ todo_execute_usage_failure() {
 
 todo_assert_task_success() {
 	local label="$1" index="$2"
-	assert_line "${label} line ${index}: \"${TASKS[$index]}\""
+	local task="${3:-${TASKS[$index]}}"
+	assert_line "${label} line ${index}: \"${task}\""
 }
 
 todo_assert_summary() {
@@ -64,16 +60,16 @@ todo_assert_summary() {
 todo_execute_add_cmd() {
 	local index="$1"; shift
 	local task_words=("$@")
+	local task="$*"
 
 	run "$TODO_SCRIPT" "add" "${task_words[@]}"
 	assert_success
-	todo_assert_task_success "[+] Added" "$index"
+	todo_assert_task_success "[+] Added" "$index" "$task"
 }
 
 todo_execute_valid_index() {
 	local subcmd="$1" label="$2"; shift 2
 	local indexes=("$@")
-	local expected_output
 
 	run "$TODO_SCRIPT" "$subcmd" "${indexes[@]}"
 	assert_success

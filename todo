@@ -102,10 +102,17 @@ todo_help() {
 
 todo_add() {
 	local task="$*"
+	local empty_line formatted_task
 	local index; index="$(( LINE_COUNT + 1 ))"
-	local formatted_task
 
-	printf "%s\n" "$task" >> "$TODO_FILE"
+	empty_line="$(grep -nm 1 '^[[:space:]]*$' "$TODO_FILE")" || true
+	if [[ -n "$empty_line" ]]; then
+		index="${empty_line%%:*}"
+		sed -i "${index}s/.*/${task}/" "$TODO_FILE"
+	else
+		printf "%s\n" "$task" >> "$TODO_FILE"
+	fi
+
 	formatted_task="$(print_task_success "$index" "$task")"
 	print_confirmation "$formatted_task"$'\n'
 }
@@ -140,13 +147,13 @@ todo_do() {
 		if ! validate_index "$i"; then continue; fi
 		task="$(sed -n "${i}p" "$TODO_FILE")"
 
-		if [[ "$task" =~ $done_mark ]]; then
+		if [[ "$task" =~ ^$done_mark ]]; then
 			printf "Skipping %d: Task is already marked as done.\n" "$i"; continue
 		fi
 
 		formatted_task="$(print_task_success "$i" "$task")"
 		done_tasks+="$formatted_task"$'\n'
-		sed_args+=("-e" "${i}s/^/x /")
+		sed_args+=("-e" "${i}s/^/${done_mark}/")
 	done
 
 	if [[ "${#sed_args[@]}" -gt 0 ]]; then
@@ -165,13 +172,13 @@ todo_undo() {
 		if ! validate_index "$i"; then continue; fi
 		task="$(sed -n "${i}p" "$TODO_FILE")"
 
-		if [[ ! "$task" =~ $done_mark ]]; then
-			printf "Skipping %d: Task is still marked as to do.\n" "$i"; continue
+		if [[ ! "$task" =~ ^$done_mark ]]; then
+			printf "Skipping %d: Task is still marked as todo.\n" "$i"; continue
 		fi
 
 		formatted_task="$(print_task_success "$i" "$task")"
 		undone_tasks+="$formatted_task"$'\n'
-		sed_args+=("-e" "${i}s/^x //")
+		sed_args+=("-e" "${i}s/^${done_mark}//")
 	done
 
 	if [[ "${#sed_args[@]}" -gt 0 ]]; then
