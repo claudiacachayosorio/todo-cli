@@ -184,12 +184,28 @@ setup() {
 	todo_assert_storage_content "$expected"
 }
 
-# bats --filter "^done:" test/
+# bats --filter "^do:" test/
 
-#@test "done: no arguments: prints error and exits 2" {
-#	run --separate-stderr "$TODO_SCRIPT" done
-#	assert_command_error "Task index required."
-#}
+@test "do: marks tasks corresponding to valid indexes as done" {
+	local label="[x] Done"
+	local tasks=("${TASKS[@]}")
+	local expected
+	printf "%s\n" "${TASKS[@]:1}" > "$TODO_FILE"
+
+	# valid index: adds prefix to corresponding task
+	todo_execute_valid_index "do" "$label" "x " 1
+	todo_assert_summary 3 1
+	tasks[1]="x ${TASKS[1]}"
+	printf -v expected "%s\n" "${tasks[@]:1}"
+	todo_assert_storage_content "$expected"
+
+	# multiple valid indexes: adds prefix to corresponding tasks
+	todo_execute_valid_index "do" "$label" "x " 2 3
+	todo_assert_summary 1 3
+	tasks[2]="x ${TASKS[2]}"; tasks[3]="x ${TASKS[3]}"
+	printf -v expected "%s\n" "${tasks[@]:1}"
+	todo_assert_storage_content "$expected"
+}
 
 #@test "done: invalid task numbers: prints error and leave data intact" {
 #	assert_invalid_indexes "done"
@@ -203,21 +219,6 @@ setup() {
 
 #@test "done: empty todo.txt: prints 'empty todo' message and exits 0" {
 #	assert_todo_empty "done"
-#}
-
-#@test "done: valid index: inserts 'done' mark into line corresponding to index" {
-#	seed_todo
-#	run "$TODO_SCRIPT" done 6
-#	assert_success
-#	assert_output "✅ 6  ${TASKS[6]}"
-#}
-
-#@test "done: multiple indexes: inserts 'done' mark into lines corresponding to indexes provided" {
-#	seed_todo
-#	run "$TODO_SCRIPT" done 8 9
-#	assert_success
-#	assert_output "✅ 8  ${TASKS[8]}"
-#	assert_output "✅ 9  ${TASKS[9]}"
 #}
 
 #@test "done: valid and invalid indexes: skips invalid indexes and inserts 'done' mark into lines corresponding to valid indexes" {}

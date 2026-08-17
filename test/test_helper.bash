@@ -46,12 +46,6 @@ todo_execute_usage_failure() {
 	assert_stderr "ERROR: ${error_desc}"
 }
 
-todo_assert_task_success() {
-	local label="$1" index="$2"
-	local task="${3:-${TASKS[$index]}}"
-	assert_line "${label} line ${index}: \"${task}\""
-}
-
 todo_assert_summary() {
 	local todo="${1:-0}" done="${2:-0}"
 	local total; total="$(( todo + done ))"
@@ -61,6 +55,12 @@ todo_assert_summary() {
 	if [[ "${#lines[@]}" -gt 1 ]]; then
 		assert_output --partial $'\n'"${todo} todo"
 	else :; fi
+}
+
+todo_assert_task_success() {
+	local label="$1" index="$2"
+	local task="${3:-${TASKS[$index]}}"
+	assert_line "${label} line ${index}: \"${task}\""
 }
 
 todo_execute_add_cmd() {
@@ -75,12 +75,15 @@ todo_execute_add_cmd() {
 
 todo_execute_valid_index() {
 	local subcmd="$1" label="$2"; shift 2
+	local prefix="" task=""
+	if [[ ! "$1" =~ ^[0-9]+$ ]]; then prefix="$1"; shift; fi
 	local indexes=("$@")
 
 	run --keep-empty-lines "$TODO_SCRIPT" "$subcmd" "${indexes[@]}"
 	assert_success
 	local i; for i in "${indexes[@]}"; do
-		todo_assert_task_success "$label" "$i"
+		if [[ -n "$prefix" ]]; then task="${prefix}${TASKS[$i]}"; fi
+		todo_assert_task_success "$label" "$i" "$task"
 	done
 }
 

@@ -29,6 +29,7 @@ LABELS[del]="[-] Deleted"
 LABELS[do]="[x] Done"
 LABELS[undo]="[ ] Undone"
 readonly LABELS
+readonly DONE_REGEX="^x "
 
 LINE_COUNT=0
 INDEX_WIDTH=1
@@ -141,7 +142,6 @@ todo_del() {
 }
 
 todo_do() {
-	local done_mark="x "
 	local sed_args=()
 	local done_tasks=""
 	local task formatted_task
@@ -150,13 +150,13 @@ todo_do() {
 		if ! validate_index "$i"; then continue; fi
 		task="$(sed -n "${i}p" "$TODO_FILE")"
 
-		if [[ "$task" =~ ^$done_mark ]]; then
+		if [[ "$task" =~ $DONE_REGEX ]]; then
 			printf "Skipping %d: Task is already marked as done.\n" "$i"; continue
 		fi
 
-		formatted_task="$(print_task_success "$i" "$task")"
+		formatted_task="$(print_task_success "$i" "x ${task}")"
 		done_tasks+="$formatted_task"$'\n'
-		sed_args+=("-e" "${i}s/^/${done_mark}/")
+		sed_args+=("-e" "${i}s/^/x /")
 	done
 
 	if [[ "${#sed_args[@]}" -gt 0 ]]; then
@@ -166,7 +166,6 @@ todo_do() {
 }
 
 todo_undo() {
-	local done_mark="x "
 	local sed_args=()
 	local undone_tasks=""
 	local task formatted_task
@@ -175,13 +174,13 @@ todo_undo() {
 		if ! validate_index "$i"; then continue; fi
 		task="$(sed -n "${i}p" "$TODO_FILE")"
 
-		if [[ ! "$task" =~ ^$done_mark ]]; then
+		if [[ ! "$task" =~ $DONE_REGEX ]]; then
 			printf "Skipping %d: Task is still marked as todo.\n" "$i"; continue
 		fi
 
 		formatted_task="$(print_task_success "$i" "$task")"
 		undone_tasks+="$formatted_task"$'\n'
-		sed_args+=("-e" "${i}s/^${done_mark}//")
+		sed_args+=("-e" "${i}s/${DONE_REGEX}//")
 	done
 
 	if [[ "${#sed_args[@]}" -gt 0 ]]; then
