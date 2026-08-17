@@ -71,7 +71,7 @@ setup() {
 # bats --filter "^add:" test/
 
 @test "add: creates storage and appends tasks" {
-	local task_1_alt="here's a different 1st row"
+	local task_1_alt="this is a different first task"
 	local expected unquoted_task
 	read -ra unquoted_task <<< "${TASKS[3]}"
 
@@ -133,7 +133,7 @@ setup() {
 	todo_execute_invalid_index "del" 5
 	todo_assert_storage_content
 
-	run "$TODO_SCRIPT" "del" 0 4
+	run --keep-empty-lines "$TODO_SCRIPT" "del" 0 4
 	assert_success
 	todo_assert_invalid_index 0
 	todo_assert_task_success "[-] Deleted" 4

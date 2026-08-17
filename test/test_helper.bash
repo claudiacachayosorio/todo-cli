@@ -54,6 +54,7 @@ todo_assert_task_success() {
 todo_assert_summary() {
 	local todo="${1:-4}" done="${2:-0}"
 	local total; total="$(( todo + done ))"
+	assert_line --index -2 ""
 	assert_line --index -1 "${todo} todo | ${done} done | ${total} total"
 }
 
@@ -62,7 +63,7 @@ todo_execute_add_cmd() {
 	local task_words=("$@")
 	local task="$*"
 
-	run "$TODO_SCRIPT" "add" "${task_words[@]}"
+	run --keep-empty-lines "$TODO_SCRIPT" "add" "${task_words[@]}"
 	assert_success
 	todo_assert_task_success "[+] Added" "$index" "$task"
 }
@@ -71,7 +72,7 @@ todo_execute_valid_index() {
 	local subcmd="$1" label="$2"; shift 2
 	local indexes=("$@")
 
-	run "$TODO_SCRIPT" "$subcmd" "${indexes[@]}"
+	run --keep-empty-lines "$TODO_SCRIPT" "$subcmd" "${indexes[@]}"
 	assert_success
 	local i; for i in "${indexes[@]}"; do
 		todo_assert_task_success "$label" "$i"
