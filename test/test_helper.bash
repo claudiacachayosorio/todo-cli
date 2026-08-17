@@ -22,9 +22,11 @@ todo_assert_storage_empty() {
 
 todo_assert_storage_content() {
 	local expected="${1:-}"
-	[[ -z "$expected" ]] && printf -v expected "%s\n" "${TASKS[@]:1}"
+	if [[ -z "$expected" ]]; then
+		printf -v expected "%s\n" "${TASKS[@]:1}"
+	fi
 
-	[[ -f "$TODO_FILE" ]]
+	assert_file_exists "$TODO_FILE"
 	run --keep-empty-lines cat "$TODO_FILE"
 	assert_output "$expected"
 }
@@ -42,7 +44,7 @@ todo_execute_usage_failure() {
 	run --separate-stderr "$TODO_SCRIPT" "${cli_args[@]}"
 	assert_failure 2
 	refute_output
-	assert_stderr "ERROR: $error_desc"
+	assert_stderr "ERROR: ${error_desc}"
 }
 
 todo_assert_task_success() {
@@ -54,6 +56,9 @@ todo_assert_task_success() {
 todo_assert_summary() {
 	local todo="${1:-0}" done="${2:-0}"
 	local total; total="$(( todo + done ))"
+	if [[ "${#lines[@]}" -gt 1 ]]; then
+		assert_line --index -2 ""
+	fi
 	assert_line --index -1 "${todo} todo | ${done} done | ${total} total"
 }
 

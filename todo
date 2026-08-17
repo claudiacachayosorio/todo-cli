@@ -57,6 +57,7 @@ print_summary() {
 	printf "%d todo | %d done | %d total" "$todo" "$done" "$total"
 }
 
+# TODO: sort task confirmation by line number
 print_task_success() {
 	local index="$1" task_output="$2"
 	local subcmd="${FUNCNAME[1]#todo_}"
