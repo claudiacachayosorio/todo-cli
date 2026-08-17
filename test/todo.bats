@@ -22,9 +22,22 @@ setup() {
 # bats --filter "^interface:" test/
 
 @test "interface: handles routing and usage" {
+	local tasks=("${TASKS[@]}")
+
 	todo_execute_help
 	todo_execute_help "help"
 	todo_execute_help "--help"
+
+	run "$TODO_SCRIPT" "status"
+	assert_success
+	todo_assert_summary
+
+	tasks[1]="x ${TASKS[1]}"
+	printf "%s\n" "${tasks[@]:1}" > "$TODO_FILE"
+
+	run "$TODO_SCRIPT" "status"
+	assert_success
+	todo_assert_summary 3 1
 
 	local error_desc="'fixt' is not a valid command."
 	todo_execute_usage_failure "$error_desc" "fixt"
@@ -76,22 +89,27 @@ setup() {
 	read -ra unquoted_task <<< "${TASKS[3]}"
 
 	todo_execute_add_cmd 1 "${TASKS[1]}"
+	assert_line --index -2 ""
 	todo_assert_summary 1
 	expected="${TASKS[1]}"$'\n'
 	todo_assert_storage_content "$expected"
 
 	todo_execute_add_cmd 2 "${TASKS[2]}"
+	assert_line --index -2 ""
 	todo_assert_summary 2
 	expected+="${TASKS[2]}"$'\n'
 	todo_assert_storage_content "$expected"
 
 	printf "\n%s\n" "${TASKS[2]}" > "$TODO_FILE"
+
 	todo_execute_add_cmd 1 "$task_1_alt"
+	assert_line --index -2 ""
 	todo_assert_summary 2
 	printf -v expected "%s\n%s\n" "$task_1_alt" "${TASKS[2]}"
 	todo_assert_storage_content "$expected"
 
 	todo_execute_add_cmd 3 "${unquoted_task[@]}"
+	assert_line --index -2 ""
 	todo_assert_summary 3
 	expected+="${TASKS[3]}"$'\n'
 	todo_assert_storage_content "$expected"
@@ -105,16 +123,19 @@ setup() {
 	printf "%s\n" "${TASKS[@]:1}" > "$TODO_FILE"
 
 	todo_execute_valid_index "del" "$label" 1
+	assert_line --index -2 ""
 	todo_assert_summary 3
 	printf -v expected "\n%s" "${TASKS[@]:2}"
 	todo_assert_storage_content "$expected"$'\n'
 
 	todo_execute_valid_index "del" "$label" 2 3
+	assert_line --index -2 ""
 	todo_assert_summary 1
 	printf -v expected "\n\n\n%s\n" "${TASKS[4]}"
 	todo_assert_storage_content "$expected"
 
 	todo_execute_valid_index "del" "$label" 4
+	assert_line --index -2 ""
 	todo_assert_summary 0
 	run grep -c "^$" "$TODO_FILE"
 	assert_output 4
@@ -137,6 +158,7 @@ setup() {
 	assert_success
 	todo_assert_invalid_index 0
 	todo_assert_task_success "[-] Deleted" 4
+	assert_line --index -2 ""
 	todo_assert_summary 3
 	printf -v expected "%s\n" "${TASKS[@]:1:3}"
 	todo_assert_storage_content "$expected"$'\n'

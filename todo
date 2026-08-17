@@ -200,6 +200,9 @@ main() {
 		""|help|--help)
 			todo_help
 			;;
+		status)
+			print_summary
+			;;
 		add)
 			[[ -n "${1:-}" ]] || die 2 "Task description cannot be empty."
 			todo_add "$@"

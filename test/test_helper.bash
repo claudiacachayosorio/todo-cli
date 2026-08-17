@@ -52,9 +52,8 @@ todo_assert_task_success() {
 }
 
 todo_assert_summary() {
-	local todo="${1:-4}" done="${2:-0}"
+	local todo="${1:-0}" done="${2:-0}"
 	local total; total="$(( todo + done ))"
-	assert_line --index -2 ""
 	assert_line --index -1 "${todo} todo | ${done} done | ${total} total"
 }
 
