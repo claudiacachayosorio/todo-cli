@@ -222,21 +222,21 @@ main() {
 			print_summary
 			;;
 		add)
-			[[ "$#" -gt 0 ]] || die 2 "Task description cannot be empty."
+			[[ $# -gt 0 ]] || die 2 "Task description cannot be empty."
 			todo_add "$@"
 			;;
 		del)
-			[[ "$#" -gt 0 ]] || die 2 "Task index required."
+			[[ $# -gt 0 ]] || die 2 "Task index required."
 			is_todo_empty --exit
 			todo_del "$@"
 			;;
 		do)
-			[[ "$#" -gt 0 ]] || die 2 "Task index required."
+			[[ $# -gt 0 ]] || die 2 "Task index required."
 			is_todo_empty --exit
 			todo_do "$@"
 			;;
 		undo)
-			[[ "$#" -gt 0 ]] || die 2 "Task index required."
+			[[ $# -gt 0 ]] || die 2 "Task index required."
 			is_todo_empty --exit
 			todo_undo "$@"
 			;;

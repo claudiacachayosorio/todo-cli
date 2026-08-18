@@ -94,7 +94,7 @@ todo_execute_valid_index() {
 	local prefix="" \
 	      task=""
 
-	[[ ! "$1" =~ ^[0-9]$ ]] && prefix="$1"; shift
+	[[ ! "$1" =~ ^[0-9]$ ]] && { prefix="$1"; shift; }
 	local i indexes=("$@")
 
 	run --keep-empty-lines "$TODO_SCRIPT" "$subcmd" "${indexes[@]}"
