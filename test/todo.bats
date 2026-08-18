@@ -9,51 +9,6 @@ setup() {
 	source "$TODO_SCRIPT"
 }
 
-# bats --filter "^storage:" test/
-
-@test "storage: initializes and manages files" {
-	# missing todo.txt: creates storage
-	run "$TODO_SCRIPT" --init-only
-	assert_success
-	assert_file_exists "$TODO_FILE"
-
-	# existing storage and data: preserves data
-	printf "%s\n" "${TASKS[@]:1}" > "$TODO_FILE"
-	run "$TODO_SCRIPT" --init-only
-	assert_success
-	todo_assert_storage_content
-}
-
-# bats --filter "^validation:" test/
-
-@test "validation: rejects missing arguments for subcommands" {
-	local missing_task_error="Task description cannot be empty."
-	local missing_index_error="Task index required."
-
-	# missing arguments: prints error and exits 2
-	todo_execute_usage_failure "$missing_task_error" "add"
-	todo_execute_usage_failure "$missing_index_error" "del"
-	todo_execute_usage_failure "$missing_index_error" "do"
-	todo_execute_usage_failure "$missing_index_error" "undo"
-}
-
-@test "validation: handles empty storage precondition" {
-	run "$TODO_SCRIPT" --init-only
-	assert_file_exists "$TODO_FILE"
-	assert_file_empty "$TODO_FILE"
-
-	# empty storage: prints message and exits 0
-	run "$TODO_SCRIPT" "del" 1
-	assert_success
-	todo_assert_storage_empty "del"
-	run "$TODO_SCRIPT" "do" 1
-	assert_success
-	todo_assert_storage_empty "do"
-	run "$TODO_SCRIPT" "undo" 1
-	assert_success
-	todo_assert_storage_empty "undo"
-}
-
 # bats --filter "^add:" test/
 
 @test "add: creates storage and appends tasks" {

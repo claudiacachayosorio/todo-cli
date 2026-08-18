@@ -43,17 +43,6 @@ todo_assert_storage_content() {
 	assert_output "$expected"
 }
 
-todo_execute_usage_failure() {
-	local error_desc="$1"
-	shift
-	local cli_args=("$@")
-
-	run --separate-stderr "$TODO_SCRIPT" "${cli_args[@]}"
-	assert_failure 2
-	refute_output
-	assert_stderr "ERROR: ${error_desc}"
-}
-
 todo_assert_summary() {
 	local todo="${1:-0}" \
 	      done="${2:-0}" \
@@ -128,4 +117,29 @@ todo_execute_invalid_index() {
 	run "$TODO_SCRIPT" "$subcmd" "$index"
 	todo_assert_invalid_index "$index" "$error"
 	assert_failure 2
+}
+
+todo_test_help_cmd() {
+	local arg="$1"
+	run "$TODO_SCRIPT" "$arg"
+	assert_success
+	assert_line --index 0 "USAGE"
+}
+
+todo_test_usage_failure() {
+	local error_desc="$1"
+	shift
+	local args=("${@}")
+
+	run --separate-stderr "$TODO_SCRIPT" "${args[@]}"
+	assert_failure 2
+	refute_output
+	assert_stderr "ERROR: ${error_desc}"
+}
+
+todo_test_missing_data() {
+	local subcmd="$1"
+	run "$TODO_SCRIPT" "$subcmd" 1
+	assert_success
+	todo_assert_storage_empty
 }
