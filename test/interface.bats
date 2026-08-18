@@ -9,17 +9,24 @@ setup() {
 	source "$TODO_SCRIPT"
 }
 
-todo_test_help() {
+todo_test_help_cmd() {
 	local arg="$1"
 	run "$TODO_SCRIPT" "$arg"
 	assert_success
 	assert_line --index 0 "USAGE"
 }
 
-for help_arg in "" "help" "--help"; do
-	local desc_name="${help_arg:-no arguments}"
-	bats_test_function --description "${desc_name}: prints usage guide" -- todo_test_help "$help_arg"
-done
+todo_register_help_cmd_tests() {
+	local arg desc_name
+	for arg in "" "help" "--help"; do
+		desc_name="${arg:-no arguments}"
+		bats_test_function \
+			--description "${desc_name}: prints usage guide" \
+			-- todo_test_help_cmd "$arg"
+	done
+}
+
+todo_register_help_cmd_tests
 
 @test "status: prints task summary" {
 	local tasks=("${TASKS[@]}")
