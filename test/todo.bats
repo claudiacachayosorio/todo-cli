@@ -210,19 +210,25 @@ setup() {
 @test "do: handles and skips invalid indexes" {
 	local tasks=("${TASKS[@]}")
 	local expected
-	printf "%s\n" "${TASKS[@]:1}" > "$TODO_FILE"
+	tasks[1]="x ${TASKS[1]}"
+	printf "%s\n" "${tasks[@]:1}" > "$TODO_FILE"
+	printf -v expected "%s\n" "${tasks[@]:1}"
 
 	# non-numeric index: prints error and exits 2
 	todo_execute_invalid_index "do" "text"
-	todo_assert_storage_content
+	todo_assert_storage_content "$expected"
 
 	# index zero: prints error and exits 2
 	todo_execute_invalid_index "do" 0
-	todo_assert_storage_content
+	todo_assert_storage_content "$expected"
 
 	# out-of-bounds index: prints error and exits 2
 	todo_execute_invalid_index "do" 5
-	todo_assert_storage_content
+	todo_assert_storage_content "$expected"
+
+	# task already checked: prints error and exits 2
+	todo_execute_invalid_index "do" 1 "checked"
+	todo_assert_storage_content "$expected"
 
 	# valid & invalid input: edits only task with valid index
 	tasks[4]="x ${TASKS[4]}"
@@ -231,7 +237,7 @@ setup() {
 	assert_success
 	todo_assert_invalid_index 0
 	todo_assert_task_success "[x] Done" 4 "${tasks[4]}"
-	todo_assert_summary 3 1
+	todo_assert_summary 2 2
 	todo_assert_storage_content "$expected"
 }
 
@@ -261,6 +267,7 @@ setup() {
 @test "undo: handles and skips invalid indexes" {
 	local tasks=("${TASKS[@]/#/x }")
 	local expected
+	tasks[1]="${TASKS[1]}"
 	printf "%s\n" "${tasks[@]:1}" > "$TODO_FILE"
 	printf -v expected "%s\n" "${tasks[@]:1}"
 
@@ -276,6 +283,10 @@ setup() {
 	todo_execute_invalid_index "undo" 5
 	todo_assert_storage_content "$expected"
 
+	# task still unchecked: prints error and exits 2
+	todo_execute_invalid_index "undo" 1 "unchecked"
+	todo_assert_storage_content "$expected"
+
 	# valid & invalid input: edits only task with valid index
 	tasks[4]="${TASKS[4]}"
 	printf -v expected "%s\n" "${tasks[@]:1}"
@@ -283,6 +294,6 @@ setup() {
 	assert_success
 	todo_assert_invalid_index 0
 	todo_assert_task_success "[ ] Undone" 4 "${tasks[4]}"
-	todo_assert_summary 1 3
+	todo_assert_summary 2 2
 	todo_assert_storage_content "$expected"
 }

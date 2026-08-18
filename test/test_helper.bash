@@ -88,18 +88,21 @@ todo_execute_valid_index() {
 }
 
 todo_assert_invalid_index() {
-	declare -A index_errors
+	local index="$1"
+	local error="${2:-$index}"
+	local -A index_errors
 	index_errors[text]="Task index must be number."
 	index_errors[0]="Task index must be greater than zero."
-	index_errors[5]="Task does not exist."
-
-	local index="$1"
-	assert_line "Skipping ${index}: ${index_errors[$index]}"
+	index_errors["${#TASKS[@]}"]="Task does not exist."
+	index_errors[checked]="Task is already marked as done."
+	index_errors[unchecked]="Task is still marked as todo."
+	assert_line "Skipping ${index}: ${index_errors[$error]}"
 }
 
 todo_execute_invalid_index() {
 	local subcmd="$1" index="$2"
+	local error="${3:-$index}"
 	run "$TODO_SCRIPT" "$subcmd" "$index"
-	todo_assert_invalid_index "$index"
+	todo_assert_invalid_index "$index" "$error"
 	assert_failure 2
 }
