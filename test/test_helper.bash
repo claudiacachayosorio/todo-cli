@@ -2,7 +2,13 @@
 # =========================================================================== #
 # Description: Helper functions for todo testing suite.
 
-# VARIABLES ================================================================= #
+# SETTINGS ================================================================== #
+
+bats_require_minimum_version 1.5.0
+
+readonly BATS_LIB_PATH="${BATS_TEST_DIRNAME}/test_helper"
+readonly TODO_DIR="$(cd "$BATS_TEST_DIRNAME/.." >/dev/null 2>&1 && pwd)"
+readonly TODO_SCRIPT="${TODO_DIR}/todo"
 
 declare -g TASKS=("")
 TASKS[1]="this is the first task"
@@ -11,7 +17,14 @@ TASKS[3]="this is the third task"
 TASKS[4]="this is the fourth task"
 readonly TASKS
 
-# FUNCTIONS ================================================================= #
+todo_setup() {
+	bats_load_library bats-support
+	bats_load_library bats-assert
+	bats_load_library bats-file
+	export DATA_DIR="$BATS_TEST_TMPDIR"
+}
+
+# HELPERS =================================================================== #
 
 todo_assert_storage_empty() {
 	assert_file_exists "$TODO_FILE"
@@ -28,13 +41,6 @@ todo_assert_storage_content() {
 	assert_file_exists "$TODO_FILE"
 	run --keep-empty-lines cat "$TODO_FILE"
 	assert_output "$expected"
-}
-
-todo_execute_help() {
-	local subcmd="${1:-}"
-	run "$TODO_SCRIPT" "$subcmd"
-	assert_success
-	assert_line --index 0 "USAGE"
 }
 
 todo_execute_usage_failure() {

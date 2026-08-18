@@ -1,45 +1,12 @@
 #!/usr/bin/env bats
 # =========================================================================== #
 # Description: Test suite for todo-cli project.
-# Command:     bats test/
-
-bats_require_minimum_version 1.5.0
-
-readonly BATS_LIB_PATH="${BATS_TEST_DIRNAME}/test_helper"
-readonly TODO_DIR="$(cd "$BATS_TEST_DIRNAME/.." >/dev/null 2>&1 && pwd)"
-readonly TODO_SCRIPT="${TODO_DIR}/todo"
+# Command:     bats test/todo.bats
 
 setup() {
-	bats_load_library bats-support
-	bats_load_library bats-assert
-	bats_load_library bats-file
-
 	load test_helper
-	export DATA_DIR="$BATS_TEST_TMPDIR"
+	todo_setup
 	source "$TODO_SCRIPT"
-}
-
-# bats --filter "^interface:" test/
-
-@test "interface: handles routing and usage" {
-	local tasks=("${TASKS[@]}")
-
-	# no argument: prints usage guide
-	todo_execute_help
-	# help option: prints usage guide
-	todo_execute_help "help"
-	todo_execute_help "--help"
-
-	# status option: prints task summary
-	tasks[1]="x ${TASKS[1]}"
-	printf "%s\n" "${tasks[@]:1}" > "$TODO_FILE"
-	run "$TODO_SCRIPT" "status"
-	assert_success
-	todo_assert_summary 3 1
-
-	# invalid subcommand: prints error and exits 2
-	local error_desc="'fixt' is not a valid command."
-	todo_execute_usage_failure "$error_desc" "fixt"
 }
 
 # bats --filter "^storage:" test/
