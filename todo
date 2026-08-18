@@ -178,7 +178,7 @@ todo_undo() {
 			printf "Skipping %d: Task is still marked as todo.\n" "$i"; continue
 		fi
 
-		formatted_task="$(print_task_success "$i" "$task")"
+		formatted_task="$(print_task_success "$i" "${task#x }")"
 		undone_tasks+="$formatted_task"$'\n'
 		sed_args+=("-e" "${i}s/${DONE_REGEX}//")
 	done
