@@ -1,6 +1,6 @@
 #!/usr/bin/env bats
 # =========================================================================== #
-# Description: Integration tests for todo-cli's interface.
+# Description: Testing suite for todo-cli's interface functions.
 # Command:     bats test/interface.bats
 
 setup() {
