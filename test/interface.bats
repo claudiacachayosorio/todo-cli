@@ -17,8 +17,11 @@ todo_test_help_cmd() {
 }
 
 todo_register_help_cmd_tests() {
-	local arg desc_name
-	for arg in "" "help" "--help"; do
+	local args=("" "help" "--help") \
+	      arg \
+	      desc_name
+
+	for arg in "${args[@]}"; do
 		desc_name="${arg:-no arguments}"
 		bats_test_function \
 			--description "${desc_name}: prints usage guide" \

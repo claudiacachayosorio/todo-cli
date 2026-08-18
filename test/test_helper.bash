@@ -44,8 +44,10 @@ todo_assert_storage_content() {
 }
 
 todo_execute_usage_failure() {
-	local error_desc="$1"; shift
+	local error_desc="$1"
+	shift
 	local cli_args=("$@")
+
 	run --separate-stderr "$TODO_SCRIPT" "${cli_args[@]}"
 	assert_failure 2
 	refute_output
@@ -53,26 +55,32 @@ todo_execute_usage_failure() {
 }
 
 todo_assert_summary() {
-	local todo="${1:-0}" done="${2:-0}"
-	local total; total="$(( todo + done ))"
-	local summary="${todo} todo | ${done} done | ${total} total"
+	local todo="${1:-0}" \
+	      done="${2:-0}" \
+				total \
+	      summary
 
+	total="$(( todo + done ))"
+	summary="${todo} todo | ${done} done | ${total} total"
 	assert_line "$summary"
+
 	if [[ "${#lines[@]}" -gt 1 ]]; then
 		assert_output --partial $'\n'"${todo} todo"
 	else :; fi
 }
 
 todo_assert_task_success() {
-	local label="$1" index="$2"
+	local label="$1" \
+	      index="$2"
 	local task="${3:-${TASKS[$index]}}"
 	assert_line "${label} line ${index}: \"${task}\""
 }
 
 todo_execute_add_cmd() {
-	local index="$1"; shift
-	local task_words=("$@")
-	local task="$*"
+	local index="$1"
+	shift
+	local task_words=("$@") \
+	      task="$*"
 
 	run --keep-empty-lines "$TODO_SCRIPT" "add" "${task_words[@]}"
 	assert_success
@@ -80,14 +88,19 @@ todo_execute_add_cmd() {
 }
 
 todo_execute_valid_index() {
-	local subcmd="$1" label="$2"; shift 2
-	local prefix="" task=""
-	if [[ ! "$1" =~ ^[0-9]$ ]]; then prefix="$1"; shift; fi
-	local indexes=("$@")
+	local subcmd="$1" \
+	      label="$2"
+	shift 2
+	local prefix="" \
+	      task=""
+
+	[[ ! "$1" =~ ^[0-9]$ ]] && prefix="$1"; shift
+	local i indexes=("$@")
 
 	run --keep-empty-lines "$TODO_SCRIPT" "$subcmd" "${indexes[@]}"
 	assert_success
-	local i; for i in "${indexes[@]}"; do
+
+	for i in "${indexes[@]}"; do
 		if [[ -n "$prefix" ]]; then task="${prefix}${TASKS[$i]}"; fi
 		todo_assert_task_success "$label" "$i" "$task"
 	done
@@ -96,18 +109,22 @@ todo_execute_valid_index() {
 todo_assert_invalid_index() {
 	local index="$1"
 	local error="${2:-$index}"
+
 	local -A index_errors
 	index_errors[text]="Task index must be number."
 	index_errors[0]="Task index must be greater than zero."
 	index_errors["${#TASKS[@]}"]="Task does not exist."
 	index_errors[checked]="Task is already marked as done."
 	index_errors[unchecked]="Task is still marked as todo."
+
 	assert_line "Skipping ${index}: ${index_errors[$error]}"
 }
 
 todo_execute_invalid_index() {
-	local subcmd="$1" index="$2"
+	local subcmd="$1" \
+	      index="$2"
 	local error="${3:-$index}"
+
 	run "$TODO_SCRIPT" "$subcmd" "$index"
 	todo_assert_invalid_index "$index" "$error"
 	assert_failure 2
