@@ -207,18 +207,30 @@ setup() {
 	todo_assert_storage_content "$expected"
 }
 
-#@test "done: invalid task numbers: prints error and leave data intact" {
-#	assert_invalid_indexes "done"
-#}
+@test "do: handles and skips invalid indexes" {
+	local tasks=("${TASKS[@]}")
+	local expected
+	printf "%s\n" "${TASKS[@]:1}" > "$TODO_FILE"
 
-#@test "done: task already done: print error and leaves data intact" {
-#	seed_todo
-#	run_and_assert_index_error "done" "4" "Task 4 is already marked as done."
-#	assert_todo_content "$TASKS_RENDERED"
-#}
+	# non-numeric index: prints error and exits 2
+	todo_execute_invalid_index "do" "text"
+	todo_assert_storage_content
 
-#@test "done: empty todo.txt: prints 'empty todo' message and exits 0" {
-#	assert_todo_empty "done"
-#}
+	# index zero: prints error and exits 2
+	todo_execute_invalid_index "do" 0
+	todo_assert_storage_content
 
-#@test "done: valid and invalid indexes: skips invalid indexes and inserts 'done' mark into lines corresponding to valid indexes" {}
+	# out-of-bounds index: prints error and exits 2
+	todo_execute_invalid_index "do" 5
+	todo_assert_storage_content
+
+	# valid & invalid input: deletes only task with valid index
+	run --keep-empty-lines "$TODO_SCRIPT" "do" 0 4
+	assert_success
+	todo_assert_invalid_index 0
+	todo_assert_task_success "[x] Done" 4 "x ${TASKS[4]}"
+	todo_assert_summary 3 1
+	tasks[4]="x ${TASKS[4]}"
+	printf -v expected "%s\n" "${tasks[@]:1}"
+	todo_assert_storage_content "$expected"
+}

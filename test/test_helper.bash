@@ -76,7 +76,7 @@ todo_execute_add_cmd() {
 todo_execute_valid_index() {
 	local subcmd="$1" label="$2"; shift 2
 	local prefix="" task=""
-	if [[ ! "$1" =~ ^[0-9]+$ ]]; then prefix="$1"; shift; fi
+	if [[ ! "$1" =~ ^[0-9]$ ]]; then prefix="$1"; shift; fi
 	local indexes=("$@")
 
 	run --keep-empty-lines "$TODO_SCRIPT" "$subcmd" "${indexes[@]}"
