@@ -9,69 +9,6 @@ setup() {
 	source "$TODO_SCRIPT"
 }
 
-# bats --filter "^del:" test/
-
-@test "del: removes tasks corresponding to valid indexes" {
-	local label="[-] Deleted"
-	local expected
-	printf "%s\n" "${TASKS[@]:1}" > "$TODO_FILE"
-
-	# valid index: replaces corresponding task with empty line
-	todo_execute_valid_index "del" "$label" 1
-	todo_assert_summary 3
-	printf -v expected "\n%s" "${TASKS[@]:2}"
-	todo_assert_storage_content "$expected"$'\n'
-
-	# multiple valid indexes: empties lines corresponding to indexes
-	todo_execute_valid_index "del" "$label" 2 3
-	todo_assert_summary 1
-	printf -v expected "\n\n\n%s\n" "${TASKS[4]}"
-	todo_assert_storage_content "$expected"
-}
-
-@test "del: handles leftover empty space" {
-	local label="[-] Deleted"
-	local expected
-	printf "\n\n%s\n%s\n" "${TASKS[3]}" "${TASKS[4]}" > "$TODO_FILE"
-
-	# end of file task: removes leftover trailing empty lines
-	todo_execute_valid_index "del" "$label" 4
-	todo_assert_summary 1
-	printf -v expected "\n\n%s\n" "${TASKS[3]}"
-	todo_assert_storage_content "$expected"
-
-	# last remaining task: clears entire file
-	todo_execute_valid_index "del" "$label" 3
-	todo_assert_summary 0
-	todo_assert_storage_empty
-}
-
-@test "del: handles and skips invalid indexes" {
-	local expected
-	printf "%s\n" "${TASKS[@]:1}" > "$TODO_FILE"
-
-	# non-numeric index: prints error and exits 2
-	todo_execute_invalid_index "del" "text"
-	todo_assert_storage_content
-
-	# index zero: prints error and exits 2
-	todo_execute_invalid_index "del" 0
-	todo_assert_storage_content
-
-	# out-of-bounds index: prints error and exits 2
-	todo_execute_invalid_index "del" 5
-	todo_assert_storage_content
-
-	# valid & invalid input: deletes only task with valid index
-	run --keep-empty-lines "$TODO_SCRIPT" "del" 0 4
-	assert_success
-	todo_assert_invalid_index 0
-	todo_assert_task_success "[-] Deleted" 4
-	todo_assert_summary 3
-	printf -v expected "%s\n" "${TASKS[@]:1:3}"
-	todo_assert_storage_content "$expected"
-}
-
 # bats --filter "^do:" test/
 
 @test "do: marks tasks corresponding to valid indexes as done" {

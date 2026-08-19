@@ -125,6 +125,7 @@ todo_test_invalid_index() {
 	      error="$2"
 	local index="${INDEX_ERRORS["$error"]#* | }"
 
+	[[ ! -s "$TODO_FILE" ]] && todo_print_tasks > "$TODO_FILE"
 	run --separate-stderr "$TODO_SCRIPT" "$subcmd" "$index"
 	todo_assert_invalid_index "$error"
 	assert_failure 2

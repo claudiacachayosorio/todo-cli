@@ -7,12 +7,12 @@ load test_helper
 setup() {
 	todo_setup
 	source "$TODO_SCRIPT"
-	todo_print_tasks > "$TODO_FILE"
 	export LABEL="[-] Deleted"
 }
 
 @test "success: valid index: replaces targeted task with empty line" {
 	local tasks=("${TASKS[@]}")
+	todo_print_tasks > "$TODO_FILE"
 	todo_execute_valid_index "del" "$LABEL" 1
 	todo_assert_summary 3
 	tasks[1]=""
@@ -21,6 +21,7 @@ setup() {
 
 @test "success: multiple valid indexes: replaces targeted tasks with empty lines" {
 	local tasks=("${TASKS[@]}")
+	todo_print_tasks > "$TODO_FILE"
 	todo_execute_valid_index "del" "$LABEL" 1 2
 	todo_assert_summary 2
 	tasks[1]=""
@@ -57,6 +58,7 @@ todo_register_invalid_index_tests() {
 todo_register_invalid_index_tests
 
 @test "success/failure: valid & invalid index: targets only valid index" {
+	todo_print_tasks > "$TODO_FILE"
 	todo_execute_mixed_indexes "del" "$LABEL" 3
 	todo_assert_storage_content "${TASKS[@]:0:4}"
 }
