@@ -44,14 +44,19 @@ setup() {
 	todo_assert_storage_empty
 }
 
-todo_register_invalid_index_del_tests() {
+todo_register_invalid_index_tests() {
 	local error
 	for error in "${!INDEX_ERRORS[@]}"; do
 		[[ "$error" == "checked" ]]   && continue
 		[[ "$error" == "unchecked" ]] && continue
 		bats_test_function \
-			--description "failure: ${error} index: prints error and exits 2" \
+			--description "failure: index is ${error}: prints error and exits 2" \
 			-- todo_test_invalid_index "del" "$error"
 	done
 }
-todo_register_invalid_index_del_tests
+todo_register_invalid_index_tests
+
+@test "success/failure: valid & invalid index: targets only valid index" {
+	todo_execute_mixed_indexes "del" "$LABEL" 3
+	todo_assert_storage_content "${TASKS[@]:0:4}"
+}

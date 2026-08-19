@@ -19,7 +19,7 @@ readonly TASKS
 
 declare -gA INDEX_ERRORS
 INDEX_ERRORS["non-numeric"]="Task index must be number. | string"
-INDEX_ERRORS["zero"]="Task index must be greater than zero. | 0"
+INDEX_ERRORS["0"]="Task index must be greater than zero. | 0"
 INDEX_ERRORS["out-of-bounds"]="Task does not exist. | 5"
 INDEX_ERRORS["checked"]="Task is already marked as done. | 1"
 INDEX_ERRORS["unchecked"]="Task is still marked as todo. | 1"
@@ -117,7 +117,7 @@ todo_execute_valid_index() {
 todo_assert_invalid_index() {
 	local error="$1"
 	local index="${INDEX_ERRORS["$error"]#* | }"
-	assert_line "Skipping ${index}: ${INDEX_ERRORS["$error"]% | *}"
+	assert_stderr_line "Skipping ${index}: ${INDEX_ERRORS["$error"]% | *}"
 }
 
 todo_test_invalid_index() {
@@ -125,8 +125,21 @@ todo_test_invalid_index() {
 	      error="$2"
 	local index="${INDEX_ERRORS["$error"]#* | }"
 
-	run "$TODO_SCRIPT" "$subcmd" "$index"
+	run --separate-stderr "$TODO_SCRIPT" "$subcmd" "$index"
 	todo_assert_invalid_index "$error"
 	assert_failure 2
 	todo_assert_storage_content
+}
+
+todo_execute_mixed_indexes() {
+	local subcmd="$1" \
+	      label="$2"
+	shift 2
+	local expected_count="${@}"
+
+	run --keep-empty-lines --separate-stderr "$TODO_SCRIPT" "$subcmd" 0 4
+	assert_success
+	todo_assert_invalid_index 0
+	todo_assert_task_success "$label" 4
+	todo_assert_summary "${expected_count[@]}"
 }
