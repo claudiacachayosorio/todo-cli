@@ -17,6 +17,14 @@ TASKS[3]="this is the third task"
 TASKS[4]="this is the fourth task"
 readonly TASKS
 
+declare -gA INDEX_ERRORS
+INDEX_ERRORS["non-numeric"]="Task index must be number. | string"
+INDEX_ERRORS["zero"]="Task index must be greater than zero. | 0"
+INDEX_ERRORS["out-of-bounds"]="Task does not exist. | 5"
+INDEX_ERRORS["checked"]="Task is already marked as done. | 1"
+INDEX_ERRORS["unchecked"]="Task is still marked as todo. | 1"
+readonly INDEX_ERRORS
+
 todo_setup() {
 	bats_load_library bats-support
 	bats_load_library bats-assert
@@ -99,25 +107,18 @@ todo_execute_valid_index() {
 }
 
 todo_assert_invalid_index() {
-	local index="$1"
-	local error="${2:-$index}"
-
-	local -A index_errors
-	index_errors[text]="Task index must be number."
-	index_errors[0]="Task index must be greater than zero."
-	index_errors["${#TASKS[@]}"]="Task does not exist."
-	index_errors[checked]="Task is already marked as done."
-	index_errors[unchecked]="Task is still marked as todo."
-
-	assert_line "Skipping ${index}: ${index_errors[$error]}"
+	local error="$1"
+	local index="${INDEX_ERRORS[$error]#* | }"
+	assert_line "Skipping ${index}: ${INDEX_ERRORS[$error]% | *}"
 }
 
-todo_execute_invalid_index() {
+todo_test_invalid_index() {
 	local subcmd="$1" \
-	      index="$2"
-	local error="${3:-$index}"
+	      error="$2"
+	local index="${INDEX_ERRORS[$error]#* | }"
 
 	run "$TODO_SCRIPT" "$subcmd" "$index"
-	todo_assert_invalid_index "$index" "$error"
+	todo_assert_invalid_index "$error"
 	assert_failure 2
+	todo_print_tasks | todo_assert_storage_content
 }

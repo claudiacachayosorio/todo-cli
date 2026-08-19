@@ -19,7 +19,7 @@ setup() {
 	todo_print_tasks > "$TODO_FILE"
 	run "$TODO_SCRIPT" --init-only
 	assert_success
-	todo_assert_storage_content
+	todo_print_tasks | todo_assert_storage_content
 }
 
 todo_test_missing_args() {
