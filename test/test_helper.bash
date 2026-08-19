@@ -26,6 +26,14 @@ todo_setup() {
 
 # HELPERS =================================================================== #
 
+todo_seed_storage() {
+	local task_count="${#TASKS[@]}"
+	[[ "${1:-}" =~ ^[0-9]$ ]] && { task_count="$1"; shift; }
+
+	local tasks=("${@:-${TASKS[@]}}")
+	printf "%s\n" "${tasks[@]:1:$task_count}" > "$TODO_FILE"
+}
+
 todo_assert_storage_empty() {
 	assert_file_exists "$TODO_FILE"
 	assert_file_empty "$TODO_FILE"
@@ -41,6 +49,13 @@ todo_assert_storage_content() {
 	assert_file_exists "$TODO_FILE"
 	run --keep-empty-lines cat "$TODO_FILE"
 	assert_output "$expected"
+}
+
+todo_assert_usage_failure() {
+	local error_desc="$1"
+	assert_failure 2
+	refute_output
+	assert_stderr "ERROR: ${error_desc}"
 }
 
 todo_assert_summary() {
@@ -63,17 +78,6 @@ todo_assert_task_success() {
 	      index="$2"
 	local task="${3:-${TASKS[$index]}}"
 	assert_line "${label} line ${index}: \"${task}\""
-}
-
-todo_execute_add_cmd() {
-	local index="$1"
-	shift
-	local task_words=("$@") \
-	      task="$*"
-
-	run --keep-empty-lines "$TODO_SCRIPT" "add" "${task_words[@]}"
-	assert_success
-	todo_assert_task_success "[+] Added" "$index" "$task"
 }
 
 todo_execute_valid_index() {
@@ -117,29 +121,4 @@ todo_execute_invalid_index() {
 	run "$TODO_SCRIPT" "$subcmd" "$index"
 	todo_assert_invalid_index "$index" "$error"
 	assert_failure 2
-}
-
-todo_test_help_cmd() {
-	local arg="$1"
-	run "$TODO_SCRIPT" "$arg"
-	assert_success
-	assert_line --index 0 "USAGE"
-}
-
-todo_test_usage_failure() {
-	local error_desc="$1"
-	shift
-	local args=("${@}")
-
-	run --separate-stderr "$TODO_SCRIPT" "${args[@]}"
-	assert_failure 2
-	refute_output
-	assert_stderr "ERROR: ${error_desc}"
-}
-
-todo_test_missing_data() {
-	local subcmd="$1"
-	run "$TODO_SCRIPT" "$subcmd" 1
-	assert_success
-	todo_assert_storage_empty
 }

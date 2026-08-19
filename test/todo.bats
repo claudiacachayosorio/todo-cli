@@ -16,13 +16,13 @@ setup() {
 	local expected unquoted_task
 	read -ra unquoted_task <<< "${TASKS[3]}"
 
-	# missing todo.txt: creates storage and saves new task
+	# missing todo.txt: creates todo.txt and saves new task
 	todo_execute_add_cmd 1 "${TASKS[1]}"
 	todo_assert_summary 1
 	expected="${TASKS[1]}"$'\n'
 	todo_assert_storage_content "$expected"
 
-	# existing storage and data: appends new task
+	# existing data: appends new task
 	todo_execute_add_cmd 2 "${TASKS[2]}"
 	todo_assert_summary 2
 	expected+="${TASKS[2]}"$'\n'
@@ -30,7 +30,7 @@ setup() {
 
 	printf "\n%s\n" "${TASKS[2]}" > "$TODO_FILE"
 
-	# existing empty line: inserts new task in empty line
+	# todo.txt has empty line: inserts new task in empty line
 	todo_execute_add_cmd 1 "$task_1_alt"
 	todo_assert_summary 2
 	printf -v expected "%s\n%s\n" "$task_1_alt" "${TASKS[2]}"

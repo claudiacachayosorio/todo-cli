@@ -4,12 +4,17 @@
 # Command:     bats test/interface.bats
 
 load test_helper
-
 setup() {
 	todo_setup
 	source "$TODO_SCRIPT"
 }
 
+todo_test_help_cmd() {
+	local arg="$1"
+	run "$TODO_SCRIPT" "$arg"
+	assert_success
+	assert_line --index 0 "USAGE"
+}
 todo_register_help_cmd_tests() {
 	local args=("" "help" "--help") \
 	      arg \
@@ -28,7 +33,7 @@ todo_register_help_cmd_tests
 	local tasks=("${TASKS[@]}")
 	      tasks[1]="x ${TASKS[1]}"
 
-	printf "%s\n" "${tasks[@]:1}" > "$TODO_FILE"
+	todo_seed_storage "${tasks[@]}"
 	run "$TODO_SCRIPT" "status"
 	assert_success
 	todo_assert_summary 3 1
@@ -36,5 +41,6 @@ todo_register_help_cmd_tests
 
 @test "option: invalid: prints error and exits 2" {
 	local error_desc="'cmd' is not a valid command."
-	todo_test_usage_failure "$error_desc" "cmd"
+	run --separate-stderr "$TODO_SCRIPT" "cmd"
+	todo_assert_usage_failure "$error_desc"
 }
