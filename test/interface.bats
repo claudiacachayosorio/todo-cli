@@ -33,7 +33,7 @@ todo_register_help_cmd_tests
 	local tasks=("${TASKS[@]}")
 	      tasks[1]="x ${TASKS[1]}"
 
-	todo_seed_storage "${tasks[@]}"
+	todo_print_tasks "${tasks[@]}" > "$TODO_FILE"
 	run "$TODO_SCRIPT" "status"
 	assert_success
 	todo_assert_summary 3 1

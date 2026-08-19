@@ -30,8 +30,8 @@ todo_execute_add_cmd() {
 
 @test "success: existing data: appends new task" {
 	local expected_tasks
-	printf -v expected_tasks "%s\n" "${TASKS[@]:1}"
-	todo_seed_storage 3
+	expected_tasks="$(todo_print_tasks)"
+	todo_print_tasks 3 > "$TODO_FILE"
 	todo_execute_add_cmd 4 4 "$expected_tasks" "${TASKS[4]}"
 }
 
@@ -41,9 +41,9 @@ todo_execute_add_cmd() {
 	      expected_tasks
 
 	tasks[1]="$task_1_alt"
-	printf -v expected_tasks "%s\n" "${tasks[@]:1}"
+	expected_tasks="$(todo_print_tasks "${tasks[@]}")"
 	tasks[1]=""
-	todo_seed_storage "${tasks[@]}"
+	todo_print_tasks "${tasks[@]}" > "$TODO_FILE"
 	todo_execute_add_cmd 1 4 "$expected_tasks" "$task_1_alt"
 }
 
@@ -51,7 +51,7 @@ todo_execute_add_cmd() {
 	local unquoted_task \
 	      expected_tasks
 	read -ra unquoted_task <<< "${TASKS[4]}"
-	printf -v expected_tasks "%s\n" "${TASKS[@]:1}"
-	todo_seed_storage 3
+	expected_tasks="$(todo_print_tasks)"
+	todo_print_tasks 3 > "$TODO_FILE"
 	todo_execute_add_cmd 4 4 "$expected_tasks" "${unquoted_task[@]}"
 }

@@ -9,40 +9,6 @@ setup() {
 	source "$TODO_SCRIPT"
 }
 
-# bats --filter "^add:" test/
-
-@test "add: creates storage and appends tasks" {
-	local task_1_alt="this is a different first task"
-	local expected unquoted_task
-	read -ra unquoted_task <<< "${TASKS[3]}"
-
-	# missing todo.txt: creates todo.txt and saves new task
-	todo_execute_add_cmd 1 "${TASKS[1]}"
-	todo_assert_summary 1
-	expected="${TASKS[1]}"$'\n'
-	todo_assert_storage_content "$expected"
-
-	# existing data: appends new task
-	todo_execute_add_cmd 2 "${TASKS[2]}"
-	todo_assert_summary 2
-	expected+="${TASKS[2]}"$'\n'
-	todo_assert_storage_content "$expected"
-
-	printf "\n%s\n" "${TASKS[2]}" > "$TODO_FILE"
-
-	# todo.txt has empty line: inserts new task in empty line
-	todo_execute_add_cmd 1 "$task_1_alt"
-	todo_assert_summary 2
-	printf -v expected "%s\n%s\n" "$task_1_alt" "${TASKS[2]}"
-	todo_assert_storage_content "$expected"
-
-	# unquoted task: joins arguments into one new task
-	todo_execute_add_cmd 3 "${unquoted_task[@]}"
-	todo_assert_summary 3
-	expected+="${TASKS[3]}"$'\n'
-	todo_assert_storage_content "$expected"
-}
-
 # bats --filter "^del:" test/
 
 @test "del: removes tasks corresponding to valid indexes" {

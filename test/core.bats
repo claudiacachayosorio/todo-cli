@@ -16,7 +16,7 @@ setup() {
 }
 
 @test "storage: existing data: preserves data" {
-	todo_seed_storage
+	todo_print_tasks > "$TODO_FILE"
 	run "$TODO_SCRIPT" --init-only
 	assert_success
 	todo_assert_storage_content

@@ -26,12 +26,11 @@ todo_setup() {
 
 # HELPERS =================================================================== #
 
-todo_seed_storage() {
+todo_print_tasks() {
 	local task_count="${#TASKS[@]}"
 	[[ "${1:-}" =~ ^[0-9]$ ]] && { task_count="$1"; shift; }
-
 	local tasks=("${@:-${TASKS[@]}}")
-	printf "%s\n" "${tasks[@]:1:$task_count}" > "$TODO_FILE"
+	printf "%s\n" "${tasks[@]:1:$task_count}"
 }
 
 todo_assert_storage_empty() {
@@ -41,14 +40,14 @@ todo_assert_storage_empty() {
 }
 
 todo_assert_storage_content() {
-	local expected="${1:-}"
-	if [[ -z "$expected" ]]; then
-		printf -v expected "%s\n" "${TASKS[@]:1}"
+	local expected_content="${1:-}"
+	if [[ -z "$expected_content" ]]; then
+		expected_content="$(todo_print_tasks)"
 	fi
 
 	assert_file_exists "$TODO_FILE"
 	run --keep-empty-lines cat "$TODO_FILE"
-	assert_output "$expected"
+	assert_output "$expected_content"
 }
 
 todo_assert_usage_failure() {
