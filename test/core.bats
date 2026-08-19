@@ -19,7 +19,7 @@ setup() {
 	todo_print_tasks > "$TODO_FILE"
 	run "$TODO_SCRIPT" --init-only
 	assert_success
-	todo_print_tasks | todo_assert_storage_content
+	todo_assert_storage_content
 }
 
 todo_test_missing_args() {
@@ -31,11 +31,12 @@ todo_test_missing_args() {
 	fi
 
 	run --separate-stderr "$TODO_SCRIPT" "$subcmd"
-	todo_assert_usage_failure
+	todo_assert_usage_failure "$error_desc"
 }
 todo_register_missing_args_tests() {
 	local subcmds=("add" "del" "do" "undo") \
 	      subcmd
+	for subcmd in "${subcmds[@]}"; do
 		bats_test_function \
 			--description "validation: missing args (${subcmd}): prints error and exits 2" \
 			-- todo_test_missing_args "$subcmd"

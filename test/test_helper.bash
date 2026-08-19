@@ -4,7 +4,7 @@
 
 # SETTINGS ================================================================== #
 
-bats_require_minimum_version 1.5.0
+bats_require_minimum_version 1.10.0
 
 readonly BATS_LIB_PATH="${BATS_TEST_DIRNAME}/test_helper"
 readonly TODO_DIR="$(cd "$BATS_TEST_DIRNAME/.." >/dev/null 2>&1 && pwd)"
@@ -48,14 +48,22 @@ todo_assert_storage_empty() {
 }
 
 todo_assert_storage_content() {
-	local expected_content="${1:-}"
-	if [[ -z "$expected_content" ]]; then
-		expected_content="$(todo_print_tasks)"
+	local expected_content="${1:-}" \
+				actual_content \
+	      tasks
+
+	if [[ $# -ne 1 ]]; then
+		tasks=("${@:-}")
+		run todo_print_tasks "${tasks[@]}"
+		assert_success
+		expected_content="$output"
 	fi
 
 	assert_file_exists "$TODO_FILE"
-	run --keep-empty-lines cat "$TODO_FILE"
-	assert_output "$expected_content"
+	run cat "$TODO_FILE"
+	assert_success
+	actual_content="$output"
+	assert_equal "$actual_content" "$expected_content"
 }
 
 todo_assert_usage_failure() {
@@ -108,17 +116,17 @@ todo_execute_valid_index() {
 
 todo_assert_invalid_index() {
 	local error="$1"
-	local index="${INDEX_ERRORS[$error]#* | }"
-	assert_line "Skipping ${index}: ${INDEX_ERRORS[$error]% | *}"
+	local index="${INDEX_ERRORS["$error"]#* | }"
+	assert_line "Skipping ${index}: ${INDEX_ERRORS["$error"]% | *}"
 }
 
 todo_test_invalid_index() {
 	local subcmd="$1" \
 	      error="$2"
-	local index="${INDEX_ERRORS[$error]#* | }"
+	local index="${INDEX_ERRORS["$error"]#* | }"
 
 	run "$TODO_SCRIPT" "$subcmd" "$index"
 	todo_assert_invalid_index "$error"
 	assert_failure 2
-	todo_print_tasks | todo_assert_storage_content
+	todo_assert_storage_content
 }
