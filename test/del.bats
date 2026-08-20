@@ -7,13 +7,16 @@ load test_helper
 setup() {
 	todo_setup
 	source "$TODO_SCRIPT"
-	export LABEL="[-] Deleted"
+	readonly LABEL="[-] Deleted"
 }
 
 @test "success: valid index: replaces targeted task with empty line" {
 	local tasks=("${TASKS[@]}")
 	todo_print_tasks > "$TODO_FILE"
-	todo_execute_valid_index "del" "$LABEL" 1
+
+	run --keep-empty-lines "$TODO_SCRIPT" "del" 1
+	assert_success
+	todo_assert_task_success "$LABEL" 1
 	todo_assert_summary 3
 	tasks[1]=""
 	todo_assert_storage_content "${tasks[@]}"
@@ -22,7 +25,11 @@ setup() {
 @test "success: multiple valid indexes: replaces targeted tasks with empty lines" {
 	local tasks=("${TASKS[@]}")
 	todo_print_tasks > "$TODO_FILE"
-	todo_execute_valid_index "del" "$LABEL" 1 2
+
+	run --keep-empty-lines "$TODO_SCRIPT" "del" 1 2
+	assert_success
+	todo_assert_task_success "$LABEL" 1
+	todo_assert_task_success "$LABEL" 2
 	todo_assert_summary 2
 	tasks[1]=""
 	tasks[2]=""
@@ -33,23 +40,27 @@ setup() {
 	local tasks=("${TASKS[@]}")
 	tasks[3]=""
 	todo_print_tasks "${tasks[@]}" > "$TODO_FILE"
-	todo_execute_valid_index "del" "$LABEL" "4"
+	run --keep-empty-lines "$TODO_SCRIPT" "del" 4
+	assert_success
+	todo_assert_task_success "$LABEL" 4
 	todo_assert_summary 2
-	todo_assert_storage_content "${tasks[@]:0:3}"
+	unset "tasks[3]" "tasks[4]"
+	todo_assert_storage_content "${tasks[@]}"
 }
 
 @test "success: last remaining task: empties storage" {
 	printf "\n%s\n" "${TASKS[2]}" > "$TODO_FILE"
-	todo_execute_valid_index "del" "$LABEL" 2
+	run --keep-empty-lines "$TODO_SCRIPT" "del" 2
+	assert_success
+	todo_assert_task_success "$LABEL" 2
 	todo_assert_summary 0
 	todo_assert_storage_empty
 }
 
 todo_register_invalid_index_tests() {
-	local error
-	for error in "${!INDEX_ERRORS[@]}"; do
-		[[ "$error" == "checked" ]]   && continue
-		[[ "$error" == "unchecked" ]] && continue
+	local index_errors=("non-numeric" "0" "out-of-bounds") \
+	      error
+	for error in "${index_errors[@]}"; do
 		bats_test_function \
 			--description "failure: index is ${error}: prints error and exits 2" \
 			-- todo_test_invalid_index "del" "$error"

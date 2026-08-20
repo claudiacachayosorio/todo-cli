@@ -95,25 +95,6 @@ todo_assert_task_success() {
 	assert_line "${label} line ${index}: \"${task}\""
 }
 
-todo_execute_valid_index() {
-	local subcmd="$1" \
-	      label="$2"
-	shift 2
-	local prefix="" \
-	      task=""
-
-	[[ ! "$1" =~ ^[0-9]$ ]] && { prefix="$1"; shift; }
-	local i indexes=("$@")
-
-	run --keep-empty-lines "$TODO_SCRIPT" "$subcmd" "${indexes[@]}"
-	assert_success
-
-	for i in "${indexes[@]}"; do
-		if [[ -n "$prefix" ]]; then task="${prefix}${TASKS[$i]}"; fi
-		todo_assert_task_success "$label" "$i" "$task"
-	done
-}
-
 todo_assert_invalid_index() {
 	local error="$1"
 	local index="${INDEX_ERRORS["$error"]#* | }"

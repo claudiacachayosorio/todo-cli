@@ -7,48 +7,52 @@ load test_helper
 setup() {
 	todo_setup
 	source "$TODO_SCRIPT"
-}
-
-todo_execute_add_cmd() {
-	local index="$1"
-	local expected_count="$index"
-	shift
-	[[ "${1:-}" =~ ^[0-9]$ ]] && { expected_count="$1"; shift; }
-
-	local task_words=("$@") \
-	      new_task="$*"
-	run --keep-empty-lines "$TODO_SCRIPT" "add" "${task_words[@]}"
-	assert_success
-	todo_assert_task_success "[+] Added" "$index" "$new_task"
-	todo_assert_summary "$expected_count"
+	readonly LABEL="[+] Added"
 }
 
 @test "success: no todo.txt: creates file and saves new task" {
-	todo_execute_add_cmd 1 "${TASKS[1]}"
-	todo_assert_storage_content "${TASKS[1]}"
+	local -r new_task="${TASKS[1]}"
+	run --keep-empty-lines "$TODO_SCRIPT" "add" "$new_task"
+	assert_success
+	todo_assert_task_success "$LABEL" 1 "$new_task"
+	todo_assert_summary 1
+	todo_assert_storage_content "$new_task"
 }
 
 @test "success: existing data: appends new task" {
+	local -r new_task="${TASKS[4]}"
 	todo_print_tasks 3 > "$TODO_FILE"
-	todo_execute_add_cmd 4 "${TASKS[4]}"
+
+	run --keep-empty-lines "$TODO_SCRIPT" "add" "$new_task"
+	assert_success
+	todo_assert_task_success "$LABEL" 4 "$new_task"
+	todo_assert_summary 4
 	todo_assert_storage_content
 }
 
 @test "success: todo.txt has empty line: inserts new task in empty line" {
-	local task_1_alt="this is a different first task" \
-	      tasks=("${TASKS[@]}")
-
+	local -r task_1_alt="this is a different first task"
+	local tasks=("${TASKS[@]}")
 	tasks[1]=""
 	todo_print_tasks "${tasks[@]}" > "$TODO_FILE"
-	todo_execute_add_cmd 1 4 "$task_1_alt"
+
+	run --keep-empty-lines "$TODO_SCRIPT" "add" "$task_1_alt"
+	assert_success
+	todo_assert_task_success "$LABEL" 1 "$task_1_alt"
+	todo_assert_summary 4
 	tasks[1]="$task_1_alt"
 	todo_assert_storage_content "${tasks[@]}"
 }
 
 @test "success: unquoted task: joins arguments into one new task" {
+	local -r task="${TASKS[4]}"
 	local unquoted_task
-	read -ra unquoted_task <<< "${TASKS[4]}"
+	read -ra unquoted_task <<< "$task"
 	todo_print_tasks 3 > "$TODO_FILE"
-	todo_execute_add_cmd 4 "${unquoted_task[@]}"
+
+	run --keep-empty-lines "$TODO_SCRIPT" "add" "${unquoted_task[@]}"
+	assert_success
+	todo_assert_task_success "$LABEL" 4 "$task"
+	todo_assert_summary 4
 	todo_assert_storage_content
 }
