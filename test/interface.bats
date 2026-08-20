@@ -6,7 +6,6 @@
 load test_helper
 setup() {
 	todo_setup
-	source "$TODO_SCRIPT"
 }
 
 todo_test_help_cmd() {
@@ -16,8 +15,8 @@ todo_test_help_cmd() {
 	assert_line --index 0 "USAGE"
 }
 todo_register_help_cmd_tests() {
-	local args=("" "help" "--help") \
-	      arg \
+	local args=("" "help" "--help")
+	local arg \
 	      desc_name
 
 	for arg in "${args[@]}"; do
@@ -31,7 +30,7 @@ todo_register_help_cmd_tests
 
 @test "option: status: prints task summary" {
 	local tasks=("${TASKS[@]}")
-	      tasks[1]="x ${TASKS[1]}"
+	tasks[1]="x ${TASKS[1]}"
 
 	todo_print_tasks "${tasks[@]}" > "$TODO_FILE"
 	run "$TODO_SCRIPT" "status"

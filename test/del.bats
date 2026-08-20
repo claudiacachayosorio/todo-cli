@@ -6,7 +6,6 @@
 load test_helper
 setup() {
 	todo_setup
-	source "$TODO_SCRIPT"
 	readonly LABEL="[-] Deleted"
 }
 
@@ -58,8 +57,8 @@ setup() {
 }
 
 todo_register_invalid_index_tests() {
-	local index_errors=("non-numeric" "0" "out-of-bounds") \
-	      error
+	local index_errors=("non-numeric" "0" "out-of-bounds")
+	local error
 	for error in "${index_errors[@]}"; do
 		bats_test_function \
 			--description "failure: index is ${error}: prints error and exits 2" \

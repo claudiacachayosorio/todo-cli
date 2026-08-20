@@ -6,7 +6,6 @@
 load test_helper
 setup() {
 	todo_setup
-	source "$TODO_SCRIPT"
 }
 
 @test "storage: missing todo.txt: creates file" {
@@ -23,19 +22,18 @@ setup() {
 }
 
 todo_test_missing_args() {
-	local subcmd="$1" \
-	      error_desc="Task index required."
+	local subcmd="$1"
+	local error_desc="Task index required."
 
 	if [[ "$subcmd" == "add" ]]; then
 		error_desc="Task description cannot be empty."
 	fi
-
 	run --separate-stderr "$TODO_SCRIPT" "$subcmd"
 	todo_assert_usage_failure "$error_desc"
 }
 todo_register_missing_args_tests() {
-	local subcmds=("add" "del" "do" "undo") \
-	      subcmd
+	local subcmds=("add" "del" "do" "undo")
+	local subcmd
 	for subcmd in "${subcmds[@]}"; do
 		bats_test_function \
 			--description "validation: missing args (${subcmd}): prints error and exits 2" \
@@ -51,9 +49,8 @@ todo_test_missing_data() {
 	todo_assert_storage_empty
 }
 todo_register_missing_data_tests() {
-	local subcmds=("del" "do" "undo") \
-	      subcmd
-
+	local subcmds=("del" "do" "undo")
+	local subcmd
 	for subcmd in "${subcmds[@]}"; do
 		bats_test_function \
 			--description "validation: missing data (${subcmd}): prints message and exits 0" \

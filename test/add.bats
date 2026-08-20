@@ -6,7 +6,6 @@
 load test_helper
 setup() {
 	todo_setup
-	source "$TODO_SCRIPT"
 	readonly LABEL="[+] Added"
 }
 

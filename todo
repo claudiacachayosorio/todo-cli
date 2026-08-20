@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # =========================================================================== #
 # Description: Portable task manager for the command line.
-# Command:     bash todo
+# Command:     ./todo
 
 # ERROR HANDLERS ============================================================ #
 
@@ -9,8 +9,8 @@ set -euo pipefail
 set -o errtrace
 
 die() {
-	local code="${1:-1}" \
-	      desc="${2:-An unknown error has occurred.}"
+	local code="${1:-1}"
+	local desc="${2:-An unknown error has occurred.}"
 	printf "ERROR: %s\n" "$desc" >&2
 	exit "$code"
 }
@@ -39,13 +39,14 @@ INDEX_WIDTH=1
 init_storage() {
 	[[ -d "$DATA_DIR" ]] || die 1 "No directory found at ${DATA_DIR}."
 	touch "$TODO_FILE"   || die 1 "Cannot create todo.txt inside ${DATA_DIR}."
-	LINE_COUNT="$(wc -l < "$TODO_FILE")"
-	INDEX_WIDTH="${#LINE_COUNT}"
+	readonly LINE_COUNT="$(wc -l < "$TODO_FILE")"
+	local potential_count; potential_count="$(( LINE_COUNT + 1 ))"
+	readonly INDEX_WIDTH="${#potential_count}"
 }
 
 is_todo_empty() {
 	if ! grep -q '[^[:space:]]' "$TODO_FILE"; then
-		if [[ -s "$TODO_FILE" ]]; then > "$TODO_FILE"; fi
+		[[ -s "$TODO_FILE" ]] && > "$TODO_FILE"
 		printf "Your todo.txt is empty!\n"
 		exit 0
 	else :;	fi
@@ -56,25 +57,23 @@ print_summary() {
 	      done \
 	      total
 	total="$(grep -c '[^[:space:]]' "$TODO_FILE")" || true
-	done="$(grep -c "^x " "$TODO_FILE")" || true
+	done="$(grep -c "^x " "$TODO_FILE")"           || true
 	todo="$(( total - done ))"
 	printf "%d todo | %d done | %d total" "$todo" "$done" "$total"
 }
 
 # TODO: sort task confirmation by line number
 print_task_success() {
-	local index="$1" \
-	      task_output="$2" \
-	      subcmd="${FUNCNAME[1]#todo_}"
-
+	local index="$1"
+	local task_output="$2"
+	local subcmd="${FUNCNAME[1]#todo_}"
 	printf "%s line %*d: \"%s\"" \
 	       "${LABELS[$subcmd]}" "$INDEX_WIDTH" "$index" "$task_output"
 }
 
 print_confirmation() {
-	local tasks="$1" \
-	      summary
-	summary="$(print_summary)"
+	local tasks="$1"
+	local summary; summary="$(print_summary)"
 	printf "%s\n" "$tasks"
 	printf "%s\n" "$summary"
 }
@@ -110,12 +109,10 @@ todo_help() {
 }
 
 todo_add() {
-	local task="$*" \
-	      index \
-	      empty_line \
-	      formatted_task \
-
-	index="$(( LINE_COUNT + 1 ))"
+	local task="$*"
+	local index; index="$(( LINE_COUNT + 1 ))"
+	local empty_line \
+	      formatted_task
 	empty_line="$(grep -nm 1 '^[[:space:]]*$' "$TODO_FILE")" || true
 
 	if [[ -n "$empty_line" ]]; then
@@ -130,11 +127,11 @@ todo_add() {
 }
 
 todo_del() {
-	local i indexes=("$@") \
-	      sed_args=() \
-	      task \
-	      formatted_task \
-	      deleted_tasks=""
+	local i indexes=("$@")
+	local sed_args=()
+	local deleted_tasks=""
+	local task \
+	      formatted_task
 
 	for i in "${indexes[@]}"; do
 		if ! validate_index "$i"; then continue; fi
@@ -153,11 +150,11 @@ todo_del() {
 }
 
 todo_do() {
-	local i indexes=("$@") \
-	      sed_args=() \
-	      task \
-	      formatted_task \
-	      done_tasks=""
+	local i indexes=("$@")
+	local sed_args=()
+	local done_tasks=""
+	local task \
+	      formatted_task
 
 	for i in "${indexes[@]}"; do
 		if ! validate_index "$i"; then continue; fi
@@ -179,11 +176,11 @@ todo_do() {
 }
 
 todo_undo() {
-	local i indexes=("$@") \
-	      sed_args=() \
-	      task \
-	      formatted_task \
-	      undone_tasks=""
+	local i indexes=("$@")
+	local sed_args=()
+	local undone_tasks=""
+	local task \
+	      formatted_task
 
 	for i in "${indexes[@]}"; do
 		if ! validate_index "$i"; then continue; fi

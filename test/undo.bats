@@ -6,7 +6,6 @@
 load test_helper
 setup() {
 	todo_setup
-	source "$TODO_SCRIPT"
 	readonly LABEL="[ ] Undone"
 	readonly DONE_TASKS=("${TASKS[@]/#/x }")
 	todo_print_tasks "${DONE_TASKS[@]}" > "$TODO_FILE"

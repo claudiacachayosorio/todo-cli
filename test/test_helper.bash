@@ -2,10 +2,9 @@
 # =========================================================================== #
 # Description: Helper functions for todo testing suite.
 
-# SETTINGS ================================================================== #
+# CONSTANTS & SETTINGS ====================================================== #
 
 bats_require_minimum_version 1.10.0
-
 readonly BATS_LIB_PATH="${BATS_TEST_DIRNAME}/test_helper"
 readonly TODO_DIR="$(cd "$BATS_TEST_DIRNAME/.." >/dev/null 2>&1 && pwd)"
 readonly TODO_SCRIPT="${TODO_DIR}/todo"
@@ -30,9 +29,10 @@ todo_setup() {
 	bats_load_library bats-assert
 	bats_load_library bats-file
 	export DATA_DIR="$BATS_TEST_TMPDIR"
+	source "$TODO_SCRIPT"
 }
 
-# HELPERS =================================================================== #
+# TEST HELPERS ============================================================== #
 
 todo_print_tasks() {
 	local task_count="${#TASKS[@]}"
@@ -47,9 +47,10 @@ todo_assert_storage_empty() {
 	assert_output --partial "Your todo.txt is empty!"
 }
 
+# TODO: keep newlines in outputs (currently false success)
 todo_assert_storage_content() {
-	local expected_content="${1:-}" \
-				actual_content \
+	local expected_content="${1:-}"
+	local actual_content \
 	      tasks
 
 	if [[ $# -ne 1 ]]; then
@@ -73,26 +74,23 @@ todo_assert_usage_failure() {
 	assert_stderr "ERROR: ${error_desc}"
 }
 
-todo_assert_summary() {
-	local todo="${1:-0}" \
-	      done="${2:-0}" \
-				total \
-	      summary
-
-	total="$(( todo + done ))"
-	summary="${todo} todo | ${done} done | ${total} total"
-	assert_line "$summary"
-
-	if [[ "${#lines[@]}" -gt 1 ]]; then
-		assert_output --partial $'\n'"${todo} todo"
-	else :; fi
-}
-
 todo_assert_task_success() {
-	local label="$1" \
-	      index="$2"
+	local label="$1"
+	local index="$2"
 	local task="${3:-${TASKS[$index]}}"
 	assert_line "${label} line ${index}: \"${task}\""
+}
+
+todo_assert_summary() {
+	local todo="$1"
+	local done="${2:-0}"
+	local total; total="$(( todo + done ))"
+	local summary="${todo} todo | ${done} done | ${total} total"
+
+	assert_line "$summary"
+	if [[ "${#lines[@]}" -gt 1 ]]; then
+		assert_output --partial $'\n'$'\n'"$summary"
+	else :; fi
 }
 
 todo_assert_invalid_index() {
@@ -101,21 +99,9 @@ todo_assert_invalid_index() {
 	assert_stderr_line "Skipping ${index}: ${INDEX_ERRORS["$error"]% | *}"
 }
 
-todo_test_invalid_index() {
-	local subcmd="$1" \
-	      error="$2"
-	local index="${INDEX_ERRORS["$error"]#* | }"
-
-	[[ ! -s "$TODO_FILE" ]] && todo_print_tasks > "$TODO_FILE"
-	run --separate-stderr "$TODO_SCRIPT" "$subcmd" "$index"
-	todo_assert_invalid_index "$error"
-	assert_failure 2
-	todo_assert_storage_content
-}
-
 todo_execute_mixed_indexes() {
-	local subcmd="$1" \
-	      label="$2"
+	local subcmd="$1"
+	local label="$2"
 	shift 2
 	local expected_count="${@}"
 
@@ -124,4 +110,16 @@ todo_execute_mixed_indexes() {
 	todo_assert_invalid_index 0
 	todo_assert_task_success "$label" 4
 	todo_assert_summary "${expected_count[@]}"
+}
+
+todo_test_invalid_index() {
+	local subcmd="$1"
+	local error="$2"
+	local index="${INDEX_ERRORS["$error"]#* | }"
+
+	[[ ! -s "$TODO_FILE" ]] && todo_print_tasks > "$TODO_FILE"
+	run --separate-stderr "$TODO_SCRIPT" "$subcmd" "$index"
+	todo_assert_invalid_index "$error"
+	assert_failure 2
+	todo_assert_storage_content
 }

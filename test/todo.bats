@@ -3,10 +3,9 @@
 # Description: Test suite for todo-cli project.
 # Command:     bats test/todo.bats
 
+load test_helper
 setup() {
-	load test_helper
 	todo_setup
-	source "$TODO_SCRIPT"
 }
 
 # bats --filter "^do:" test/
