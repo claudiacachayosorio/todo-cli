@@ -7,7 +7,7 @@
 bats_require_minimum_version 1.10.0
 readonly BATS_LIB_PATH="${BATS_TEST_DIRNAME}/test_helper"
 readonly TODO_DIR="$(cd "$BATS_TEST_DIRNAME/.." >/dev/null 2>&1 && pwd)"
-readonly TODO_SCRIPT="${TODO_DIR}/todo"
+readonly TODO_SCRIPT="${TODO_DIR}/todo.sh"
 
 declare -g TASKS=("")
 TASKS[1]="this is the first task"

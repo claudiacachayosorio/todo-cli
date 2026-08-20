@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # =========================================================================== #
 # Description: Portable task manager for the command line.
-# Command:     ./todo
+# Command:     ./todo.sh
 
 # ERROR HANDLERS ============================================================ #
 
