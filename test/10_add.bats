@@ -1,7 +1,7 @@
 #!/usr/bin/env bats
 # =========================================================================== #
 # Description: Testing suite for todo-cli's add subcommand.
-# Command:     bats test/add.bats
+# Command:     bats test/10_add.bats
 
 load test_helper
 readonly LABEL="[+] Added"

@@ -1,7 +1,7 @@
 #!/usr/bin/env bats
 # =========================================================================== #
 # Description: Testing suite for todo-cli's do subcommand.
-# Command:     bats test/do.bats
+# Command:     bats test/11_do.bats
 
 load test_helper
 readonly LABEL="[x] Done"

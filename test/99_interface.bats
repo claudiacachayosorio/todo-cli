@@ -1,7 +1,7 @@
 #!/usr/bin/env bats
 # =========================================================================== #
 # Description: Testing suite for todo-cli's interface functions.
-# Command:     bats test/interface.bats
+# Command:     bats test/99_interface.bats
 
 load test_helper
 setup() {

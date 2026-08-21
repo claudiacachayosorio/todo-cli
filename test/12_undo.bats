@@ -1,7 +1,7 @@
 #!/usr/bin/env bats
 # =========================================================================== #
 # Description: Testing suite for todo-cli's undo subcommand.
-# Command:     bats test/undo.bats
+# Command:     bats test/12_undo.bats
 
 load test_helper
 readonly LABEL="[ ] Undone"

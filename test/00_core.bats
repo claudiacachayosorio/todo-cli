@@ -1,7 +1,7 @@
 #!/usr/bin/env bats
 # =========================================================================== #
 # Description: Testing suite for todo-cli's core functions.
-# Command:     bats test/core.bats
+# Command:     bats test/00_core.bats
 
 load test_helper
 setup() {
@@ -42,9 +42,9 @@ todo_register_missing_args_tests() {
 }
 todo_register_missing_args_tests \
 "add" \
-"del" \
 "do" \
-"undo"
+"undo" \
+"del"
 
 todo_test_missing_data() {
 	local subcmd="$1"
@@ -62,6 +62,6 @@ todo_register_missing_data_tests() {
 	done
 }
 todo_register_missing_data_tests \
-"del" \
 "do" \
-"undo"
+"undo" \
+"del"

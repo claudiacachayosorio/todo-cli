@@ -1,7 +1,7 @@
 #!/usr/bin/env bats
 # =========================================================================== #
 # Description: Testing suite for todo-cli's del subcommand.
-# Command:     bats test/del.bats
+# Command:     bats test/13_del.bats
 
 load test_helper
 readonly LABEL="[-] Deleted"

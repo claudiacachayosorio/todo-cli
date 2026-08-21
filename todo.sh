@@ -102,9 +102,9 @@ todo_help() {
 
 	COMMANDS
 	  add   <description>
-	  del   <index>...
 	  do 		<index>...
 	  undo  <index>...
+		del   <index>...
 	EOF
 	exit 0
 }
@@ -126,29 +126,6 @@ todo_add() {
 
 	formatted_task="$(print_task_success "$index" "$task")"
 	print_confirmation "$formatted_task"$'\n'
-}
-
-todo_del() {
-	local i indexes=("$@")
-	local sed_args=()
-	local deleted_tasks=""
-	local task \
-	      formatted_task
-
-	for i in "${indexes[@]}"; do
-		if ! validate_index "$i"; then continue; fi
-		task="$(sed -n "${i}p" "$TODO_FILE")"
-		formatted_task="$(print_task_success "$i" "$task")"
-		deleted_tasks+="$formatted_task"$'\n'
-		sed_args+=("-e" "${i}s/.*//")
-	done
-
-	if [[ "${#sed_args[@]}" -gt 0 ]]; then
-		sed -i "${sed_args[@]}" "$TODO_FILE"
-		print_confirmation "$deleted_tasks"
-		sed -i -e :a -e '/\S/!{$d;N;ba;}' "$TODO_FILE"
-		is_todo_empty
-	else exit 2; fi
 }
 
 todo_do() {
@@ -203,6 +180,29 @@ todo_undo() {
 	else exit 2; fi
 }
 
+todo_del() {
+	local i indexes=("$@")
+	local sed_args=()
+	local deleted_tasks=""
+	local task \
+	      formatted_task
+
+	for i in "${indexes[@]}"; do
+		if ! validate_index "$i"; then continue; fi
+		task="$(sed -n "${i}p" "$TODO_FILE")"
+		formatted_task="$(print_task_success "$i" "$task")"
+		deleted_tasks+="$formatted_task"$'\n'
+		sed_args+=("-e" "${i}s/.*//")
+	done
+
+	if [[ "${#sed_args[@]}" -gt 0 ]]; then
+		sed -i "${sed_args[@]}" "$TODO_FILE"
+		print_confirmation "$deleted_tasks"
+		sed -i -e :a -e '/\S/!{$d;N;ba;}' "$TODO_FILE"
+		is_todo_empty
+	else exit 2; fi
+}
+
 # MAIN ====================================================================== #
 
 main() {
@@ -224,11 +224,6 @@ main() {
 			[[ $# -gt 0 ]] || die 2 "Task description cannot be empty."
 			todo_add "$@"
 			;;
-		del)
-			[[ $# -gt 0 ]] || die 2 "Task index required."
-			is_todo_empty --exit
-			todo_del "$@"
-			;;
 		do)
 			[[ $# -gt 0 ]] || die 2 "Task index required."
 			is_todo_empty --exit
@@ -238,6 +233,11 @@ main() {
 			[[ $# -gt 0 ]] || die 2 "Task index required."
 			is_todo_empty --exit
 			todo_undo "$@"
+			;;
+		del)
+			[[ $# -gt 0 ]] || die 2 "Task index required."
+			is_todo_empty --exit
+			todo_del "$@"
 			;;
 		*)
 			die 2 "'${cmd}' is not a valid command."
