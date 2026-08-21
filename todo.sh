@@ -67,6 +67,7 @@ print_summary() {
 	done="$(grep -c "^x " "$TODO_FILE")"           || true
 	todo="$(( total - done ))"
 	printf "%d todo | %d done | %d total\n" "$todo" "$done" "$total"
+	is_todo_empty
 }
 
 print_task_success() {
@@ -203,7 +204,6 @@ todo_del() {
 		sed -i "${sed_args[@]}" "$TODO_FILE"
 		print_confirmation "$deleted_tasks"
 		sed -i -e :a -e '/\S/!{$d;N;ba;}' "$TODO_FILE"
-		is_todo_empty
 	else exit 2; fi
 }
 

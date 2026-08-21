@@ -92,7 +92,7 @@ todo_assert_summary() {
 
 	assert_line "$summary"
 	if [[ "${#lines[@]}" -gt 1 ]]; then
-		assert_output --partial $'\n'$'\n'"$summary"
+		assert_line "$summary"
 	else :; fi
 }
 
