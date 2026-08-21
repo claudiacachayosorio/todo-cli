@@ -66,7 +66,7 @@ print_summary() {
 print_task_success() {
 	local index="$1"
 	local task_output="$2"
-	local subcmd="${FUNCNAME[1]#todo_}"
+	local subcmd="${FUNCNAME[-3]#todo_}"
 	printf "%s line %*d: \"%s\"" \
 	       "${LABELS[$subcmd]}" "$INDEX_WIDTH" "$index" "$task_output"
 }
@@ -78,6 +78,7 @@ print_confirmation() {
 	printf "%s\n" "$summary"
 }
 
+# TODO: validate index within bounds that isn't empty line
 validate_index() {
 	local index="$1"
 	if [[ ! "$index" =~ ^[0-9]+$ ]]; then
@@ -108,6 +109,7 @@ todo_help() {
 	exit 0
 }
 
+# TODO: if add multiple tasks, change LINE_COUNT & INDEX_WIDTH
 todo_add() {
 	local task="$*"
 	local index; index="$(( LINE_COUNT + 1 ))"

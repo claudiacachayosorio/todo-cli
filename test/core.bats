@@ -32,7 +32,7 @@ todo_test_missing_args() {
 	todo_assert_usage_failure "$error_desc"
 }
 todo_register_missing_args_tests() {
-	local subcmds=("add" "del" "do" "undo")
+	local subcmds=("$@")
 	local subcmd
 	for subcmd in "${subcmds[@]}"; do
 		bats_test_function \
@@ -40,7 +40,7 @@ todo_register_missing_args_tests() {
 			-- todo_test_missing_args "$subcmd"
 	done
 }
-todo_register_missing_args_tests
+todo_register_missing_args_tests "add" "del" "do" "undo"
 
 todo_test_missing_data() {
 	local subcmd="$1"
@@ -49,7 +49,7 @@ todo_test_missing_data() {
 	todo_assert_storage_empty
 }
 todo_register_missing_data_tests() {
-	local subcmds=("del" "do" "undo")
+	local subcmds=("$@")
 	local subcmd
 	for subcmd in "${subcmds[@]}"; do
 		bats_test_function \
@@ -57,4 +57,4 @@ todo_register_missing_data_tests() {
 			-- todo_test_missing_data "$subcmd"
 	done
 }
-todo_register_missing_data_tests
+todo_register_missing_data_tests "del" "do" "undo"

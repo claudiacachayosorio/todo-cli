@@ -15,9 +15,8 @@ todo_test_help_cmd() {
 	assert_line --index 0 "USAGE"
 }
 todo_register_help_cmd_tests() {
-	local args=("" "help" "--help")
-	local arg \
-	      desc_name
+	local args=("$@")
+	local arg desc_name
 
 	for arg in "${args[@]}"; do
 		desc_name="${arg:-no arguments}"
@@ -26,7 +25,7 @@ todo_register_help_cmd_tests() {
 			-- todo_test_help_cmd "$arg"
 	done
 }
-todo_register_help_cmd_tests
+todo_register_help_cmd_tests "" "help" "--help"
 
 @test "option: status: prints task summary" {
 	local tasks=("${TASKS[@]}")

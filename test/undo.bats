@@ -4,10 +4,15 @@
 # Command:     bats test/undo.bats
 
 load test_helper
+readonly LABEL="[ ] Undone"
+readonly DONE_TASKS=("${TASKS[@]/#/x }")
+readonly UNCHECKED_INDEX="${INDEX_ERRORS["task is unchecked"]#* | }"
+FAILURE_TESTS_TASKS=("${DONE_TASKS[@]}")
+FAILURE_TESTS_TASKS[$UNCHECKED_INDEX]="${TASKS[$UNCHECKED_INDEX]}"
+readonly FAILURE_TESTS_TASKS
+
 setup() {
 	todo_setup
-	readonly LABEL="[ ] Undone"
-	readonly DONE_TASKS=("${TASKS[@]/#/x }")
 	todo_print_tasks "${DONE_TASKS[@]}" > "$TODO_FILE"
 }
 
@@ -32,3 +37,9 @@ setup() {
 	todo_assert_summary 2 2
 	todo_assert_storage_content "${expected_tasks[@]}"
 }
+
+todo_register_invalid_index_tests "undo" \
+	"index is non-numeric" \
+	"index is 0" \
+	"index is out-of-bounds" \
+	"task is unchecked"

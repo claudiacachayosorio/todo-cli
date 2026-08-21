@@ -9,7 +9,7 @@ readonly BATS_LIB_PATH="${BATS_TEST_DIRNAME}/test_helper"
 readonly TODO_DIR="$(cd "$BATS_TEST_DIRNAME/.." >/dev/null 2>&1 && pwd)"
 readonly TODO_SCRIPT="${TODO_DIR}/todo.sh"
 
-declare -g TASKS=("")
+declare -ga TASKS=("")
 TASKS[1]="this is the first task"
 TASKS[2]="this is the second task"
 TASKS[3]="this is the third task"
@@ -17,11 +17,11 @@ TASKS[4]="this is the fourth task"
 readonly TASKS
 
 declare -gA INDEX_ERRORS
-INDEX_ERRORS["non-numeric"]="Task index must be number. | string"
-INDEX_ERRORS["0"]="Task index must be greater than zero. | 0"
-INDEX_ERRORS["out-of-bounds"]="Task does not exist. | 5"
-INDEX_ERRORS["checked"]="Task is already marked as done. | 1"
-INDEX_ERRORS["unchecked"]="Task is still marked as todo. | 1"
+INDEX_ERRORS["index is non-numeric"]="Task index must be number. | string"
+INDEX_ERRORS["index is 0"]="Task index must be greater than zero. | 0"
+INDEX_ERRORS["index is out-of-bounds"]="Task does not exist. | 5"
+INDEX_ERRORS["task is checked"]="Task is already marked as done. | 4"
+INDEX_ERRORS["task is unchecked"]="Task is still marked as todo. | 4"
 readonly INDEX_ERRORS
 
 todo_setup() {
@@ -38,6 +38,7 @@ todo_print_tasks() {
 	local task_count="${#TASKS[@]}"
 	[[ "${1:-}" =~ ^[0-9]$ ]] && { task_count="$1"; shift; }
 	local tasks=("${@:-${TASKS[@]}}")
+	touch "$TODO_FILE"
 	printf "%s\n" "${tasks[@]:1:$task_count}"
 }
 
@@ -94,9 +95,9 @@ todo_assert_summary() {
 }
 
 todo_assert_invalid_index() {
-	local error="$1"
-	local index="${INDEX_ERRORS["$error"]#* | }"
-	assert_stderr_line "Skipping ${index}: ${INDEX_ERRORS["$error"]% | *}"
+	local error_name="$1"
+	local index="${INDEX_ERRORS["$error_name"]#* | }"
+	assert_line "Skipping ${index}: ${INDEX_ERRORS["$error_name"]% | *}"
 }
 
 todo_execute_mixed_indexes() {
@@ -105,21 +106,35 @@ todo_execute_mixed_indexes() {
 	shift 2
 	local expected_count="${@}"
 
-	run --keep-empty-lines --separate-stderr "$TODO_SCRIPT" "$subcmd" 0 4
+	run --keep-empty-lines "$TODO_SCRIPT" "$subcmd" 0 4
 	assert_success
-	todo_assert_invalid_index 0
+	todo_assert_invalid_index "index is 0"
 	todo_assert_task_success "$label" 4
 	todo_assert_summary "${expected_count[@]}"
 }
 
 todo_test_invalid_index() {
 	local subcmd="$1"
-	local error="$2"
-	local index="${INDEX_ERRORS["$error"]#* | }"
+	local error_name="$2"
+	local tasks=("${FAILURE_TESTS_TASKS[@]:-${TASKS[@]}}")
+	local index="${INDEX_ERRORS["$error_name"]#* | }"
 
-	[[ ! -s "$TODO_FILE" ]] && todo_print_tasks > "$TODO_FILE"
-	run --separate-stderr "$TODO_SCRIPT" "$subcmd" "$index"
-	todo_assert_invalid_index "$error"
+	todo_print_tasks "${tasks[@]}" > "$TODO_FILE"
+	run --keep-empty-lines "$TODO_SCRIPT" "$subcmd" "$index"
 	assert_failure 2
-	todo_assert_storage_content
+	todo_assert_invalid_index "$error_name"
+	todo_assert_storage_content "${tasks[@]}"
+}
+
+todo_register_invalid_index_tests() {
+	local subcmd="$1"
+	shift
+	local index_errors=("$@")
+	local error_name
+
+	for error_name in "${index_errors[@]}"; do
+		bats_test_function \
+			--description "failure: ${error_name}: prints error and exits 2" \
+			-- todo_test_invalid_index "$subcmd" "$error_name"
+	done
 }

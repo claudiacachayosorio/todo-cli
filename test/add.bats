@@ -4,9 +4,10 @@
 # Command:     bats test/add.bats
 
 load test_helper
+readonly LABEL="[+] Added"
+
 setup() {
 	todo_setup
-	readonly LABEL="[+] Added"
 }
 
 @test "success: no todo.txt: creates file and saves new task" {

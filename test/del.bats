@@ -4,9 +4,9 @@
 # Command:     bats test/del.bats
 
 load test_helper
+readonly LABEL="[-] Deleted"
 setup() {
 	todo_setup
-	readonly LABEL="[-] Deleted"
 }
 
 @test "success: valid index: replaces targeted task with empty line" {
@@ -56,16 +56,10 @@ setup() {
 	todo_assert_storage_empty
 }
 
-todo_register_invalid_index_tests() {
-	local index_errors=("non-numeric" "0" "out-of-bounds")
-	local error
-	for error in "${index_errors[@]}"; do
-		bats_test_function \
-			--description "failure: index is ${error}: prints error and exits 2" \
-			-- todo_test_invalid_index "del" "$error"
-	done
-}
-todo_register_invalid_index_tests
+todo_register_invalid_index_tests "del" \
+	"index is non-numeric" \
+	"index is 0" \
+	"index is out-of-bounds"
 
 @test "success/failure: valid & invalid index: targets only valid index" {
 	todo_print_tasks > "$TODO_FILE"

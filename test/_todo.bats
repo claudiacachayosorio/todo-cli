@@ -1,7 +1,7 @@
 #!/usr/bin/env bats
 # =========================================================================== #
 # Description: Test suite for todo-cli project.
-# Command:     bats test/todo.bats
+# Command:     bats test/_todo.bats
 
 load test_helper
 setup() {
