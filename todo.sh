@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =========================================================================== #
-# Description: Portable task manager for the command line.
+# Description: Task manager for the command line.
 # Command:     ./todo.sh
 
 # ERROR HANDLERS ============================================================ #
@@ -85,7 +85,6 @@ print_confirmation() {
 	printf "%s\n" "$summary"
 }
 
-# TODO: validate index within bounds that isn't empty line
 validate_index() {
 	local index="$1"
 	if [[ ! "$index" =~ ^[0-9]+$ ]]; then
@@ -111,13 +110,13 @@ todo_help() {
 	  ./todo.sh [<command> [<argument>...]]
 
 	COMMANDS
-	  add <task>         Add new task to todo.txt
-	  do <index>...      Mark task as done
-	  undo <index>...    Remove done mark from task
-	  del <index>...     Delete task from todo.txt
-	  status             Display task count
-	  --version, -v      Display version number
-	  help, --help, -h   List available commands
+	  add <task>         Add new task.
+	  do <index>...      Mark task as done.
+	  undo <index>...    Undo task marked as done.
+	  del <index>...     Delete task.
+	  status             Display task count.
+	  --version, -v      Display version number.
+	  help, --help, -h   List available commands.
 	EOF
 	exit 0
 }
