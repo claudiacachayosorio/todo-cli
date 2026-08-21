@@ -78,9 +78,10 @@ todo_assert_usage_failure() {
 todo_assert_task_success() {
 	local label="$1"
 	local index="$2"
+	local task="${3:-${TASKS[$index]}}"
 	local prefix=""
 	[[ "$label" =~ ^\[x\] ]] && prefix="x "
-	assert_line "${label} line ${index}: \"${prefix}${TASKS[$index]}\""
+	assert_line "${label} line ${index}: \"${prefix}${task}\""
 }
 
 todo_assert_summary() {
