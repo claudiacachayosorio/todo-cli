@@ -57,11 +57,11 @@ setup() {
 }
 
 todo_register_invalid_index_tests "del" \
-	"index is non-numeric" \
-	"index is 0" \
-	"index is out-of-bounds"
+"index is non-numeric" \
+"index is 0" \
+"index is out of bounds"
 
-@test "success/failure: valid & invalid index: targets only valid index" {
+@test "success & warning: valid & invalid index: targets only valid index" {
 	todo_print_tasks > "$TODO_FILE"
 	todo_execute_mixed_indexes "del" "$LABEL" 3
 	todo_assert_storage_content "${TASKS[@]:0:4}"

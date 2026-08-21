@@ -39,7 +39,14 @@ setup() {
 }
 
 todo_register_invalid_index_tests "undo" \
-	"index is non-numeric" \
-	"index is 0" \
-	"index is out-of-bounds" \
-	"task is unchecked"
+"index is non-numeric" \
+"index is 0" \
+"index is out of bounds" \
+"task is unchecked"
+
+@test "success & warning: valid and invalid index: targets only valid index" {
+	local expected_tasks=("${DONE_TASKS[@]}")
+	expected_tasks[4]="${TASKS[4]}"
+	todo_execute_mixed_indexes "undo" "$LABEL" 1 3
+	todo_assert_storage_content "${expected_tasks[@]}"
+}

@@ -25,7 +25,10 @@ todo_register_help_cmd_tests() {
 			-- todo_test_help_cmd "$arg"
 	done
 }
-todo_register_help_cmd_tests "" "help" "--help"
+todo_register_help_cmd_tests \
+"" \
+"help" \
+"--help"
 
 @test "option: status: prints task summary" {
 	local tasks=("${TASKS[@]}")

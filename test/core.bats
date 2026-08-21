@@ -40,7 +40,11 @@ todo_register_missing_args_tests() {
 			-- todo_test_missing_args "$subcmd"
 	done
 }
-todo_register_missing_args_tests "add" "del" "do" "undo"
+todo_register_missing_args_tests \
+"add" \
+"del" \
+"do" \
+"undo"
 
 todo_test_missing_data() {
 	local subcmd="$1"
@@ -57,4 +61,7 @@ todo_register_missing_data_tests() {
 			-- todo_test_missing_data "$subcmd"
 	done
 }
-todo_register_missing_data_tests "del" "do" "undo"
+todo_register_missing_data_tests \
+"del" \
+"do" \
+"undo"

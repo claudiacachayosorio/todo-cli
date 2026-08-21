@@ -19,7 +19,7 @@ readonly TASKS
 declare -gA INDEX_ERRORS
 INDEX_ERRORS["index is non-numeric"]="Task index must be number. | string"
 INDEX_ERRORS["index is 0"]="Task index must be greater than zero. | 0"
-INDEX_ERRORS["index is out-of-bounds"]="Task does not exist. | 5"
+INDEX_ERRORS["index is out of bounds"]="Task does not exist. | 5"
 INDEX_ERRORS["task is checked"]="Task is already marked as done. | 4"
 INDEX_ERRORS["task is unchecked"]="Task is still marked as todo. | 4"
 readonly INDEX_ERRORS
@@ -78,12 +78,13 @@ todo_assert_usage_failure() {
 todo_assert_task_success() {
 	local label="$1"
 	local index="$2"
-	local task="${3:-${TASKS[$index]}}"
-	assert_line "${label} line ${index}: \"${task}\""
+	local prefix=""
+	[[ "$label" =~ ^\[x\] ]] && prefix="x "
+	assert_line "${label} line ${index}: \"${prefix}${TASKS[$index]}\""
 }
 
 todo_assert_summary() {
-	local todo="$1"
+	local todo="${1:-0}"
 	local done="${2:-0}"
 	local total; total="$(( todo + done ))"
 	local summary="${todo} todo | ${done} done | ${total} total"
@@ -104,7 +105,7 @@ todo_execute_mixed_indexes() {
 	local subcmd="$1"
 	local label="$2"
 	shift 2
-	local expected_count="${@}"
+	local expected_count=("${@}")
 
 	run --keep-empty-lines "$TODO_SCRIPT" "$subcmd" 0 4
 	assert_success
