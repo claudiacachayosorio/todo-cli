@@ -1,19 +1,6 @@
 # todo-cli
 A simple command line task manager written in pure Bash.
 
-## :joystick: Demo
-
-```text
-$ ./todo.sh add "create task"
-[+] Added line 1: "finish readme"
-
-$ ./todo.sh do 2
-[x] Done line 2: "x run test suite"
-
-$ ./todo.sh status
-1 todo | 2 done | 3 total
-```
-
 ## :gear: Installation
 ```bash
 # Clone this repository
@@ -49,5 +36,5 @@ git submodule update --init --recursive
 bats test/
 ```
 
-## :busts_in_silhouette: Acknowledgments
-This project was inspired by Gina Trapani's [todo.txt-cli](https://github.com/todotxt/todo.txt-cli). 
+## :bulb: Inspiration
+This project was inspired by Gina Trapani's original [todo.txt-cli](https://github.com/todotxt/todo.txt-cli). 

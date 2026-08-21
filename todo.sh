@@ -19,7 +19,7 @@ trap 'die 1 "Command failed unexpectedly."' ERR
 
 # GLOBALS =================================================================== #
 
-readonly VERSION="0.1.0"
+readonly VERSION="1.0.0"
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly DATA_DIR="${DATA_DIR:-$SCRIPT_DIR}"
 readonly TODO_FILE="${DATA_DIR}/todo.txt"

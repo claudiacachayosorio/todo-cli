@@ -37,7 +37,7 @@ todo_test_version_flag() {
 	local flag="$1"
 	run "$TODO_SCRIPT" "$flag"
 	assert_success
-	assert_line="todo-cli, version 0.1.0"
+	assert_line="todo-cli, version 1.0.0"
 }
 @test "flag: --version: prints current version" {
 	todo_test_version_flag "--version"
