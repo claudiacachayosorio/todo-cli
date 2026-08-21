@@ -15,7 +15,7 @@ setup() {
 	todo_print_tasks > "$TODO_FILE"
 }
 
-@test "success: valid index: adds prefix to targeted task" {
+@test "valid index: adds prefix to targeted task" {
 	local expected_tasks=("${TASKS[@]}")
 	expected_tasks[1]="x ${TASKS[1]}"
 	run --keep-empty-lines "$TODO_SCRIPT" "do" 1
@@ -25,7 +25,7 @@ setup() {
 	todo_assert_storage_content "${expected_tasks[@]}"
 }
 
-@test "success: multiple valid indexes: adds prefix to targeted tasks" {
+@test "multiple valid indexes: adds prefix to targeted tasks" {
 	local expected_tasks=("${TASKS[@]}")
 	expected_tasks[1]="x ${TASKS[1]}"
 	expected_tasks[2]="x ${TASKS[2]}"
@@ -43,7 +43,7 @@ todo_register_invalid_index_tests "do" \
 "index is out of bounds" \
 "task is checked"
 
-@test "success & warning: valid and invalid index: targets only valid index" {
+@test "valid and invalid index: targets only valid index" {
 	local expected_tasks=("${TASKS[@]}")
 	expected_tasks[4]="x ${TASKS[4]}"
 	todo_execute_mixed_indexes "do" "$LABEL" 3 1

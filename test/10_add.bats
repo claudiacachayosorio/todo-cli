@@ -10,7 +10,7 @@ setup() {
 	todo_setup
 }
 
-@test "success: no todo.txt: creates file and saves new task" {
+@test "no todo.txt: creates file and saves new task" {
 	local -r new_task="${TASKS[1]}"
 	run --keep-empty-lines "$TODO_SCRIPT" "add" "$new_task"
 	assert_success
@@ -19,7 +19,7 @@ setup() {
 	todo_assert_storage_content "$new_task"
 }
 
-@test "success: existing data: appends new task" {
+@test "existing data: appends new task" {
 	local -r new_task="${TASKS[4]}"
 	todo_print_tasks 3 > "$TODO_FILE"
 
@@ -30,7 +30,7 @@ setup() {
 	todo_assert_storage_content
 }
 
-@test "success: todo.txt has empty line: inserts new task in empty line" {
+@test "todo.txt has empty line: inserts new task in empty line" {
 	local -r task_1_alt="this is a different first task"
 	local tasks=("${TASKS[@]}")
 	tasks[1]=""
@@ -44,7 +44,7 @@ setup() {
 	todo_assert_storage_content "${tasks[@]}"
 }
 
-@test "success: unquoted task: joins arguments into one new task" {
+@test "unquoted task: joins arguments into one new task" {
 	local -r task="${TASKS[4]}"
 	local unquoted_task
 	read -ra unquoted_task <<< "$task"

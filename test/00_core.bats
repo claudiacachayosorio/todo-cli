@@ -36,7 +36,7 @@ todo_register_missing_args_tests() {
 	local subcmd
 	for subcmd in "${subcmds[@]}"; do
 		bats_test_function \
-			--description "validation: missing args (${subcmd}): prints error and exits 2" \
+			--description "validate: missing args (${subcmd}): prints error and exits 2" \
 			-- todo_test_missing_args "$subcmd"
 	done
 }
@@ -57,7 +57,7 @@ todo_register_missing_data_tests() {
 	local subcmd
 	for subcmd in "${subcmds[@]}"; do
 		bats_test_function \
-			--description "validation: missing data (${subcmd}): prints message and exits 0" \
+			--description "validate: missing data (${subcmd}): prints message and exits 0" \
 			-- todo_test_missing_data "$subcmd"
 	done
 }

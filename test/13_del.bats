@@ -9,7 +9,7 @@ setup() {
 	todo_setup
 }
 
-@test "success: valid index: replaces targeted task with empty line" {
+@test "valid index: replaces targeted task with empty line" {
 	local tasks=("${TASKS[@]}")
 	todo_print_tasks > "$TODO_FILE"
 
@@ -21,7 +21,7 @@ setup() {
 	todo_assert_storage_content "${tasks[@]}"
 }
 
-@test "success: multiple valid indexes: replaces targeted tasks with empty lines" {
+@test "multiple valid indexes: replaces targeted tasks with empty lines" {
 	local tasks=("${TASKS[@]}")
 	todo_print_tasks > "$TODO_FILE"
 
@@ -35,7 +35,7 @@ setup() {
 	todo_assert_storage_content "${tasks[@]}"
 }
 
-@test "success: end of file task: trims leftover trailing newlines" {
+@test "end of file task: trims leftover trailing newlines" {
 	local tasks=("${TASKS[@]}")
 	tasks[3]=""
 	todo_print_tasks "${tasks[@]}" > "$TODO_FILE"
@@ -47,7 +47,7 @@ setup() {
 	todo_assert_storage_content "${tasks[@]}"
 }
 
-@test "success: last remaining task: empties storage" {
+@test "last remaining task: empties storage" {
 	printf "\n%s\n" "${TASKS[2]}" > "$TODO_FILE"
 	run --keep-empty-lines "$TODO_SCRIPT" "del" 2
 	assert_success
@@ -61,7 +61,7 @@ todo_register_invalid_index_tests "del" \
 "index is 0" \
 "index is out of bounds"
 
-@test "success & warning: valid & invalid index: targets only valid index" {
+@test "valid & invalid index: targets only valid index" {
 	todo_print_tasks > "$TODO_FILE"
 	todo_execute_mixed_indexes "del" "$LABEL" 3
 	todo_assert_storage_content "${TASKS[@]:0:4}"

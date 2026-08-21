@@ -136,7 +136,7 @@ todo_register_invalid_index_tests() {
 
 	for error_name in "${index_errors[@]}"; do
 		bats_test_function \
-			--description "failure: ${error_name}: prints error and exits 2" \
+			--description "${error_name}: prints error and exits 2" \
 			-- todo_test_invalid_index "$subcmd" "$error_name"
 	done
 }

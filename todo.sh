@@ -19,6 +19,7 @@ trap 'die 1 "Command failed unexpectedly."' ERR
 
 # GLOBALS =================================================================== #
 
+readonly VERSION="0.1.0"
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly DATA_DIR="${DATA_DIR:-$SCRIPT_DIR}"
 readonly TODO_FILE="${DATA_DIR}/todo.txt"
@@ -216,6 +217,9 @@ main() {
 			;;
 		""|help|--help)
 			todo_help
+			;;
+		--version|-v)
+			printf "todo-cli, version %s\n" "$VERSION"
 			;;
 		status)
 			print_summary
