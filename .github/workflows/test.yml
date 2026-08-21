@@ -1,11 +1,12 @@
-name: Bash CLI Testing
+name: Test Suite
 
 on:
   push:
     branches: [main]
 
 jobs:
-  testing:
+  run-tests:
+    name: Execute bats-core tests
     runs-on: ubuntu-latest
 
     steps:
@@ -14,13 +15,13 @@ jobs:
         with:
           submodules: true
 
-      - name: Make script executable
-        run: chmod +x ./todo
+      - name: Make CLI script executable
+        run: chmod +x ./todo.sh
 
-      - name: Install Bats
+      - name: Install bats-core
         run: npm install bats
 
-      - name: Run Bats tests
+      - name: Run all tests
         env:
           BATS_LIB_PATH: ${{ github.workspace }}/test/test_helper
         run: ./node_modules/.bin/bats test/
