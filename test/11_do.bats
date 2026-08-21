@@ -5,9 +5,8 @@
 
 load test_helper
 readonly LABEL="[x] Done"
-readonly CHECKED_INDEX="${INDEX_ERRORS["task is checked"]#* | }"
 FAILURE_TESTS_TASKS=("${TASKS[@]}")
-FAILURE_TESTS_TASKS[$CHECKED_INDEX]="x ${TASKS[$CHECKED_INDEX]}"
+FAILURE_TESTS_TASKS[$TOGGLED_TASK_INDEX]="x ${TASKS[$TOGGLED_TASK_INDEX]}"
 readonly FAILURE_TESTS_TASKS
 
 setup() {
@@ -41,6 +40,7 @@ todo_register_invalid_index_tests "do" \
 "index is non-numeric" \
 "index is 0" \
 "index is out of bounds" \
+"task is empty" \
 "task is checked"
 
 @test "valid and invalid index: targets only valid index" {

@@ -89,12 +89,15 @@ print_confirmation() {
 validate_index() {
 	local index="$1"
 	if [[ ! "$index" =~ ^[0-9]+$ ]]; then
-		printf "Skipping %s: Task index must be number.\n" "$index" >&2
+		printf "Skipping %s: Task index must be a number.\n" "$index" >&2
 		return 1
 	elif [[ "$index" -eq 0 ]]; then
 		printf "Skipping 0: Task index must be greater than zero.\n" >&2
 		return 1
 	elif [[ "$index" -gt "$LINE_COUNT" ]]; then
+		printf "Skipping %d: Task does not exist.\n" "$index" >&2
+		return 1
+	elif sed -n "${index}{/^[[:space:]]*$/q0; q1}" "$TODO_FILE"; then
 		printf "Skipping %d: Task does not exist.\n" "$index" >&2
 		return 1
 	else return 0; fi

@@ -6,9 +6,8 @@
 load test_helper
 readonly LABEL="[ ] Undone"
 readonly DONE_TASKS=("${TASKS[@]/#/x }")
-readonly UNCHECKED_INDEX="${INDEX_ERRORS["task is unchecked"]#* | }"
 FAILURE_TESTS_TASKS=("${DONE_TASKS[@]}")
-FAILURE_TESTS_TASKS[$UNCHECKED_INDEX]="${TASKS[$UNCHECKED_INDEX]}"
+FAILURE_TESTS_TASKS[$TOGGLED_TASK_INDEX]="${TASKS[$TOGGLED_TASK_INDEX]}"
 readonly FAILURE_TESTS_TASKS
 
 setup() {
@@ -42,6 +41,7 @@ todo_register_invalid_index_tests "undo" \
 "index is non-numeric" \
 "index is 0" \
 "index is out of bounds" \
+"task is empty" \
 "task is unchecked"
 
 @test "valid and invalid index: targets only valid index" {

@@ -59,10 +59,13 @@ setup() {
 todo_register_invalid_index_tests "del" \
 "index is non-numeric" \
 "index is 0" \
-"index is out of bounds"
+"index is out of bounds" \
+"task is empty"
 
 @test "valid & invalid index: targets only valid index" {
+	local expected_tasks=("${TASKS[@]}")
 	todo_print_tasks > "$TODO_FILE"
 	todo_execute_mixed_indexes "del" "$LABEL" 3
-	todo_assert_storage_content "${TASKS[@]:0:4}"
+	unset "expected_tasks[4]"
+	todo_assert_storage_content "${expected_tasks[@]}"
 }

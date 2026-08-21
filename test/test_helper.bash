@@ -16,12 +16,15 @@ TASKS[3]="this is the third task"
 TASKS[4]="this is the fourth task"
 readonly TASKS
 
+readonly EMPTY_TASK_INDEX=1
+readonly TOGGLED_TASK_INDEX=4
 declare -gA INDEX_ERRORS
-INDEX_ERRORS["index is non-numeric"]="Task index must be number. | string"
+INDEX_ERRORS["index is non-numeric"]="Task index must be a number. | string"
 INDEX_ERRORS["index is 0"]="Task index must be greater than zero. | 0"
 INDEX_ERRORS["index is out of bounds"]="Task does not exist. | 5"
-INDEX_ERRORS["task is checked"]="Task is already marked as done. | 4"
-INDEX_ERRORS["task is unchecked"]="Task is still marked as todo. | 4"
+INDEX_ERRORS["task is empty"]="Task does not exist. | ${EMPTY_TASK_INDEX}"
+INDEX_ERRORS["task is checked"]="Task is already marked as done. | ${TOGGLED_TASK_INDEX}"
+INDEX_ERRORS["task is unchecked"]="Task is still marked as todo. | ${TOGGLED_TASK_INDEX}"
 readonly INDEX_ERRORS
 
 todo_setup() {
@@ -118,8 +121,9 @@ todo_execute_mixed_indexes() {
 todo_test_invalid_index() {
 	local subcmd="$1"
 	local error_name="$2"
-	local tasks=("${FAILURE_TESTS_TASKS[@]:-${TASKS[@]}}")
 	local index="${INDEX_ERRORS["$error_name"]#* | }"
+	local tasks=("${FAILURE_TESTS_TASKS[@]:-${TASKS[@]}}")
+	tasks[$EMPTY_TASK_INDEX]=""
 
 	todo_print_tasks "${tasks[@]}" > "$TODO_FILE"
 	run --keep-empty-lines "$TODO_SCRIPT" "$subcmd" "$index"

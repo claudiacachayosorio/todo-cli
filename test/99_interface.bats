@@ -46,13 +46,6 @@ todo_test_version_flag() {
 	todo_test_version_flag "-v"
 }
 
-@test "status: storage empty: prints task summary and 'empty todo' message" {
-	run "$TODO_SCRIPT" "status"
-	assert_success
-	assert_line "Your todo.txt is empty!"
-	todo_assert_summary 0
-}
-
 @test "status: mixed tasks: prints task summary" {
 	local tasks=("${TASKS[@]}")
 	tasks[1]="x ${TASKS[1]}"
@@ -61,4 +54,11 @@ todo_test_version_flag() {
 	run "$TODO_SCRIPT" "status"
 	assert_success
 	todo_assert_summary 3 1
+}
+
+@test "status: storage empty: prints task summary and 'empty todo' message" {
+	run "$TODO_SCRIPT" "status"
+	assert_success
+	todo_assert_summary 0
+	assert_line "Your todo.txt is empty!"
 }
