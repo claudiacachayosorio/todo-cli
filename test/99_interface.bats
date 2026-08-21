@@ -31,7 +31,7 @@ todo_register_help_cmd_tests() {
 			-- todo_test_help_cmd "$arg"
 	done
 }
-todo_register_help_cmd_tests "" "help" "--help"
+todo_register_help_cmd_tests "" "help" "--help" "-h"
 
 todo_test_version_flag() {
 	local flag="$1"

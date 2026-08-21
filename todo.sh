@@ -45,6 +45,14 @@ init_storage() {
 	readonly INDEX_WIDTH="${#potential_count}"
 }
 
+is_arg_missing() {
+	local arg_count="$1"
+	local error_desc="${2:-Argument required.}"
+	if [[ "$arg_count" -eq 0 ]]; then
+		die 2 "$error_desc"
+	else return 0; fi
+}
+
 is_todo_empty() {
 	if ! grep -q '[^[:space:]]' "$TODO_FILE"; then
 		[[ -s "$TODO_FILE" ]] && > "$TODO_FILE"
@@ -54,16 +62,13 @@ is_todo_empty() {
 }
 
 print_summary() {
-	local todo \
-	      done \
-	      total
+	local todo done total
 	total="$(grep -c '[^[:space:]]' "$TODO_FILE")" || true
 	done="$(grep -c "^x " "$TODO_FILE")"           || true
 	todo="$(( total - done ))"
-	printf "%d todo | %d done | %d total" "$todo" "$done" "$total"
+	printf "%d todo | %d done | %d total\n" "$todo" "$done" "$total"
 }
 
-# TODO: sort task confirmation by line number
 print_task_success() {
 	local index="$1"
 	local task_output="$2"
@@ -99,23 +104,24 @@ validate_index() {
 todo_help() {
 	cat <<-EOF
 	USAGE
-	  bash todo <command> [<argument>...]
+	  ./todo.sh [<command> [<argument>...]]
 
 	COMMANDS
-	  add   <description>
-	  do 		<index>...
-	  undo  <index>...
-		del   <index>...
+	  add <task>         Add new task to todo.txt
+	  do <index>...      Mark task as done
+	  undo <index>...    Remove done mark from task
+	  del <index>...     Delete task from todo.txt
+	  status             Display task count
+	  --version, -v      Display version number
+	  help, --help, -h   List available commands
 	EOF
 	exit 0
 }
 
-# TODO: if add multiple tasks, change LINE_COUNT & INDEX_WIDTH
 todo_add() {
 	local task="$*"
 	local index; index="$(( LINE_COUNT + 1 ))"
-	local empty_line \
-	      formatted_task
+	local empty_line formatted_task
 	empty_line="$(grep -nm 1 '^[[:space:]]*$' "$TODO_FILE")" || true
 
 	if [[ -n "$empty_line" ]]; then
@@ -133,8 +139,7 @@ todo_do() {
 	local i indexes=("$@")
 	local sed_args=()
 	local done_tasks=""
-	local task \
-	      formatted_task
+	local task formatted_task
 
 	for i in "${indexes[@]}"; do
 		if ! validate_index "$i"; then continue; fi
@@ -159,8 +164,7 @@ todo_undo() {
 	local i indexes=("$@")
 	local sed_args=()
 	local undone_tasks=""
-	local task \
-	      formatted_task
+	local task formatted_task
 
 	for i in "${indexes[@]}"; do
 		if ! validate_index "$i"; then continue; fi
@@ -185,8 +189,7 @@ todo_del() {
 	local i indexes=("$@")
 	local sed_args=()
 	local deleted_tasks=""
-	local task \
-	      formatted_task
+	local task formatted_task
 
 	for i in "${indexes[@]}"; do
 		if ! validate_index "$i"; then continue; fi
@@ -212,43 +215,30 @@ main() {
 	shift
 
 	case "$cmd" in
-		--init-only)
-			exit 0
-			;;
-		""|help|--help)
-			todo_help
-			;;
-		--version|-v)
-			printf "todo-cli, version %s\n" "$VERSION"
-			;;
-		status)
-			print_summary
-			;;
 		add)
-			[[ $# -gt 0 ]] || die 2 "Task description cannot be empty."
-			todo_add "$@"
+			is_arg_missing "$#" "Task description cannot be empty."
 			;;
-		do)
-			[[ $# -gt 0 ]] || die 2 "Task index required."
-			is_todo_empty --exit
-			todo_do "$@"
-			;;
-		undo)
-			[[ $# -gt 0 ]] || die 2 "Task index required."
-			is_todo_empty --exit
-			todo_undo "$@"
-			;;
-		del)
-			[[ $# -gt 0 ]] || die 2 "Task index required."
-			is_todo_empty --exit
-			todo_del "$@"
+		do|undo|del)
+			is_arg_missing "$#" "Task index required."
+			is_todo_empty
 			;;
 		*)
-			die 2 "'${cmd}' is not a valid command."
 			;;
+	esac
+
+	case "$cmd" in
+		""|help|--help|-h) todo_help ;;
+		--init-only)       exit 0 ;;
+		--version|-v)      printf "todo-cli, version %s\n" "$VERSION" ;;
+		status)            print_summary ;;
+		add)               todo_add "$@" ;;
+		do)                todo_do "$@" ;;
+		undo)              todo_undo "$@" ;;
+		del)               todo_del "$@" ;;
+		*)                 die 2 "'${cmd}' is not a valid command." ;;
 	esac
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-	main "$@"
+	main "${@:-}"
 fi
